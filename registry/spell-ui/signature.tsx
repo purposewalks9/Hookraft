@@ -26,22 +26,48 @@ export function Signature({
 
   useEffect(() => {
     async function load() {
-      const font = await opentype.load("/LaStoriaBoldRegular.otf");
+      try {
+        // Try multiple paths to ensure font loads correctly
+        let font;
+        const fontPaths = [
+          "/LastoriaBoldRegular.otf",
+          "./LastoriaBoldRegular.otf",
+          `${window.location.origin}/LastoriaBoldRegular.otf`,
+        ];
 
-      let x = horizontalPadding;
-      const newPaths: string[] = [];
+        for (const path of fontPaths) {
+          try {
+            font = await opentype.load(path);
+            break;
+          } catch (e) {
+            console.log(`Failed to load font from ${path}, trying next...`);
+          }
+        }
 
-      for (const char of text) {
-        const glyph = font.charToGlyph(char);
-        const path = glyph.getPath(x, baseline, fontSize);
-        newPaths.push(path.toPathData(3));
+        if (!font) {
+          throw new Error("Font could not be loaded from any path");
+        }
 
-        const advanceWidth = glyph.advanceWidth ?? font.unitsPerEm;
-        x += advanceWidth * (fontSize / font.unitsPerEm);
+        let x = horizontalPadding;
+        const newPaths: string[] = [];
+
+        for (const char of text) {
+          const glyph = font.charToGlyph(char);
+          const path = glyph.getPath(x, baseline, fontSize);
+          newPaths.push(path.toPathData(3));
+
+          const advanceWidth = glyph.advanceWidth ?? font.unitsPerEm;
+          x += advanceWidth * (fontSize / font.unitsPerEm);
+        }
+
+        setPaths(newPaths);
+        setWidth(x + horizontalPadding);
+      } catch (error) {
+        console.error("Failed to load font:", error);
+        // Set fallback text path if font fails to load
+        setPaths([]);
+        setWidth(text.length * fontSize * 0.6);
       }
-
-      setPaths(newPaths);
-      setWidth(x + horizontalPadding);
     }
 
     load();
