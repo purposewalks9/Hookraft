@@ -6,7 +6,7 @@ export default function Home() {
     <div className="flex items-center justify-center h-svh">
       <Link href={"/docs/introduction"}>
         <RichButton asChild>
-            See Docs
+          See Docs
         </RichButton>
       </Link>
     </div>

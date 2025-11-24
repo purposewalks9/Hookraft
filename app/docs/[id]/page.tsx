@@ -1,6 +1,6 @@
 import { Badge } from "@/registry/spell-ui/badge";
 import { allDocItems, getDoc } from "@/lib/doc";
-import { ExternalLink, ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
 import { DocsTableOfContents } from "@/components/toc";
 import { getTableOfContents } from "@/lib/toc";
@@ -26,7 +26,9 @@ export default async function DocPage({
   const allItems = await allDocItems();
   const currentIndex = allItems.findIndex((doc) => doc.id === id);
   const prevDoc = currentIndex > 0 ? allItems[currentIndex - 1] : null;
-  const nextDoc = currentIndex < allItems.length - 1 ? allItems[currentIndex + 1] : null;
+  const nextDoc = currentIndex < allItems.length - 1
+    ? allItems[currentIndex + 1]
+    : null;
 
   let toc: { title?: string; url: string; depth: number }[] = [];
   let rawContent = "";
@@ -62,18 +64,20 @@ export default async function DocPage({
                   disabled={!prevDoc}
                   asChild={!!prevDoc}
                 >
-                  {prevDoc ? (
-                    <Link
-                      href={`/docs/${prevDoc.id}`}
-                      title={prevDoc.title}
-                    >
-                      <ArrowLeft className="text-muted-foreground" />
-                    </Link>
-                  ) : (
-                    <span>
-                      <ArrowLeft className="text-muted-foreground" />
-                    </span>
-                  )}
+                  {prevDoc
+                    ? (
+                      <Link
+                        href={`/docs/${prevDoc.id}`}
+                        title={prevDoc.title}
+                      >
+                        <ArrowLeft className="text-muted-foreground" />
+                      </Link>
+                    )
+                    : (
+                      <span>
+                        <ArrowLeft className="text-muted-foreground" />
+                      </span>
+                    )}
                 </Button>
                 <Button
                   variant="secondary"
@@ -82,18 +86,20 @@ export default async function DocPage({
                   disabled={!nextDoc}
                   asChild={!!nextDoc}
                 >
-                  {nextDoc ? (
-                    <Link
-                      href={`/docs/${nextDoc.id}`}
-                      title={nextDoc.title}
-                    >
-                      <ArrowRight className="text-muted-foreground" />
-                    </Link>
-                  ) : (
-                    <span>
-                      <ArrowRight className="text-muted-foreground" />
-                    </span>
-                  )}
+                  {nextDoc
+                    ? (
+                      <Link
+                        href={`/docs/${nextDoc.id}`}
+                        title={nextDoc.title}
+                      >
+                        <ArrowRight className="text-muted-foreground" />
+                      </Link>
+                    )
+                    : (
+                      <span>
+                        <ArrowRight className="text-muted-foreground" />
+                      </span>
+                    )}
                 </Button>
               </div>
             </div>

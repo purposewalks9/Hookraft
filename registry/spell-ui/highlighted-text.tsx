@@ -49,7 +49,10 @@ export function HighlightedText({
   return (
     <span
       ref={containerRef}
-      className={cn("relative inline-flex overflow-hidden align-baseline", className)}
+      className={cn(
+        "relative inline-flex overflow-hidden align-baseline",
+        className,
+      )}
     >
       <motion.span
         className="absolute inset-0 -left-[0.15em] -right-[0.18em] bg-black dark:bg-white z-0"

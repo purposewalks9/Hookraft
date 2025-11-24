@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,10 +23,12 @@ interface DocCopySectionProps {
 }
 
 function getPromptUrl(baseURL: string, url: string) {
-  return `${baseURL}?q=${encodeURIComponent(
-    `I'm looking at this spell ui documentation: https://spell.sh${url}.
-Help me understand how to use it. Be ready to explain concepts, give examples, or help debug based on it.`
-  )}`;
+  return `${baseURL}?q=${
+    encodeURIComponent(
+      `I'm looking at this spell ui documentation: https://spell.sh${url}.
+Help me understand how to use it. Be ready to explain concepts, give examples, or help debug based on it.`,
+    )
+  }`;
 }
 
 export function DocCopySection({ content, url }: DocCopySectionProps) {
@@ -53,7 +55,12 @@ export function DocCopySection({ content, url }: DocCopySectionProps) {
     viewMarkdown: () => {
       const mdUrl = `${pathname}.md`;
       return (
-        <a href={mdUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+        <a
+          href={mdUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2"
+        >
           <svg strokeLinejoin="round" viewBox="0 0 22 16" className="h-4 w-4">
             <path
               fillRule="evenodd"

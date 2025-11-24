@@ -102,7 +102,13 @@ export function DocsTableOfContents({
             Edit this page
           </Link>
         )}
-        <Link href={siteConfig.links.tom} className="transition-colors hover:text-foreground text-muted-foreground [&_svg]:size-3 flex gap-1.5 items-center"><SiX className="pl-[1px]" /><span>Follow @tomm_ui</span></Link>
+        <Link
+          href={siteConfig.links.tom}
+          className="transition-colors hover:text-foreground text-muted-foreground [&_svg]:size-3 flex gap-1.5 items-center"
+        >
+          <SiX className="pl-[1px]" />
+          <span>Follow @tomm_ui</span>
+        </Link>
       </div>
     </div>
   );

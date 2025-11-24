@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useId, useState, useRef } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { motion, useInView } from "motion/react";
 import opentype from "opentype.js";
 
@@ -97,7 +97,9 @@ export function Signature({
               strokeWidth={fontSize * 0.22}
               fill="none"
               initial={{ pathLength: 0, opacity: 0 }}
-              animate={shouldAnimate ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
+              animate={shouldAnimate
+                ? { pathLength: 1, opacity: 1 }
+                : { pathLength: 0, opacity: 0 }}
               transition={{
                 pathLength: {
                   delay: i * 0.2,

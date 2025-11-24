@@ -82,7 +82,10 @@ function extractItems(node: ListNode, depth: number): TocItem[] {
   return items;
 }
 
-function extractItemFromListItem(listItem: ListItemNode, depth: number): TocItem | null {
+function extractItemFromListItem(
+  listItem: ListItemNode,
+  depth: number,
+): TocItem | null {
   if (!listItem.children || listItem.children.length === 0) return null;
 
   let title = "";
