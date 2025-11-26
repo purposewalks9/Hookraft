@@ -163,7 +163,7 @@ export function DocCopySection({ content, url }: DocCopySectionProps) {
                     : "scale-100 opacity-100 blur-none",
                 )}
               >
-                <Copy className="h-4 w-4 text-[#b5b5b5]" />
+                <Copy className="h-4 w-4 text-muted-foreground dark:text-[#b5b5b5]" />
               </div>
             </div>
             <span>Copy this page</span>

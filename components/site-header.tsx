@@ -4,7 +4,6 @@ import { DocSchema } from "@/lib/types";
 import { SearchForm } from "./command-menu";
 import { Button } from "./ui/button";
 import { useTheme } from "next-themes";
-import { SiGithub } from "@icons-pack/react-simple-icons";
 import { SidebarTrigger } from "./ui/sidebar";
 import { GithubStars } from "./github-stars";
 

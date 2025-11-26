@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { ListMinus, SquarePen } from "lucide-react";
+import { SquarePen } from "lucide-react";
 import { Separator } from "./ui/separator";
 import Link from "next/link";
 import { siteConfig } from "@/lib/config";
