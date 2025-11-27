@@ -8,6 +8,7 @@ import { motion } from "motion/react";
 import LabelInput from "@/registry/spell-ui/label-input";
 import { Spinner } from "@/registry/spell-ui/spinner";
 import { Check } from "lucide-react";
+import Link from "next/link";
 
 export default function EarlyAccessPage() {
   const [password, setPassword] = useState("");
@@ -113,6 +114,7 @@ export default function EarlyAccessPage() {
           </Button>
         </form>
       </div>
+      <Link href="/docs/introduction" prefetch className="hidden" aria-hidden />
     </motion.div>
   );
 }
