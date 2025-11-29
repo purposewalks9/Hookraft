@@ -1,5 +1,5 @@
 import { Badge } from "@/registry/spell-ui/badge";
-import { allDocItems, getDoc } from "@/lib/doc";
+import { allDocItems, getDoc, getDocSchema } from "@/lib/doc";
 import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
 import { DocsTableOfContents } from "@/components/toc";
@@ -45,6 +45,10 @@ export default async function DocPage({
     ? allItems[currentIndex + 1]
     : null;
 
+  const schema = await getDocSchema();
+  const gettingStartedSection = schema.find((section) => section.title === "Getting Started");
+  const isGettingStarted = gettingStartedSection?.items.some((item) => item.id === id) ?? false;
+
   let toc: { title?: string; url: string; depth: number }[] = [];
   let rawContent = "";
   try {
@@ -67,13 +71,21 @@ export default async function DocPage({
                   <BreadcrumbLink href="/docs/introduction">Docs</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/docs/introduction">Components</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{item.title}</BreadcrumbPage>
-                </BreadcrumbItem>
+                {isGettingStarted ? (
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                ) : (
+                  <>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="/docs/components">Components</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </>
+                )}
               </BreadcrumbList>
             </Breadcrumb>
             <div className="flex items-start justify-between">
