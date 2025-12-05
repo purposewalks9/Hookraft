@@ -19,10 +19,10 @@ export function DemoPresets() {
           <button
             key={preset}
             onClick={() => setActivePreset(preset)}
-            className={`px-3 py-1.5 text-sm cursor-pointer rounded-full transition-colors ${
+            className={`px-3 py-1 text-sm font-medium tracking-tight cursor-pointer rounded-full transition-colors ${
               activePreset === preset
                 ? "bg-white text-black"
-                : "bg-white/20 text-white hover:bg-white/30"
+                : "bg-transparent text-white"
             }`}
           >
             {preset}
