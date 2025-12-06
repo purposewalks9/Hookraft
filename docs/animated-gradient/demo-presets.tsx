@@ -10,7 +10,7 @@ export function DemoPresets() {
     useState<(typeof presets)[number]>("Lava");
 
   return (
-    <div className="relative min-h-[500px] w-full md:min-h-[350px] flex flex-col">
+    <div className="min-h-[500px] w-full md:min-h-[350px] flex flex-col">
       <div className="absolute inset-0">
         <AnimatedGradient config={{ preset: activePreset }} />
       </div>
