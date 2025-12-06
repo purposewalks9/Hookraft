@@ -10,10 +10,8 @@ export function DemoPresets() {
     useState<(typeof presets)[number]>("Lava");
 
   return (
-    <div className="min-h-[500px] w-full md:min-h-[350px] flex flex-col">
-      <div className="absolute inset-0">
-        <AnimatedGradient config={{ preset: activePreset }} />
-      </div>
+    <div className="relative min-h-[500px] w-full md:min-h-[350px] flex flex-col">
+      <AnimatedGradient style={{ zIndex: 0 }} config={{ preset: activePreset }} />
       <div className="relative z-10 flex gap-2 p-4 flex-wrap">
         {presets.map((preset) => (
           <button

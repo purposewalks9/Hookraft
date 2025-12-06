@@ -1,3 +1,4 @@
+import Rays from "@/registry/spell-ui/light-rays";
 import { RichButton } from "@/registry/spell-ui/rich-button";
 import Link from "next/link";
 
