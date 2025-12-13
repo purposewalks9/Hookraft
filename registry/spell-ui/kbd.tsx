@@ -20,8 +20,6 @@ const keySymbolMap = {
   ctrl: "⌃",
   alt: "⌥",
   option: "⌥",
-  enter: "↵",
-  return: "↵",
   space: "␣",
   arrowleft: "←",
   left: "←",
