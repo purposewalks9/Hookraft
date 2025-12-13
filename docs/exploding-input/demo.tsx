@@ -13,14 +13,13 @@ export function Demo() {
       <ExplodingInput
       className="z-50"
         content={[
-          <img key="1" src="https://spell.sh/emojis/bell.avif" alt="bell" className="size-10" />,
-          <img key="2" src="https://spell.sh/emojis/cursor.avif" alt="cursor" className="size-10" />,
-          <img key="3" src="https://spell.sh/emojis/heart.avif" alt="heart" className="size-10" />,
-          <img key="4" src="https://spell.sh/emojis/image.avif" alt="image" className="size-10" />,
-          <img key="5" src="https://spell.sh/emojis/money.avif" alt="money" className="size-10" />,
-          <img key="6" src="https://spell.sh/emojis/shaka.avif" alt="shaka" className="size-10" />,
-          <img key="7" src="https://spell.sh/emojis/smile.avif" alt="smile" className="size-10" />,
-          <img key="8" src="https://spell.sh/emojis/thumbsup.avif" alt="thumbsup" className="size-10" />,
+          <span key="1" className="text-4xl">🤩</span>,
+          <span key="2" className="text-4xl">👾</span>,
+          <span key="3" className="text-4xl">😺</span>,
+          <span key="4" className="text-4xl">👻</span>,
+          <span key="5" className="text-4xl">🎃</span>,
+          <span key="6" className="text-4xl">🖤</span>,
+          <span key="7" className="text-4xl">🗯️</span>,
         ]}
         direction={{ horizontal: "left", vertical: "top" }}
         gravity={0.5}
