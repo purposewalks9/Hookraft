@@ -38,7 +38,7 @@ export function Hero() {
         <div className="col-span-1 md:col-span-2 row-span-1 md:row-span-2 rounded-2xl border shadow-inner min-h-[300px] md:min-h-[400px] flex flex-col p-4">
           <div className="flex-1 flex items-center justify-center">
             <TextMarquee
-              height={250}
+              height={300}
               speed={1}
               prefix={
                 <span className="text-2xl md:text-3xl text-muted-foreground/75 font-medium">
@@ -47,6 +47,7 @@ export function Hero() {
               }
             >
               <p className="text-2xl md:text-3xl font-medium">emily</p>
+              <p className="text-2xl md:text-3xl font-medium">james</p>
               <p className="text-2xl md:text-3xl font-medium">dennis</p>
               <p className="text-2xl md:text-3xl font-medium">max</p>
               <p className="text-2xl md:text-3xl font-medium">michele</p>
@@ -73,7 +74,7 @@ export function Hero() {
         </div>
         <div className="col-span-1 rounded-2xl border shadow-inner min-h-[200px] md:min-h-[240px] flex flex-col p-4">
           <div className="flex-1 flex items-center justify-center">
-            <ShimmerText className="text-lg" duration={1}>
+            <ShimmerText className="text-lg font-medium" duration={1}>
               Thinking longer...
             </ShimmerText>
           </div>

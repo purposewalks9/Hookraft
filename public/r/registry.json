@@ -393,6 +393,21 @@
       "dependencies": ["motion"],
       "registryDependencies": [],
       "category": "input"
+    },
+    {
+      "name": "exploding-input",
+      "type": "registry:component",
+      "title": "Exploding Input",
+      "description": "Input component that spawns particle effects when typing.",
+      "files": [
+        {
+          "path": "registry/spell-ui/exploding-input.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "dependencies": [],
+      "registryDependencies": [],
+      "category": "input"
     }
   ]
 }

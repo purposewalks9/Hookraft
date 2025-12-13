@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "randomized-text",
-  "type": "registry:component",
   "title": "Randomized Text",
   "description": "Text component with randomized character reveal animation.",
   "dependencies": [
@@ -14,5 +13,6 @@
       "content": "\"use client\";\n\nimport { motion } from \"motion/react\";\nimport { useMemo } from \"react\";\n\ntype SplitType = \"words\" | \"chars\";\n\ninterface RandomizedTextProps {\n  children: string;\n  className?: string;\n  split?: SplitType;\n  delay?: number;\n  inView?: boolean;\n  once?: boolean;\n}\n\nexport function RandomizedText({\n  children,\n  className = \"\",\n  split = \"words\",\n  delay = 0.2,\n  inView = false,\n  once = true,\n}: RandomizedTextProps) {\n\n  const expoOut = (t: number): number => {\n    return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);\n  };\n\n  const elements = useMemo(() => {\n    if (split === \"chars\") {\n      return children.split(\"\").map((char, i) => ({\n        content: char === \" \" ? \"\\u00A0\" : char,\n        key: `char-${i}`,\n      }));\n    }\n    return children.split(\" \").map((word, i) => ({\n      content: word,\n      key: `word-${i}`,\n    }));\n  }, [children, split]);\n\n  const randomizedDelays = useMemo(() => {\n    return elements.map(() =>\n      delay + Math.random() * 0.2 + Math.random() * 0.03\n    );\n  }, [elements.length, delay]);\n\n  const variants = {\n    hidden: { opacity: 0 },\n    visible: { opacity: 1 },\n  };\n\n  return (\n    <motion.span\n      className={className}\n      aria-label={children}\n      style={{ display: \"inline-block\", wordBreak: \"break-word\" }}\n      initial=\"hidden\"\n      whileInView={inView ? \"visible\" : undefined}\n      animate={inView ? undefined : \"visible\"}\n      viewport={{ once }}\n    >\n      {elements.map((element, i) => (\n        <motion.span\n          key={element.key}\n          variants={variants}\n          transition={{\n            duration: 1.2,\n            delay: randomizedDelays[i],\n            ease: expoOut,\n          }}\n          style={{ display: split === \"words\" ? \"inline-block\" : \"inline\" }}\n          className={split === \"words\" ? \"mr-[0.25em]\" : \"\"}\n        >\n          {element.content}\n        </motion.span>\n      ))}\n    </motion.span>\n  );\n}\n",
       "type": "registry:component"
     }
-  ]
+  ],
+  "type": "registry:component"
 }
