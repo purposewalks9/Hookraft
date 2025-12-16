@@ -2,7 +2,7 @@ import { ShimmerText } from "@/registry/spell-ui/shimmer-text";
 
 export function Demo() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 font-medium">
       <ShimmerText variant="blue">
         Thinking longer for a better answer
       </ShimmerText>

@@ -8,7 +8,7 @@ import SpotifyCardCarouselDemo from "@/docs/spotify-card/demo-carousel";
 import { Demo as ColorSelectorDemo } from "@/docs/color-selector/demo";
 import { Demo as MarqueeDemo } from "@/docs/marquee/demo";
 import { Demo as AnimatedCheckboxDemo } from "@/docs/animated-checkbox/demo";
-import ShimmerText from "@/registry/spell-ui/shimmer-text";
+import { ShimmerText } from "@/registry/spell-ui/shimmer-text";
 
 export function Hero() {
   return (

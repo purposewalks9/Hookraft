@@ -1,0 +1,122 @@
+import { Demo } from './demo'
+
+<DemoCanvas>
+  <DemoPreview>
+    <Demo />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+## Installation
+
+<InstallationTabs item="gradient-wave-text">
+```tsx file=../../registry/spell-ui/gradient-wave-text.tsx
+```
+</InstallationTabs>
+
+## Usage
+
+```tsx
+import { GradientWaveText } from "@/components/gradient-wave-text";
+```
+```tsx
+<GradientWaveText className="text-3xl md:text-5xl font-medium tracking-[-.03em]">
+  Just ship things.
+</GradientWaveText>
+```
+
+## Props
+
+<PropsTable
+  data={[
+    {
+      name: "children",
+      type: "React.ReactNode",
+      nameDetails: "Text content to display with gradient wave effect"
+    },
+    {
+      name: "className",
+      type: "string",
+      nameDetails: "Additional CSS classes"
+    },
+    {
+      name: "align",
+      type: "'left' | 'center' | 'right'",
+      default: "center",
+      nameDetails: "Text alignment"
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      nameDetails: "Animation speed multiplier"
+    },
+    {
+      name: "paused",
+      type: "boolean",
+      default: "false",
+      nameDetails: "Pause the animation"
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      nameDetails: "Delay before animation starts in seconds"
+    },
+    {
+      name: "repeat",
+      type: "boolean",
+      default: "false",
+      nameDetails: "Repeat animation infinitely"
+    },
+    {
+      name: "inView",
+      type: "boolean",
+      default: "false",
+      nameDetails: "Start animation when element enters viewport"
+    },
+    {
+      name: "once",
+      type: "boolean",
+      default: "true",
+      nameDetails: "Only animate once when inView is true"
+    },
+    {
+      name: "radial",
+      type: "boolean",
+      default: "true",
+      nameDetails: "Use radial gradient (false = linear)"
+    },
+    {
+      name: "bottomOffset",
+      type: "number",
+      default: "20",
+      nameDetails: "Bottom offset percentage for radial gradient"
+    },
+    {
+      name: "bandGap",
+      type: "number",
+      default: "4",
+      nameDetails: "Gap between gradient bands"
+    },
+    {
+      name: "bandCount",
+      type: "number",
+      default: "8",
+      nameDetails: "Number of gradient bands"
+    },
+    {
+      name: "customColors",
+      type: "string[]",
+      nameDetails: "Custom colors array to override defaults"
+    },
+    {
+      name: "ariaLabel",
+      type: "string",
+      nameDetails: "Accessible label for screen readers"
+    }
+  ]}
+/>

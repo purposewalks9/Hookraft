@@ -408,6 +408,21 @@
       "dependencies": [],
       "registryDependencies": [],
       "category": "input"
+    },
+    {
+      "name": "gradient-wave-text",
+      "type": "registry:component",
+      "title": "Gradient Wave Text",
+      "description": "Apple-style animated gradient text with wave effect.",
+      "files": [
+        {
+          "path": "registry/spell-ui/gradient-wave-text.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "dependencies": [],
+      "registryDependencies": [],
+      "category": "animation"
     }
   ]
 }
