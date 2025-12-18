@@ -26,7 +26,7 @@ const SpotifyCardSkeleton = ({ className }: { className?: string }) => (
   >
     <div className="aspect-square w-full max-w-[75px] animate-pulse self-center rounded-lg bg-muted" />
     <div className="z-10 flex w-full flex-col justify-end">
-      <div className="flex flex-col items-end gap-1 pl-4">
+      <div className="flex flex-col items-end gap-1 pl-6">
         <div className="h-4 w-24 animate-pulse rounded bg-muted" />
         <div className="h-4 w-16 animate-pulse rounded bg-muted" />
       </div>
@@ -264,7 +264,7 @@ export function SpotifyCard({ url, className }: SpotifyCardProps) {
             <SiSpotify size={18} className="text-[#BAAEBA]" />
           </a>
         </div>
-        <div className="pl-4 text-end">
+        <div className="pl-6 text-end">
           <h2 className="whitespace-nowrap text-sm font-semibold tracking-[-.006em] text-[#D6D1D4]">
             {data.title}
           </h2>

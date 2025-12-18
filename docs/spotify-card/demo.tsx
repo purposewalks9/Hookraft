@@ -3,8 +3,8 @@ import { SpotifyCard } from "@/registry/spell-ui/spotify-card";
 export default function SpotifyCardDemo() {
   return (
     <SpotifyCard
-      url="https://open.spotify.com/track/3qL63QvSTHvC4Uw8eEhz4z"
-      className="max-w-[300px] max-h-[100px]"
+      url="https://open.spotify.com/track/7dt6x5M1jzdTEt8oCbisTK"
+      className="max-w-[325px] max-h-[100px]"
     />
   );
 }
