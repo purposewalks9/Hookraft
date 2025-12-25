@@ -40,6 +40,7 @@ import { SpecialText } from "@/components/special-text";
 ```tsx
 <SpecialText>HELLO WORLD</SpecialText>
 <SpecialText speed={10}>FAST</SpecialText>
+<SpecialText delay={0.6}>DELAYED</SpecialText>
 <SpecialText className="text-2xl text-blue-500">STYLED</SpecialText>
 ```
 
@@ -57,6 +58,12 @@ import { SpecialText } from "@/components/special-text";
       type: "number",
       default: "20",
       nameDetails: "Animation speed in milliseconds (lower is faster)"
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      nameDetails: "Delay before starting the animation (in seconds)"
     },
     {
       name: "className",

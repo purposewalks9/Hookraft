@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 interface SlideUpTextProps {
   children: React.ReactNode;
   split?: "words" | "characters" | "lines";
+  delay?: number;
   stagger?: number;
   from?: "first" | "last" | "center";
   transition?: AnimationOptions;
@@ -43,6 +44,7 @@ const SlideUpText = forwardRef<SlideUpTextRef, SlideUpTextProps>(
     {
       children,
       split = "words",
+      delay = 0,
       stagger = 0.1,
       from = "first",
       transition = {
@@ -132,7 +134,7 @@ const SlideUpText = forwardRef<SlideUpTextRef, SlideUpTextProps>(
         y: 0,
         transition: {
           ...transition,
-          delay: ((transition?.delay as number) || 0) + getStaggerDelay(i),
+          delay: delay + ((transition?.delay as number) || 0) + getStaggerDelay(i),
         },
       }),
     };

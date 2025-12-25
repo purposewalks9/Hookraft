@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 interface WordsStaggerProps {
   children: React.ReactNode;
   className?: string;
+  delay?: number;
   stagger?: number;
   speed?: number;
   autoStart?: boolean;
@@ -19,6 +20,7 @@ interface WordsStaggerProps {
 export function WordsStagger({
   children,
   className,
+  delay = 0,
   stagger = 0.1,
   speed = 0.5,
   autoStart = true,
@@ -44,6 +46,7 @@ export function WordsStagger({
     visible: {
       transition: {
         staggerChildren: stagger,
+        delayChildren: delay,
       },
     },
   };

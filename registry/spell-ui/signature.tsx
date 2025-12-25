@@ -3,23 +3,27 @@ import { useEffect, useId, useState } from "react";
 import { motion } from "motion/react";
 import opentype from "opentype.js";
 
+interface SignatureProps {
+  text?: string;
+  color?: string;
+  fontSize?: number;
+  duration?: number;
+  delay?: number;
+  className?: string;
+  inView?: boolean;
+  once?: boolean;
+}
+
 export function Signature({
   text = "Signature",
   color = "#000",
   fontSize = 14,
   duration = 1.5,
+  delay = 0,
   className,
   inView = false,
   once = true,
-}: {
-  text?: string;
-  color?: string;
-  fontSize?: number;
-  duration?: number;
-  className?: string;
-  inView?: boolean;
-  once?: boolean;
-}) {
+}: SignatureProps) {
   const [paths, setPaths] = useState<string[]>([]);
   const [width, setWidth] = useState<number>(300);
   const height = 100;
@@ -105,12 +109,12 @@ export function Signature({
               variants={variants}
               transition={{
                 pathLength: {
-                  delay: i * 0.2,
+                  delay: delay + i * 0.2,
                   duration,
                   ease: "easeInOut",
                 },
                 opacity: {
-                  delay: i * 0.2 + 0.01,
+                  delay: delay + i * 0.2 + 0.01,
                   duration: 0.01,
                 },
               }}
@@ -132,12 +136,12 @@ export function Signature({
           variants={variants}
           transition={{
             pathLength: {
-              delay: i * 0.2,
+              delay: delay + i * 0.2,
               duration,
               ease: "easeInOut",
             },
             opacity: {
-              delay: i * 0.2 + 0.01,
+              delay: delay + i * 0.2 + 0.01,
               duration: 0.01,
             },
           }}

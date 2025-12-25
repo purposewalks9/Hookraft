@@ -6,6 +6,7 @@ import { useInView } from "motion/react";
 interface SpecialTextProps {
   children: string;
   speed?: number;
+  delay?: number;
   className?: string;
   inView?: boolean;
   once?: boolean;
@@ -24,6 +25,7 @@ function getRandomChar(prevChar?: string): string {
 export function SpecialText({
   children,
   speed = 20,
+  delay = 0,
   className = "",
   inView = false,
   once = true,
@@ -31,7 +33,7 @@ export function SpecialText({
   const containerRef = useRef<HTMLSpanElement>(null);
   const isInView = useInView(containerRef, { once, margin: "-100px" });
   const shouldAnimate = inView ? isInView : true;
-  const [hasStarted, setHasStarted] = useState(!inView);
+  const [hasStarted, setHasStarted] = useState(() => !inView && delay <= 0);
   const text = children;
   const [displayText, setDisplayText] = useState<string>(
     " ".repeat(text.length),
@@ -41,6 +43,20 @@ export function SpecialText({
   );
   const [animationStep, setAnimationStep] = useState<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeoutRef = useRef<number | null>(null);
+
+  function clearStartTimeout() {
+    if (startTimeoutRef.current === null) return;
+    window.clearTimeout(startTimeoutRef.current);
+    startTimeoutRef.current = null;
+  }
+
+  function startAnimation() {
+    setHasStarted(true);
+    setDisplayText(" ".repeat(text.length));
+    setCurrentPhase("phase1");
+    setAnimationStep(0);
+  }
 
   const runPhase1 = () => {
     const maxSteps = text.length * 2;
@@ -101,12 +117,18 @@ export function SpecialText({
 
   useEffect(() => {
     if (shouldAnimate && !hasStarted) {
-      setHasStarted(true);
-      setDisplayText(" ".repeat(text.length));
-      setCurrentPhase("phase1");
-      setAnimationStep(0);
+      clearStartTimeout();
+      if (delay <= 0) {
+        startAnimation();
+        return;
+      }
+      startTimeoutRef.current = window.setTimeout(() => {
+        startTimeoutRef.current = null;
+        startAnimation();
+      }, delay * 1000);
     }
-  }, [shouldAnimate, hasStarted, text.length]);
+    return () => clearStartTimeout();
+  }, [shouldAnimate, hasStarted, delay, text.length]);
 
   useEffect(() => {
     if (!hasStarted) {
@@ -140,6 +162,7 @@ export function SpecialText({
     }
 
     return () => {
+      clearStartTimeout();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
