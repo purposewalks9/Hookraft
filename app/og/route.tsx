@@ -57,7 +57,7 @@ export async function GET(request: Request) {
               <div tw="text-zinc-50 flex text-7xl font-medium tracking-tight">
                 {title || siteConfig.name}
               </div>
-              <div tw="text-zinc-400 text-4xl flex mt-10">
+              <div tw="text-zinc-400 text-4xl flex mt-10 tracking-tight">
                 {description || siteConfig.description}
               </div>
             </div>
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
               <div tw="text-zinc-50 flex text-7xl font-medium tracking-tight">
                 {siteConfig.name}
               </div>
-              <div tw="text-zinc-400 text-4xl flex mt-10">
+              <div tw="text-zinc-400 text-4xl flex mt-10 tracking-tight">
                 {siteConfig.description}
               </div>
             </div>

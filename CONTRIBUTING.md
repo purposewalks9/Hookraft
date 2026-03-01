@@ -146,6 +146,8 @@ import ExampleComponent from "@/components/example-component";
 
 ## Props
 
+
+```tsx
 <PropsTable
   data={[
     {
