@@ -76,7 +76,7 @@ export function LabelInput({
     <div className={cn("group relative w-full", className, containerClassName)}>
       <input
         className={cn(
-          "block outline-none peer text-primary w-full px-3.5 h-10 text-sm rounded-lg border focus:ring-2 dark:bg-neutral-950 dark:border-neutral-700/75",
+          "block outline-none peer text-primary w-full px-3.5 h-10 text-sm rounded-lg border focus:ring-2 dark:bg-neutral-950 dark:border-neutral-700/75 autofill:shadow-[inset_0_0_0px_1000px_var(--color-background)]",
           isPasswordType && "pr-9",
           ringColorMap[ringColor],
         )}
