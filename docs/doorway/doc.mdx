@@ -1,0 +1,146 @@
+
+## Installation
+
+<InstallationTabs item="react-doorway">
+```bash
+pnpm add react-doorway
+```
+</InstallationTabs>
+
+---
+
+## useDoorway
+
+The core hook. Manage all five lifecycle states in one place.
+```tsx
+import { useDoorway } from "react-doorway"
+```
+```tsx
+const door = useDoorway({
+  onEnter:   () => fetchData(),
+  onLoading: () => showSpinner(),
+  onSuccess: () => trackEvent(),
+  onError:   () => alertUser(),
+  onExit:    () => clearData(),
+})
+```
+
+### Full Example
+```tsx
+function CheckoutPage() {
+  const [order, setOrder] = useState(null)
+
+  const door = useDoorway({
+    onEnter: () => door.load(),
+    onLoading: async () => {
+      try {
+        const data = await fetchOrder()
+        setOrder(data)
+        door.succeed()
+      } catch {
+        door.fail()
+      }
+    },
+    onSuccess: () => analytics.track("checkout_viewed"),
+    onError: () => toast.error("Failed to load order"),
+    onExit: () => setOrder(null),
+  })
+
+  return (
+    <div>
+      <button onClick={door.enter}>View Order</button>
+      <button onClick={door.exit}>Close</button>
+
+      {door.is("loading") && <Spinner />}
+      {door.is("success") && <OrderSummary order={order} />}
+      {door.is("error") && <button onClick={door.load}>Retry</button>}
+    </div>
+  )
+}
+```
+
+### Options
+
+<PropsTable
+  data={[
+    { name: "onEnter", type: "() => void", nameDetails: "Fires when you call door.enter()" },
+    { name: "onExit", type: "() => void", nameDetails: "Fires when you call door.exit()" },
+    { name: "onLoading", type: "() => void", nameDetails: "Fires when you call door.load()" },
+    { name: "onSuccess", type: "() => void", nameDetails: "Fires when you call door.succeed()" },
+    { name: "onError", type: "() => void", nameDetails: "Fires when you call door.fail()" },
+  ]}
+/>
+
+### Returns
+
+<PropsTable
+  data={[
+    { name: "status", type: "DoorwayStatus", nameDetails: "Current state: idle | enter | loading | success | error" },
+    { name: "is(status)", type: "(s: DoorwayStatus) => boolean", nameDetails: "Check current state" },
+    { name: "enter()", type: "() => void", nameDetails: "Transition to enter" },
+    { name: "exit()", type: "() => void", nameDetails: "Transition to idle" },
+    { name: "load()", type: "() => void", nameDetails: "Transition to loading" },
+    { name: "succeed()", type: "() => void", nameDetails: "Transition to success" },
+    { name: "fail()", type: "() => void", nameDetails: "Transition to error" },
+    { name: "reset()", type: "() => void", nameDetails: "Reset without firing onExit" },
+  ]}
+/>
+
+---
+
+## Doorway Component
+
+The declarative JSX wrapper. Wrap your components and declare lifecycle logic inline — no hook required for simple cases.
+```tsx
+import { Doorway } from "react-doorway"
+```
+```tsx
+<Doorway
+  when={isOpen}
+  onEnter={() => fetchData()}
+  onExit={() => clearData()}
+  fallback={<p>Nothing here yet</p>}
+>
+  <Modal />
+</Doorway>
+```
+
+### With Status States
+
+Combine with `useDoorway` for full lifecycle control:
+```tsx
+function App() {
+  const door = useDoorway({
+    onEnter:   () => door.load(),
+    onLoading: () => fetchData().then(door.succeed).catch(door.fail),
+    onExit:    () => clearData(),
+  })
+
+  return (
+    <>
+      <button onClick={door.enter}>Open</button>
+
+      <Doorway when={door.status !== "idle" ? door.status : false}>
+        {door.is("loading") && <Spinner />}
+        {door.is("success") && <Content />}
+        {door.is("error") && <Error />}
+      </Doorway>
+    </>
+  )
+}
+```
+
+### Props
+
+<PropsTable
+  data={[
+    { name: "when", type: "boolean | DoorwayStatus", nameDetails: "Controls visibility and fires lifecycle events" },
+    { name: "onEnter", type: "() => void", nameDetails: "Fires when when becomes true or enter" },
+    { name: "onExit", type: "() => void", nameDetails: "Fires when when becomes false or idle" },
+    { name: "onLoading", type: "() => void", nameDetails: "Fires when when becomes loading" },
+    { name: "onSuccess", type: "() => void", nameDetails: "Fires when when becomes success" },
+    { name: "onError", type: "() => void", nameDetails: "Fires when when becomes error" },
+    { name: "fallback", type: "ReactNode", default: "null", nameDetails: "Rendered when not visible" },
+    { name: "children", type: "ReactNode", nameDetails: "Your component" },
+  ]}
+/>

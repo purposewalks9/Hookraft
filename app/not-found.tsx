@@ -3,7 +3,7 @@
 import NumberFlow from "@number-flow/react";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { RichButton } from "@/registry/spell-ui/rich-button";
+import { RichButton } from "@/components/spell-ui/rich-button";
 import Link from "next/link";
 
 export default function NotFound() {

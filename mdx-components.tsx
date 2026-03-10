@@ -1,6 +1,4 @@
 import type { MDXComponents } from "mdx/types";
-import { DemoCanvas, DemoCode, DemoPreview } from "./components/demo-canvas";
-import { RegistryItemHeader } from "./components/registry-item-header";
 import { CopyCodeButton } from "./components/copy-code-button";
 import { InstallationTabs } from "./components/installation-tabs";
 import { PropsTable } from "./components/props-table";
@@ -8,10 +6,6 @@ import { PropsTable } from "./components/props-table";
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     ...components,
-    DemoCanvas,
-    DemoPreview,
-    DemoCode,
-    RegistryItemHeader,
     InstallationTabs,
     PropsTable,
     h2: ({ children, ...props }) => {

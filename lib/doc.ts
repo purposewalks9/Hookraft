@@ -1,39 +1,8 @@
 import { basicDoc } from "@/basic-doc";
-import { getRegistry } from "./registry";
-import { DocItem, DocSchema, RegistryItem } from "./types";
+import { DocSchema } from "./types";
 
-const transformRegistryItemToDocItem = (item: RegistryItem): DocItem => {
-  return {
-    id: item.name,
-    title: item.title,
-    description: item.description,
-    meta: item.meta,
-  };
-};
-
-const filterRegistryItems = (items: RegistryItem[]) => {
-  const componentItems = items.filter(
-    (item) => item.type === "registry:component",
-  );
-
-  return {
-    componentItems,
-  };
-};
-
-export const getDocSchema = async () => {
-  const { items } = await getRegistry();
-  const { componentItems } = filterRegistryItems(items);
-
-  const schema: DocSchema = [
-    ...basicDoc,
-    {
-      title: "Components",
-      items: componentItems.map(transformRegistryItemToDocItem),
-    },
-  ];
-
-  return schema;
+export const getDocSchema = async (): Promise<DocSchema> => {
+  return basicDoc;
 };
 
 export const allDocItems = async () => {

@@ -28,16 +28,10 @@ export default function SiteHeader({ docSchema }: { docSchema?: DocSchema }) {
               Docs
             </Link>
             <Link
-              href="/docs/components"
+              href="/docs/hooks"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Components
-            </Link>
-            <Link
-              href="/docs/mcp"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              MCP
+              Hooks
             </Link>
             <Link
               href="#"

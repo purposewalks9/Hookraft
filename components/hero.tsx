@@ -1,34 +1,10 @@
-import { BlurReveal } from "@/registry/spell-ui/blur-reveal";
-import { PerspectiveBook } from "@/registry/spell-ui/perspective-book";
-import { RichButton } from "@/registry/spell-ui/rich-button";
-import { BookOpen } from "lucide-react";
+import { BlurReveal } from "@/components/spell-ui/blur-reveal";
+import { RichButton } from "@/components/spell-ui/rich-button";
 import Link from "next/link";
-import { TextMarquee } from "@/registry/spell-ui/text-marquee";
-import SpotifyCardCarouselDemo from "@/docs/spotify-card/demo-carousel";
-import { Demo as ColorSelectorDemo } from "@/docs/color-selector/demo";
-import { Demo as MarqueeDemo } from "@/docs/marquee/demo";
-import { Demo as AnimatedCheckboxDemo } from "@/docs/animated-checkbox/demo";
-import { ShimmerText } from "@/registry/spell-ui/shimmer-text";
-
 export function Hero() {
   return (
     <div className="flex flex-col items-center w-full pt-6 pb-12 md:pt-14 md:pb-24 gap-8 md:gap-16 px-4">
-      {/* To hide Product Hunt banner: (1) remove the <a> block below, (2) replace this div's className with: flex flex-col items-center w-full py-12 md:py-24 gap-8 md:gap-16 px-4 */}
       <div className="flex flex-col items-center text-center gap-6 max-w-[700px]">
-        <a
-          href="https://www.producthunt.com/products/spell-ui?utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-spell-ui"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="transition-opacity hover:opacity-80"
-        >
-          <img
-            alt="Spell UI - Refined UI components for Design Engineers | Product Hunt"
-            width={250}
-            height={54}
-            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1091005&theme=dark&t=1772806141498"
-            className="h-10 w-[210px]"
-          />
-        </a>
         <BlurReveal letterSpacing="-0.020em" className="font-medium text-3xl md:text-4xl lg:text-5xl tracking-tight">
           Refined UI components for Design Engineers
         </BlurReveal>
@@ -47,79 +23,6 @@ export function Hero() {
               Components
             </Link>
           </RichButton>
-        </div>
-      </div>
-
-      {/* Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 grid-flow-dense gap-4 w-full max-w-[1400px]">
-        <div className="col-span-1 md:col-span-2 row-span-1 md:row-span-2 rounded-2xl border shadow-inner min-h-[300px] md:min-h-[400px] flex flex-col p-4">
-          <div className="flex-1 flex items-center justify-center">
-            <TextMarquee
-              height={300}
-              speed={1}
-              prefix={
-                <span className="text-2xl md:text-3xl text-muted-foreground/75 font-medium">
-                  yourwebsite.com/
-                </span>
-              }
-            >
-              <p className="text-2xl md:text-3xl font-medium">emily</p>
-              <p className="text-2xl md:text-3xl font-medium">james</p>
-              <p className="text-2xl md:text-3xl font-medium">dennis</p>
-              <p className="text-2xl md:text-3xl font-medium">max</p>
-              <p className="text-2xl md:text-3xl font-medium">michele</p>
-              <p className="text-2xl md:text-3xl font-medium">adgv</p>
-              <p className="text-2xl md:text-3xl font-medium">tomm</p>
-              <p className="text-2xl md:text-3xl font-medium">hugh</p>
-              <p className="text-2xl md:text-3xl font-medium">alex</p>
-            </TextMarquee>
-          </div>
-          <Link href="/docs/text-marquee" className="text-sm leading-4 text-muted-foreground hover:text-foreground transition-colors">Text Marquee</Link>
-        </div>
-        <div className="col-span-1 row-span-1 md:row-span-2 lg:col-start-4 lg:row-start-2 rounded-2xl border shadow-inner min-h-[300px] md:min-h-[400px] flex flex-col p-4">
-          <div className="flex-1 flex items-center justify-center">
-            <PerspectiveBook>
-              <div className="flex flex-col gap-4">
-                <h1 className="font-semibold leading-5">
-                  Your complete platform for the Design.
-                </h1>
-                <BookOpen className="size-5" />
-              </div>
-            </PerspectiveBook>
-          </div>
-          <Link href="/docs/perspective-book" className="text-sm leading-4 text-muted-foreground hover:text-foreground transition-colors">Perspective Book</Link>
-        </div>
-        <div className="col-span-1 rounded-2xl border shadow-inner min-h-[200px] md:min-h-[240px] flex flex-col p-4">
-          <div className="flex-1 flex items-center justify-center">
-            <ShimmerText className="text-lg font-medium" duration={1}>
-              Thinking longer...
-            </ShimmerText>
-          </div>
-          <Link href="/docs/shimmer-text" className="text-sm leading-4 text-muted-foreground hover:text-foreground transition-colors">Shimmer Text</Link>
-        </div>
-        <div className="col-span-1 rounded-2xl border shadow-inner min-h-[200px] md:min-h-[240px] flex flex-col p-4">
-          <div className="flex-1 flex items-center justify-center">
-            <AnimatedCheckboxDemo />
-          </div>
-          <Link href="/docs/animated-checkbox" className="text-sm leading-4 text-muted-foreground hover:text-foreground transition-colors">Animated Checkbox</Link>
-        </div>
-        <div className="col-span-1 rounded-2xl border shadow-inner min-h-[200px] md:min-h-[240px] flex flex-col p-4 overflow-hidden">
-          <div className="flex-1 flex items-center justify-center">
-            <MarqueeDemo />
-          </div>
-          <Link href="/docs/marquee" className="text-sm leading-4 text-muted-foreground hover:text-foreground transition-colors">Marquee</Link>
-        </div>
-        <div className="col-span-1 rounded-2xl border shadow-inner min-h-[200px] md:min-h-[240px] flex flex-col p-4">
-          <div className="flex-1 flex items-center justify-center">
-            <ColorSelectorDemo />
-          </div>
-          <Link href="/docs/color-selector" className="text-sm leading-4 text-muted-foreground hover:text-foreground transition-colors">Color Selector</Link>
-        </div>
-        <div className="col-span-1 md:col-span-2 rounded-2xl border shadow-inner min-h-[200px] md:min-h-[240px] flex flex-col p-4">
-          <div className="flex-1 flex items-center justify-center">
-            <SpotifyCardCarouselDemo />
-          </div>
-          <Link href="/docs/spotify-card" className="text-sm leading-4 text-muted-foreground hover:text-foreground transition-colors">Spotify Card</Link>
         </div>
       </div>
     </div>

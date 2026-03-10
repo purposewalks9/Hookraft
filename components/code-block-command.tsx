@@ -11,90 +11,50 @@ import { cn } from "@/lib/utils";
 interface CodeBlockCommandProps {
   item: string;
   className?: string;
-  mcp?: boolean;
 }
 
-export function CodeBlockCommand(
-  { item, className, mcp = false }: CodeBlockCommandProps,
-) {
+export function CodeBlockCommand({ item, className }: CodeBlockCommandProps) {
   const [config, setConfig] = useConfig();
   const { isCopied, copyToClipboard } = useCopyToClipboard();
 
   const commands = React.useMemo(() => {
-    if (mcp) {
-      return {
-        pnpm: `pnpm dlx shadcn@latest mcp init`,
-        npm: `npx shadcn@latest mcp init`,
-        yarn: `yarn dlx shadcn@latest mcp init`,
-        bun: `bunx --bun shadcn@latest mcp init`,
-      };
-    }
     return {
-      pnpm: `pnpm dlx shadcn@latest add @spell/${item}`,
-      npm: `npx shadcn@latest add @spell/${item}`,
-      yarn: `yarn dlx shadcn@latest add @spell/${item}`,
-      bun: `bunx --bun shadcn@latest add @spell/${item}`,
+      pnpm: `pnpm add ${item}`,
+      npm: `npm install ${item}`,
+      yarn: `yarn add ${item}`,
+      bun: `bun add ${item}`,
     };
-  }, [item, mcp]);
+  }, [item]);
 
   const copyCommand = React.useCallback(() => {
-    const command = commands[config.packageManager];
-    if (command) {
-      copyToClipboard(command);
-    }
+    const command = commands[config.packageManager as keyof typeof commands];
+    if (command) copyToClipboard(command);
   }, [config.packageManager, commands, copyToClipboard]);
 
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-md border bg-muted/30",
-        className,
-      )}
-    >
+    <div className={cn("relative overflow-hidden rounded-md border bg-muted/30", className)}>
       <Tabs
         value={config.packageManager}
-        onValueChange={(value) =>
-          setConfig({
-            ...config,
-            packageManager: value as "pnpm" | "npm" | "yarn" | "bun",
-          })}
+        onValueChange={(value) => setConfig({ ...config, packageManager: value as "pnpm" | "npm" | "yarn" | "bun" })}
         className="gap-0"
       >
         <div className="relative flex items-center gap-2 border-b px-4 py-2.5 bg-background/50">
-          <Terminal
-            className="size-3.5 text-muted-foreground"
-            strokeWidth={2}
-          />
+          <Terminal className="size-3.5 text-muted-foreground" strokeWidth={2} />
           <TabsList className="h-auto bg-transparent p-0" translate="no">
-            <TabsTrigger
-              value="pnpm"
-              className="h-auto rounded-sm px-2 py-1 text-xs font-mono data-[state=active]:bg-background data-[state=active]:border data-[state=active]:border-border"
-            >
-              pnpm
-            </TabsTrigger>
-            <TabsTrigger
-              value="npm"
-              className="h-auto rounded-sm px-2 py-1 text-xs font-mono data-[state=active]:bg-background data-[state=active]:border data-[state=active]:border-border"
-            >
-              npm
-            </TabsTrigger>
-            <TabsTrigger
-              value="yarn"
-              className="h-auto rounded-sm px-2 py-1 text-xs font-mono data-[state=active]:bg-background data-[state=active]:border data-[state=active]:border-border"
-            >
-              yarn
-            </TabsTrigger>
-            <TabsTrigger
-              value="bun"
-              className="h-auto rounded-sm px-2 py-1 text-xs font-mono data-[state=active]:bg-background data-[state=active]:border data-[state=active]:border-border"
-            >
-              bun
-            </TabsTrigger>
+            {["pnpm", "npm", "yarn", "bun"].map((pm) => (
+              <TabsTrigger
+                key={pm}
+                value={pm}
+                className="h-auto rounded-sm px-2 py-1 text-xs font-mono data-[state=active]:bg-background data-[state=active]:border data-[state=active]:border-border"
+              >
+                {pm}
+              </TabsTrigger>
+            ))}
           </TabsList>
           <Button
             size="icon"
             variant="ghost"
-            className="absolute right-2 size-7 opacity-70 hover:bg-transparent dark:hover:bg-transparent cursor-pointer"
+            className="absolute right-2 size-7 opacity-70 hover:bg-transparent cursor-pointer"
             onClick={copyCommand}
           >
             <span className="sr-only">Copy</span>

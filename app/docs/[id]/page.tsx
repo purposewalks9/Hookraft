@@ -1,4 +1,4 @@
-import { Badge } from "@/registry/spell-ui/badge";
+import { Badge } from "@/components/spell-ui/badge";
 import { allDocItems, getDoc, getDocSchema } from "@/lib/doc";
 import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
@@ -9,7 +9,6 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { DocCopySection } from "@/components/doc-copy-section";
 import { siteConfig } from "@/lib/config";
 import { absoluteUrl, buildOgUrl, constructMetadata } from "@/lib/utils";
 import {
@@ -135,7 +134,6 @@ export default async function DocPage({
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <DocCopySection content={rawContent} url={`/docs/${id}`} />
                 <Button
                   variant="secondary"
                   className="rounded-full size-8 shadow-none active:scale-[0.97] will-change-transform ease-out duration-150 transition-transform"
