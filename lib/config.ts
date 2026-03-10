@@ -3,7 +3,7 @@ export const siteConfig = {
   url: "https://hookraft.dev",
   ogImage: "https://hookraft.dev/og",
   description:
-    "Beautiful, sophisticated UI components designed for modern React and Tailwind CSS applications.",
+    "Hookraft is a React library that provides declarative lifecycle hooks for your views. It allows you to connect side effects to your component states, making it easier to manage logic when components appear and disappear.",
   links: {
     tom: "https://x.com/purpose_walker",
     x: "https://x.com/intent/follow?screen_name=purpose_walker",
