@@ -1,15 +1,14 @@
 export const siteConfig = {
-  name: "Hookcraft",
-  url: "https://hookcraft.dev",
-  ogImage: "https://hookcraft.dev/og",
+  name: "Hookraft",
+  url: "https://hookraft.dev",
+  ogImage: "https://hookraft.dev/og",
   description:
     "Beautiful, sophisticated UI components designed for modern React and Tailwind CSS applications.",
   links: {
-    tom: "https://x.com/tomm_ui",
-    x: "https://x.com/intent/follow?screen_name=tomm_ui",
+    tom: "https://x.com/purpose_walker",
+    x: "https://x.com/intent/follow?screen_name=purpose_walker",
     discord: "https://discord.gg/CxzqwQ2EAa",
-    github: "https://github.com/xxtomm/hookcraft",
-    // instagram: "https://instagram.com/spellui/",
+    github: "https://github.com/purposewalks9/Hookraft.git",
   },
   keywords: [
     "React",

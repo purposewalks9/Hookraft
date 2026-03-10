@@ -128,9 +128,6 @@ importers:
       react-dom:
         specifier: 19.1.2
         version: 19.1.2(react@19.1.2)
-      react-doorway:
-        specifier: ^0.1.0
-        version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       react-hotkeys-hook:
         specifier: ^5.2.1
         version: 5.2.4(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
@@ -3414,12 +3411,6 @@ packages:
     resolution: {integrity: sha512-dEoydsCp50i7kS1xHOmPXq4zQYoGWedUsvqv9H6zdif2r7yLHygyfP9qou71TulRN0d6ng9EbRVsQhSqfUc19g==}
     peerDependencies:
       react: ^19.1.2
-
-  react-doorway@0.1.0:
-    resolution: {integrity: sha512-1w6HLcE9vOP++uexkECXFvbdS32pGiPvOIl1D8L3/3Cyp92W4IFF5Me1kjHkBJ+ZKgwqFnUfnpc0ZwVP7e/CYQ==}
-    peerDependencies:
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
 
   react-hotkeys-hook@5.2.4:
     resolution: {integrity: sha512-BgKg+A1+TawkYluh5Bo4cTmcgMN5L29uhJbDUQdHwPX+qgXRjIPYU5kIDHyxnAwCkCBiu9V5OpB2mpyeluVF2A==}
@@ -7647,11 +7638,6 @@ snapshots:
     dependencies:
       react: 19.1.2
       scheduler: 0.26.0
-
-  react-doorway@0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2):
-    dependencies:
-      react: 19.1.2
-      react-dom: 19.1.2(react@19.1.2)
 
   react-hotkeys-hook@5.2.4(react-dom@19.1.2(react@19.1.2))(react@19.1.2):
     dependencies:

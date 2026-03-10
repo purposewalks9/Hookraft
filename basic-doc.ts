@@ -18,6 +18,11 @@ export const basicDoc: DocSchema = [
         id: "doorway",
         description: "Connect conditional rendering to side effects.",
       },
+      {
+        title: "UseQueue",
+        id: "use-queue",
+        description: "Manage and process async task queues in React.",
+      },
     ],
-  },
+  }
 ];

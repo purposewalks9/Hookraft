@@ -108,7 +108,7 @@ export function DocsTableOfContents({
           className="transition-colors hover:text-foreground text-muted-foreground [&_svg]:size-3 flex gap-1.5 items-center"
         >
           <SiX className="pl-[1px]" />
-          <span>Follow Purpose walker</span>
+          <span>purpose_walker</span>
         </Link>
       </div>
     </div>

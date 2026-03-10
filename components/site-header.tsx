@@ -1,7 +1,7 @@
 import { DocSchema } from "@/lib/types";
 import { SearchForm } from "./command-menu";
 import { MobileNav } from "./mobile-nav";
-import { SpellLogo } from "./spell-logo";
+import { HookLogo } from "./hook-logo";
 import { ThemeToggle } from "./theme-toggle";
 import { GithubStars } from "./github-stars";
 import Link from "next/link";
@@ -14,10 +14,7 @@ export default function SiteHeader({ docSchema }: { docSchema?: DocSchema }) {
           <div className="flex items-center gap-3">
             {docSchema && <MobileNav docSchema={docSchema} className="md:hidden" />}
             <Link href="/" className="flex items-center gap-1.5">
-              <SpellLogo size={24} />
-              <h1 className="hidden md:inline font-medium" translate="no">
-                Spell UI
-              </h1>
+              <HookLogo size={100} />
             </Link>
           </div>
           <nav className="hidden md:flex items-center gap-4 md:gap-6 text-sm">

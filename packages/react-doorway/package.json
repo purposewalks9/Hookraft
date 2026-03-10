@@ -1,0 +1,53 @@
+{
+  "name": "@hookraft/doorway",
+  "version": "0.1.1",
+  "description": "Connect conditional rendering to side effects. Lifecycle hooks for your view states.",
+  "author": "purposewalker",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "pub:release": "npm publish --access public"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.3"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "lifecycle",
+    "conditional-rendering",
+    "state",
+    "side-effects",
+    "doorway"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/purposewalks9/Hookraft"
+  },
+  "homepage": "https://hookraft.dev"
+}

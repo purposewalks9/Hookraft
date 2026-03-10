@@ -1,0 +1,115 @@
+## Installation
+
+<InstallationTabs item="@hookraft/usequeue">
+```bash
+pnpm add @hookraft/usequeue
+```
+</InstallationTabs>
+
+## Usage
+```tsx
+import { useQueue } from "@hookraft/usequeue"
+```
+```tsx
+const queue = useQueue({
+  onProcess: async (item) => await sendEmail(item),
+  onSuccess: (item) => toast.success(`Done: ${item.email}`),
+  onError: (item, error) => toast.error(`Failed: ${item.email}`),
+  onDone: () => toast.success("All done!"),
+  concurrency: 1,
+})
+```
+
+## Full Example
+```tsx
+function BulkEmailSender() {
+  const queue = useQueue({
+    onProcess: async (item) => await sendEmail(item.email),
+    onSuccess: (item) => console.log(`Sent to ${item.email}`),
+    onError: (item, err) => console.error(`Failed: ${item.email}`, err),
+    onDone: () => console.log("All emails sent!"),
+  })
+
+  return (
+    <div>
+      <button onClick={() => queue.add({ email: "a@b.com" })}>Add Email</button>
+      <button onClick={queue.start} disabled={queue.is("running")}>Start</button>
+      <button onClick={queue.pause} disabled={!queue.is("running")}>Pause</button>
+      <button onClick={queue.clear}>Clear</button>
+
+      <p>Pending: {queue.pending.length}</p>
+      <p>Processing: {queue.processing.length}</p>
+      <p>Completed: {queue.completed.length}</p>
+      <p>Failed: {queue.failed.length}</p>
+
+      <Queue when={queue.status} onDone={() => console.log("rendered done state")}>
+        <p>Queue is active</p>
+      </Queue>
+    </div>
+  )
+}
+```
+
+## Options
+
+<PropsTable
+  data={[
+    { name: "onProcess", type: "(item: T) => Promise<void>", nameDetails: "Called for each item in the queue" },
+    { name: "onSuccess", type: "(item: T) => void", nameDetails: "Fires after an item processes successfully" },
+    { name: "onError", type: "(item: T, error: unknown) => void", nameDetails: "Fires when an item fails" },
+    { name: "onDone", type: "() => void", nameDetails: "Fires when the entire queue is finished" },
+    { name: "concurrency", type: "number", default: "1", nameDetails: "How many items to process at the same time" },
+  ]}
+/>
+
+## Returns
+
+<PropsTable
+  data={[
+    { name: "status", type: "QueueStatus", nameDetails: "Current state: idle | running | paused | done" },
+    { name: "is(status)", type: "(s: QueueStatus) => boolean", nameDetails: "Check current state" },
+    { name: "add(item)", type: "(item: T) => string", nameDetails: "Add an item to the queue, returns its id" },
+    { name: "start()", type: "() => void", nameDetails: "Start processing the queue" },
+    { name: "pause()", type: "() => void", nameDetails: "Pause processing" },
+    { name: "clear()", type: "() => void", nameDetails: "Clear all items and reset" },
+    { name: "reset()", type: "() => void", nameDetails: "Reset all items back to pending" },
+    { name: "items", type: "QueueItem<T>[]", nameDetails: "All items in the queue" },
+    { name: "pending", type: "QueueItem<T>[]", nameDetails: "Items waiting to be processed" },
+    { name: "processing", type: "QueueItem<T>[]", nameDetails: "Items currently being processed" },
+    { name: "completed", type: "QueueItem<T>[]", nameDetails: "Successfully processed items" },
+    { name: "failed", type: "QueueItem<T>[]", nameDetails: "Failed items" },
+  ]}
+/>
+
+---
+
+## Queue Component
+
+The declarative JSX wrapper for queue states.
+```tsx
+import { Queue } from "@hookraft/usequeue"
+```
+```tsx
+<Queue
+  when={queue.status}
+  onRunning={() => console.log("started")}
+  onDone={() => console.log("finished")}
+  fallback={<p>Queue is idle</p>}
+>
+  <p>Queue is active</p>
+</Queue>
+```
+
+## Props
+
+<PropsTable
+  data={[
+    { name: "when", type: "QueueStatus", nameDetails: "Current queue status from useQueue" },
+    { name: "onRunning", type: "() => void", nameDetails: "Fires when queue starts running" },
+    { name: "onPaused", type: "() => void", nameDetails: "Fires when queue is paused" },
+    { name: "onDone", type: "() => void", nameDetails: "Fires when queue finishes" },
+    { name: "onIdle", type: "() => void", nameDetails: "Fires when queue goes idle" },
+    { name: "fallback", type: "ReactNode", default: "null", nameDetails: "Rendered when queue is idle" },
+    { name: "children", type: "ReactNode", nameDetails: "Rendered when queue is running, paused or done" },
+  ]}
+/>
