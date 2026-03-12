@@ -13,7 +13,7 @@ export const siteConfig = {
   keywords: [
     "React",
     "Tailwind CSS",
-    "Motion",
+    "Hooks",
     "Landing Page",
     "Components",
     "Next.js",

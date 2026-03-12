@@ -5,7 +5,7 @@ type Config = {
   packageManager: "npm" | "yarn" | "pnpm" | "bun";
 };
 
-const configAtom = atomWithStorage<Config>("spell-ui-config", {
+const configAtom = atomWithStorage<Config>("hookraft-config", {
   packageManager: "pnpm",
 });
 
