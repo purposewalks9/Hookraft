@@ -119,7 +119,7 @@ export default function Page() {
 }`;
 
 // Wraps user code in a self-contained HTML page that runs in the iframe
-function buildPreviewHTML(code: string): string {
+function buildPreviewHTML(code: string, theme: string = "dark"): string {
   const cleaned = code
     .replace(/^import\s+.*?\s+from\s+['"]react['"]\s*;?\s*$/gm, "")
     .replace(/^import\s+.*?\s+from\s+['"]react-dom['"]\s*;?\s*$/gm, "")
@@ -131,7 +131,7 @@ function buildPreviewHTML(code: string): string {
   const mountTarget = namedFn ?? "__App";
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="${theme === 'light' ? '' : 'dark'}">
 <head>
   <meta charset="UTF-8" />
   <script src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
@@ -140,7 +140,7 @@ function buildPreviewHTML(code: string): string {
   <script src="https://cdn.tailwindcss.com"><\/script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #09090b; }
+    body { background: ${theme === "light" ? "#ffffff" : "#09090b"}; color: ${theme === "light" ? "#0a0a0a" : "#fafafa"}; }
     #error {
       display: none; padding: 16px; color: #f87171;
       font-family: monospace; font-size: 12px; white-space: pre-wrap;
@@ -209,7 +209,7 @@ type Tab = "editor" | "preview";
 
 export function CodePlayground() {
   const [code, setCode] = useState(DEFAULT_CODE);
-  const [previewHTML, setPreviewHTML] = useState(() => buildPreviewHTML(DEFAULT_CODE));
+  const [previewHTML, setPreviewHTML] = useState(() => buildPreviewHTML(DEFAULT_CODE, "dark"));
   const [activeTab, setActiveTab] = useState<Tab>("editor");
   const [isRunning, setIsRunning] = useState(false);
   const { resolvedTheme } = useTheme();
@@ -219,17 +219,18 @@ export function CodePlayground() {
     if (monacoRef.current) {
       monacoRef.current.editor.setTheme(resolvedTheme === "light" ? "light" : "vs-dark");
     }
+    setPreviewHTML(buildPreviewHTML(code, resolvedTheme ?? "dark"));
   }, [resolvedTheme]);
 
   const runCode = useCallback(() => {
     setIsRunning(true);
-    setPreviewHTML(buildPreviewHTML(code));
+    setPreviewHTML(buildPreviewHTML(code, resolvedTheme ?? "dark"));
     setActiveTab("preview");
     setTimeout(() => setIsRunning(false), 600);
   }, [code]);
 
   return (
-    <section className="w-full py-20 px-4">
+    <section className="w-full px-4">
       <div className="max-w-6xl mx-auto">
         <div className="rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-2xl">
 
@@ -319,7 +320,7 @@ export function CodePlayground() {
             <div className="hidden md:block w-px bg-neutral-200 dark:bg-neutral-800" />
             <div className={`w-full md:w-1/2 h-full bg-white dark:bg-neutral-950 ${activeTab === "editor" ? "hidden md:block" : "block"}`}>
               <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900">
-                <span className="w-2 h-2 rounded-full bg-yellow-600 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                 <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400">Preview</span>
               </div>
               <iframe
