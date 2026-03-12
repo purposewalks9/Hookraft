@@ -35,7 +35,7 @@ const dynaPuff = DynaPuff({
 });
 
 export const metadata: Metadata = constructMetadata({
-  title: "Spell UI",
+  title: "Hookraft",
 });
 
 export default async function RootLayout({

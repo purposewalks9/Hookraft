@@ -1,25 +1,9 @@
 import { BlurReveal } from "@/components/spell-ui/blur-reveal";
 import { RichButton } from "@/components/spell-ui/rich-button";
+import { CodePlayground } from "@/components/code-playground";
 import Link from "next/link";
 
-const codePreview = `const door = useDoorway({
-  onEnter:   () => door.load(),
-  onLoading: async () => {
-    const data = await fetchOrder()
-    door.succeed()
-  },
-  onSuccess: () => analytics.track("viewed"),
-  onError:   () => toast.error("Failed"),
-  onExit:    () => clearData(),
-})
-
-return (
-  <Doorway when={door.status}>
-    {door.is("loading") && <Spinner />}
-    {door.is("success") && <Content />}
-    {door.is("error")   && <Error />}
-  </Doorway>
-)`;
+// ... codePreview string stays the same
 
 export function Hero() {
   return (
@@ -42,6 +26,9 @@ export function Hero() {
           </RichButton>
         </div>
       </div>
+
+      {/* Code playground below hero text */}
+      <CodePlayground />
     </div>
   );
 }

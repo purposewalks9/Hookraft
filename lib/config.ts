@@ -8,7 +8,7 @@ export const siteConfig = {
     tom: "https://x.com/purpose_walker",
     x: "https://x.com/intent/follow?screen_name=purpose_walker",
     discord: "https://discord.gg/CxzqwQ2EAa",
-    github: "https://github.com/purposewalks9/Hookraft.git",
+    github: "https://github.com/purposewalks9/Hookraft",
   },
   keywords: [
     "React",
