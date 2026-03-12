@@ -1,7 +1,8 @@
 "use client";
 
 import Editor from "@monaco-editor/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useTheme } from "next-themes";
 
 const DEFAULT_CODE = `import { useState } from "react";
 import { useDoorway, Doorway } from "@hookraft/doorway";
@@ -211,6 +212,14 @@ export function CodePlayground() {
   const [previewHTML, setPreviewHTML] = useState(() => buildPreviewHTML(DEFAULT_CODE));
   const [activeTab, setActiveTab] = useState<Tab>("editor");
   const [isRunning, setIsRunning] = useState(false);
+  const { resolvedTheme } = useTheme();
+  const monacoRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (monacoRef.current) {
+      monacoRef.current.editor.setTheme(resolvedTheme === "light" ? "light" : "vs-dark");
+    }
+  }, [resolvedTheme]);
 
   const runCode = useCallback(() => {
     setIsRunning(true);
@@ -235,7 +244,7 @@ export function CodePlayground() {
             <button
               onClick={runCode}
               disabled={isRunning}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-black text-xs font-semibold transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white hover:bg-emerald-400 disabled:opacity-60 text-black text-xs font-semibold transition-all"
             >
               {isRunning ? (
                 <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
@@ -274,9 +283,12 @@ export function CodePlayground() {
               <Editor
                 height="100%"
                 language="typescript"
-                theme="vs-dark"
+                theme={resolvedTheme === "light" ? "light" : "vs-dark"}
                 value={code}
                 onChange={(val) => setCode(val ?? "")}
+                onMount={(_editor, monaco) => {
+                  monacoRef.current = monaco;
+                }}
                 beforeMount={(monaco) => {
                   monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
                     noSemanticValidation: true,
@@ -307,7 +319,7 @@ export function CodePlayground() {
             <div className="hidden md:block w-px bg-neutral-800" />
             <div className={`w-full md:w-1/2 h-full bg-neutral-950 ${activeTab === "editor" ? "hidden md:block" : "block"}`}>
               <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-800 bg-neutral-900">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
                 <span className="text-xs font-mono text-neutral-400">Preview</span>
               </div>
               <iframe
