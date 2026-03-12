@@ -244,7 +244,7 @@ export function CodePlayground() {
             <button
               onClick={runCode}
               disabled={isRunning}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-black text-xs font-semibold transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white hover:bg-emerald-400 disabled:opacity-60 text-black text-xs font-semibold transition-all"
             >
               {isRunning ? (
                 <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
@@ -319,7 +319,7 @@ export function CodePlayground() {
             <div className="hidden md:block w-px bg-neutral-200 dark:bg-neutral-800" />
             <div className={`w-full md:w-1/2 h-full bg-white dark:bg-neutral-950 ${activeTab === "editor" ? "hidden md:block" : "block"}`}>
               <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-yellow-600 animate-pulse" />
                 <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400">Preview</span>
               </div>
               <iframe
