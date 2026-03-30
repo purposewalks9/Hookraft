@@ -1,0 +1,243 @@
+## Installation
+
+<InstallationTabs item="@hookraft/usepipeline">
+```bash
+pnpm add @hookraft/usepipeline
+```
+</InstallationTabs>
+
+## Usage
+```tsx
+import { usePipeline } from "@hookraft/usepipeline"
+```
+```tsx
+const pipeline = usePipeline({
+  steps: [
+    {
+      id: "validate",
+      run: async () => await validateCart(),
+      rollback: async () => await restoreCart(),
+    },
+    {
+      id: "payment",
+      run: async () => await chargePayment(),
+      rollback: async () => await refundPayment(),
+      dependsOn: ["validate"],
+    },
+    {
+      id: "create-order",
+      run: async () => await createOrder(),
+      rollback: async () => await cancelOrder(),
+      dependsOn: ["payment"],
+    },
+  ],
+  onStepComplete: (id) => console.log(`${id} done`),
+  onStepFailed: (id, err) => console.log(`${id} failed`, err),
+  onComplete: (results) => console.log("All done", results),
+  onRollback: () => console.log("Rolled back"),
+})
+```
+
+## Full Example
+
+This example shows a real checkout flow — validate cart, charge payment, create order and send email in parallel, then update inventory. Each step has a rollback so if anything fails, everything is cleanly reversed.
+
+```tsx
+function CheckoutFlow() {
+  const pipeline = usePipeline({
+    steps: [
+      // Step 1 — runs first, no dependencies
+      {
+        id: "validate",
+        run: async () => {
+          const res = await fetch("/api/cart/validate")
+          return res.json()
+        },
+        rollback: async () => {
+          await fetch("/api/cart/restore", { method: "POST" })
+        },
+      },
+
+      // Step 2 — only runs after validate completes
+      {
+        id: "payment",
+        run: async (ctx) => {
+          // ctx.results contains results from previous steps
+          const cart = ctx.results["validate"]
+          const res = await fetch("/api/payment/charge", {
+            method: "POST",
+            body: JSON.stringify(cart),
+          })
+          return res.json()
+        },
+        rollback: async (ctx) => {
+          const payment = ctx.results["payment"]
+          await fetch("/api/payment/refund", {
+            method: "POST",
+            body: JSON.stringify(payment),
+          })
+        },
+        dependsOn: ["payment"],
+        retries: 2, // retry up to 2 times before failing
+      },
+
+      // Step 3 — runs after payment, sequential
+      {
+        id: "create-order",
+        run: async (ctx) => {
+          const payment = ctx.results["payment"]
+          const res = await fetch("/api/orders", {
+            method: "POST",
+            body: JSON.stringify(payment),
+          })
+          return res.json()
+        },
+        rollback: async (ctx) => {
+          const order = ctx.results["create-order"]
+          await fetch(`/api/orders/${order.id}/cancel`, { method: "POST" })
+        },
+        dependsOn: ["payment"],
+      },
+
+      // Step 4 — runs in parallel alongside create-order
+      {
+        id: "send-email",
+        run: async (ctx) => {
+          const payment = ctx.results["payment"]
+          await fetch("/api/email/confirmation", {
+            method: "POST",
+            body: JSON.stringify(payment),
+          })
+        },
+        dependsOn: ["payment"],
+        parallel: true, // runs at the same time as create-order
+      },
+
+      // Step 5 — runs after create-order completes
+      {
+        id: "inventory",
+        run: async (ctx) => {
+          const order = ctx.results["create-order"]
+          await fetch("/api/inventory/update", {
+            method: "POST",
+            body: JSON.stringify(order),
+          })
+        },
+        dependsOn: ["create-order"],
+      },
+    ],
+
+    onStepComplete: (id) => console.log(`✓ ${id} complete`),
+    onStepFailed: (id, err) => console.error(`✗ ${id} failed`, err),
+    onStepRollback: (id) => console.log(`↩ rolling back ${id}`),
+    onComplete: (results) => toast("Order placed successfully!"),
+    onFailed: (failedStep, err) => toast(`Failed at ${failedStep}`),
+    onRollback: () => toast("Something went wrong. All changes reversed."),
+  })
+
+  return (
+    <div>
+      {/* Progress bar */}
+      <div style={{ width: `${pipeline.progress}%` }} />
+      <p>{pipeline.progress}% complete</p>
+
+      {/* Currently running step */}
+      {pipeline.current && (
+        <p>Running: {pipeline.current}</p>
+      )}
+
+      {/* Step breakdown */}
+      {pipeline.steps.map((step) => (
+        <div key={step.id}>
+          <span>{step.id}</span>
+          <span>{step.status}</span>
+          {step.status === "failed" && (
+            <button onClick={() => pipeline.retry(step.id)}>
+              Retry
+            </button>
+          )}
+        </div>
+      ))}
+
+      {/* Controls */}
+      <button
+        onClick={pipeline.start}
+        disabled={pipeline.is("running")}
+      >
+        {pipeline.is("running") ? "Processing..." : "Place Order"}
+      </button>
+
+      <button
+        onClick={pipeline.rollback}
+        disabled={!pipeline.is("failed")}
+      >
+        Rollback
+      </button>
+
+      <button onClick={pipeline.reset}>
+        Reset
+      </button>
+    </div>
+  )
+}
+```
+
+## How steps connect
+
+Steps run in the order defined by `dependsOn`. If a step has no `dependsOn` it runs immediately. Steps that share the same `dependsOn` and have `parallel: true` run at the same time.
+
+```
+validate
+   ↓
+payment
+   ↓
+create-order ──(parallel)── send-email
+   ↓
+inventory
+```
+
+Each step receives `ctx.results` — an object containing the return values of all previously completed steps. This lets you pass data from one step to the next without any external state.
+
+## Options
+
+<PropsTable
+  data={[
+    { name: "steps", type: "PipelineStep[]", nameDetails: "Array of steps to run in the pipeline" },
+    { name: "onStepComplete", type: "(id: string, result: unknown) => void", nameDetails: "Fires when a step completes successfully" },
+    { name: "onStepFailed", type: "(id: string, error: unknown) => void", nameDetails: "Fires when a step fails after all retries" },
+    { name: "onStepRollback", type: "(id: string) => void", nameDetails: "Fires when a step starts rolling back" },
+    { name: "onComplete", type: "(results: Record<string, unknown>) => void", nameDetails: "Fires when all steps complete successfully with all results" },
+    { name: "onFailed", type: "(failedStepId: string, error: unknown) => void", nameDetails: "Fires when the pipeline fails with the step that caused it" },
+    { name: "onRollback", type: "() => void", nameDetails: "Fires when rollback of all completed steps finishes" },
+  ]}
+/>
+
+## Step Options
+
+<PropsTable
+  data={[
+    { name: "id", type: "string", nameDetails: "Unique identifier for this step" },
+    { name: "run", type: "(ctx: PipelineContext) => Promise<unknown>", nameDetails: "The async function to execute. Receives results from previous steps via ctx.results" },
+    { name: "rollback", type: "(ctx: PipelineContext) => Promise<void>", nameDetails: "Called in reverse order if the pipeline fails. Use this to undo what run did" },
+    { name: "dependsOn", type: "string[]", nameDetails: "Step IDs that must complete before this step runs" },
+    { name: "parallel", type: "boolean", nameDetails: "If true, runs at the same time as other parallel steps at the same dependency level" },
+    { name: "retries", type: "number", default: "0", nameDetails: "How many times to retry this step before marking it as failed" },
+  ]}
+/>
+
+## Returns
+
+<PropsTable
+  data={[
+    { name: "status", type: "PipelineStatus", nameDetails: "Current pipeline state: idle | running | complete | failed | rollingback | rolledback" },
+    { name: "is(status)", type: "(s: PipelineStatus) => boolean", nameDetails: "Check the current pipeline status" },
+    { name: "steps", type: "PipelineStepState[]", nameDetails: "All steps with their individual status, result, error, and attempt count" },
+    { name: "current", type: "string | null", nameDetails: "The ID of the step currently running" },
+    { name: "progress", type: "number", nameDetails: "Completion percentage from 0 to 100 based on completed steps" },
+    { name: "results", type: "Record<string, unknown>", nameDetails: "Results returned by each completed step keyed by step ID" },
+    { name: "start()", type: "() => Promise<void>", nameDetails: "Start the pipeline from the beginning" },
+    { name: "retry(stepId)", type: "(id: string) => Promise<void>", nameDetails: "Retry a specific failed step and continue the pipeline from there" },
+    { name: "rollback()", type: "() => Promise<void>", nameDetails: "Manually trigger rollback of all completed steps in reverse order" },
+    { name: "reset()", type: "() => void", nameDetails: "Reset the pipeline back to idle with all steps cleared" },
+  ]}
+/>

@@ -1,0 +1,54 @@
+{
+  "name": "@hookraft/useauth",
+  "version": "0.1.2",
+  "description": "Strict, composable authentication hook for React. JWT decoding, brute force protection, bot detection, token refresh, and flexible storage built in.",
+  "author": "virus",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "pub:release": "npm publish --access public"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "auth",
+    "authentication",
+    "jwt",
+    "brute-force",
+    "rate-limit",
+    "lockout"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/purposewalks9/Hookraft"
+  },
+  "homepage": "https://hookraft.site"
+}

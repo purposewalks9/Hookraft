@@ -1,0 +1,230 @@
+## Installation
+
+<InstallationTabs item="@hookraft/useauth">
+```bash
+pnpm add @hookraft/useauth
+```
+</InstallationTabs>
+
+---
+
+## useAuth
+
+The core hook. Handle login, logout, JWT decoding, token refresh, and brute force protection in one place.
+
+```tsx
+import { useAuth } from "@hookraft/useauth"
+```
+```tsx
+const auth = useAuth({
+  onLogin: async (credentials) => await signIn(credentials),
+  onLogout: async () => await signOut(),
+  onRefresh: async () => await refreshToken(),
+  onTokenExpired: () => toast.error("Session expired"),
+  onError: (error) => toast.error("Login failed"),
+  maxAttempts: 5,
+  lockoutDuration: 30,
+  minAttemptInterval: 500,
+  storage: "localStorage",
+  decodeToken: true,
+})
+```
+
+### Full Example
+
+```tsx
+function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+
+  const auth = useAuth({
+    onLogin: async (credentials) => {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify(credentials),
+      })
+      const data = await res.json()
+      return { token: data.token, user: data.user }
+    },
+    onLogout: async () => {
+      await fetch("/api/auth/logout", { method: "POST" })
+    },
+    onRefresh: async () => {
+      const res = await fetch("/api/auth/refresh", { method: "POST" })
+      const data = await res.json()
+      return data.token
+    },
+    onTokenExpired: () => toast.error("Your session expired. Please log in again."),
+    onError: () => toast.error("Invalid credentials"),
+    maxAttempts: 5,
+    lockoutDuration: 30,
+    minAttemptInterval: 500,
+    storage: "localStorage",
+    storageKey: "my_app_token",
+    decodeToken: true,
+  })
+
+  if (auth.is("authenticated")) {
+    return (
+      <div>
+        <p>Welcome, {auth.user?.name}</p>
+        <p>Session expires: {auth.tokenExpiresAt?.toLocaleString()}</p>
+        <button onClick={auth.logout}>Logout</button>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <input
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <input
+        placeholder="Password"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <button
+        onClick={() => auth.login({ email, password })}
+        disabled={auth.is("loading") || auth.is("locked")}
+      >
+        {auth.is("loading") ? "Logging in..." : "Login"}
+      </button>
+
+      {auth.is("error") && (
+        <p>{auth.attempts} failed attempt(s). {5 - auth.attempts} remaining before lockout.</p>
+      )}
+
+      {auth.is("locked") && auth.lockoutReason === "max_attempts" && (
+        <p>Too many failed attempts. Try again in {auth.remainingTime}s</p>
+      )}
+
+      {auth.is("locked") && auth.lockoutReason === "bot_detection" && (
+        <p>Suspicious activity detected. Please slow down.</p>
+      )}
+    </div>
+  )
+}
+```
+
+### Options
+
+<PropsTable
+  data={[
+    { name: "onLogin", type: "(credentials: C) => Promise<{ token: string; user?: U }>", nameDetails: "Called when login is triggered. Return the token and optional user from your backend" },
+    { name: "onLogout", type: "() => Promise<void> | void", nameDetails: "Called when logout is triggered. Use to invalidate the session on your backend" },
+    { name: "onRefresh", type: "() => Promise<string>", nameDetails: "Called 60 seconds before token expiry. Return a new token to silently extend the session" },
+    { name: "onTokenExpired", type: "() => void", nameDetails: "Fires when the token expires and no refresh is available" },
+    { name: "onError", type: "(error: unknown) => void", nameDetails: "Fires when login throws an error" },
+    { name: "decodeToken", type: "boolean", default: "true", nameDetails: "Automatically decode the JWT payload to read exp, sub, iat and custom fields" },
+    { name: "storage", type: "StorageType", default: "localStorage", nameDetails: "Where to persist the token: localStorage, sessionStorage, or memory" },
+    { name: "storageKey", type: "string", default: "hookraft_auth_token", nameDetails: "The key used to store the token in storage" },
+    { name: "maxAttempts", type: "number", default: "5", nameDetails: "Number of failed login attempts before the user is locked out" },
+    { name: "lockoutDuration", type: "number", default: "30", nameDetails: "How long the lockout lasts in seconds" },
+    { name: "minAttemptInterval", type: "number", default: "500", nameDetails: "Minimum milliseconds between login attempts. Faster than this triggers bot detection" },
+  ]}
+/>
+
+### Returns
+
+<PropsTable
+  data={[
+    { name: "status", type: "AuthStatus", nameDetails: "Current state: idle | loading | authenticated | locked | error" },
+    { name: "is(status)", type: "(s: AuthStatus) => boolean", nameDetails: "Check current state" },
+    { name: "user", type: "U | undefined", nameDetails: "The user object returned from your onLogin function" },
+    { name: "token", type: "string | null", nameDetails: "The raw JWT token string" },
+    { name: "login(credentials)", type: "(credentials: C) => Promise<void>", nameDetails: "Trigger a login attempt. Runs bot detection and rate limiting before calling onLogin" },
+    { name: "logout()", type: "() => Promise<void>", nameDetails: "Clear the session, remove the token from storage, and reset all state" },
+    { name: "tokenPayload", type: "TokenPayload | null", nameDetails: "The decoded JWT payload containing exp, sub, iat and any custom fields" },
+    { name: "tokenExpiresAt", type: "Date | null", nameDetails: "The exact Date when the token expires, derived from the exp field" },
+    { name: "attempts", type: "number", nameDetails: "Number of consecutive failed login attempts" },
+    { name: "lockout", type: "LockoutState | null", nameDetails: "The active lockout state containing reason and lockedUntil" },
+    { name: "remainingTime", type: "number", nameDetails: "Seconds remaining in the current lockout. Updates reactively every second" },
+    { name: "lockoutReason", type: "LockoutReason | null", nameDetails: "Why the user is locked out: max_attempts or bot_detection" },
+  ]}
+/>
+
+---
+
+## Auth Component
+
+The declarative JSX companion. Render different UI for each auth state without writing conditionals manually.
+
+```tsx
+import { Auth } from "@hookraft/useauth"
+```
+```tsx
+<Auth
+  when={auth.status}
+  onAuthenticated={() => router.push("/dashboard")}
+  onIdle={() => router.push("/login")}
+  fallback={<p>Please log in to continue</p>}
+>
+  <Dashboard />
+</Auth>
+```
+
+### With Slot Components
+
+Use named slots to render specific UI for each state:
+
+```tsx
+function App() {
+  const auth = useAuth({ ...options })
+
+  return (
+    <Auth when={auth.status} fallback={<LoginForm onLogin={auth.login} />}>
+      <Auth.Loading when={auth.status}>
+        <Spinner />
+      </Auth.Loading>
+
+      <Auth.Authenticated when={auth.status}>
+        <Dashboard user={auth.user} onLogout={auth.logout} />
+      </Auth.Authenticated>
+
+      <Auth.Locked when={auth.status}>
+        <p>
+          {auth.lockoutReason === "bot_detection"
+            ? "Suspicious activity detected."
+            : "Too many attempts."}
+          {" "}Try again in {auth.remainingTime}s
+        </p>
+      </Auth.Locked>
+
+      <Auth.Error when={auth.status}>
+        <p>{auth.attempts} failed attempt(s). Try again.</p>
+      </Auth.Error>
+    </Auth>
+  )
+}
+```
+
+### Props
+
+<PropsTable
+  data={[
+    { name: "when", type: "AuthStatus", nameDetails: "Current auth status from useAuth" },
+    { name: "onAuthenticated", type: "() => void", nameDetails: "Fires when status becomes authenticated" },
+    { name: "onLoading", type: "() => void", nameDetails: "Fires when status becomes loading" },
+    { name: "onLocked", type: "() => void", nameDetails: "Fires when status becomes locked" },
+    { name: "onError", type: "() => void", nameDetails: "Fires when status becomes error" },
+    { name: "onIdle", type: "() => void", nameDetails: "Fires when status becomes idle" },
+    { name: "fallback", type: "ReactNode", default: "null", nameDetails: "Rendered when status is idle" },
+    { name: "children", type: "ReactNode", nameDetails: "Rendered when status is anything other than idle" },
+  ]}
+/>
+
+### Slot Components
+
+<PropsTable
+  data={[
+    { name: "Auth.Authenticated", type: "{ when: AuthStatus, children: ReactNode }", nameDetails: "Renders only when authenticated" },
+    { name: "Auth.Loading", type: "{ when: AuthStatus, children: ReactNode }", nameDetails: "Renders only when loading" },
+    { name: "Auth.Locked", type: "{ when: AuthStatus, children: ReactNode }", nameDetails: "Renders only when locked out" },
+    { name: "Auth.Error", type: "{ when: AuthStatus, children: ReactNode }", nameDetails: "Renders only when an error occurred" },
+  ]}
+/>

@@ -1,0 +1,59 @@
+## What is Hookraft?
+
+Hookraft is a collection of React hooks that handle the logic side of your app — async flows, state transitions, queues, history, and more.
+
+Instead of writing the same `useState` and `useEffect` patterns over and over, Hookraft gives you hooks that already know how to handle those problems.
+
+## The problem it solves
+
+Most React apps end up with logic scattered everywhere:
+
+```tsx
+const [loading, setLoading] = useState(false)
+const [error, setError] = useState(null)
+const [data, setData] = useState(null)
+
+useEffect(() => {
+  setLoading(true)
+  fetch("/api/data")
+    .then((r) => r.json())
+    .then(setData)
+    .catch(setError)
+    .finally(() => setLoading(false))
+}, [])
+```
+
+This works — but you write it in every component, every project, every time.
+
+With Hookraft, that becomes a hook that already handles the lifecycle for you. Your component just calls it and reacts to the result.
+
+## How it works
+
+Every Hookraft hook follows the same idea — you describe **what should happen**, the hook handles **when and how**.
+
+```tsx
+const queue = useQueue({
+  onProcess: async (item) => await sendEmail(item),
+  onDone: () => toast("All done!"),
+})
+
+queue.add({ email: "a@b.com" })
+queue.start()
+```
+
+No manual loading flags. No scattered try/catch. Just a flow.
+
+## When to use it
+
+Hookraft is useful when you have:
+
+- Async operations that need loading, success, and error states
+- Tasks that need to run in sequence or with retry logic
+- State that users should be able to undo and redo
+- Multi-step flows like forms, wizards, or onboarding
+
+## Community
+
+- [GitHub](https://github.com/purposewalks9/Hookraft) — source code and contributions
+- [Discord](https://discord.gg/utV9wVYu) — get help and discuss
+- [Twitter / X](https://x.com/purpose_walker) — updates and announcements

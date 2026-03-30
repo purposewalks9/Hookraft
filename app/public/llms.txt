@@ -1,0 +1,15 @@
+# Hookraft
+
+Hookraft is a collection of composable React hooks for async flows, queues, authentication, and undo/redo state management.
+
+## Hooks
+- useQueue: process tasks in sequence with concurrency control
+- useAuth: JWT authentication with brute force protection
+- useHistory: undo/redo for any React state
+- useDoorway: component lifecycle and async state management
+
+## Links
+- Site: https://hookraft.site
+- Docs: https://hookraft.site/docs/introduction
+- GitHub: https://github.com/purposewalks9/Hookraft
+- npm: https://www.npmjs.com/package/@hookraft/usequeue

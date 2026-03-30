@@ -1,0 +1,88 @@
+## Installation
+
+<InstallationTabs item="@hookraft/usehistory">
+```bash
+pnpm add @hookraft/usehistory
+```
+</InstallationTabs>
+
+## Usage
+```tsx
+import { useHistory } from "@hookraft/usehistory"
+```
+```tsx
+const { state, set, undo, redo, canUndo, canRedo } = useHistory("", {
+  limit: 50,
+  onUndo: (state) => console.log("Undid to:", state),
+  onRedo: (state) => console.log("Redid to:", state),
+  onChange: (state) => console.log("Changed to:", state),
+})
+```
+
+## Full Example
+```tsx
+function TextEditor() {
+  const { state, set, undo, redo, canUndo, canRedo, clear, history, jump } = useHistory("", {
+    limit: 100,
+    onUndo: (value) => console.log("Undid to:", value),
+    onChange: () => console.log("Changed!"),
+  })
+
+  return (
+    <div>
+      <textarea
+        value={state}
+        onChange={(e) => set(e.target.value)}
+        placeholder="Start typing..."
+      />
+
+      <div>
+        <button onClick={undo} disabled={!canUndo}>Undo</button>
+        <button onClick={redo} disabled={!canRedo}>Redo</button>
+        <button onClick={clear}>Clear</button>
+      </div>
+
+      {/* History timeline — click any entry to jump to it */}
+      {history.length > 0 && (
+        <ul>
+          {history.map((entry, index) => (
+            <li key={index}>
+              <button onClick={() => jump(index)}>
+                {entry || "(empty)"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+```
+
+## Options
+
+<PropsTable
+  data={[
+    { name: "limit", type: "number", default: "100", nameDetails: "Maximum number of history entries to keep" },
+    { name: "onUndo", type: "(state: T) => void", nameDetails: "Fires when undo is called with the restored state" },
+    { name: "onRedo", type: "(state: T) => void", nameDetails: "Fires when redo is called with the restored state" },
+    { name: "onChange", type: "(state: T) => void", nameDetails: "Fires whenever state changes via set, undo, or redo" },
+  ]}
+/>
+
+## Returns
+
+<PropsTable
+  data={[
+    { name: "state", type: "T", nameDetails: "The current state value" },
+    { name: "set(value)", type: "(value: T | ((prev: T) => T)) => void", nameDetails: "Set a new state value — pushes current to history" },
+    { name: "undo()", type: "() => void", nameDetails: "Step back one entry in history" },
+    { name: "redo()", type: "() => void", nameDetails: "Step forward one entry in history" },
+    { name: "canUndo", type: "boolean", nameDetails: "True if there are entries to undo" },
+    { name: "canRedo", type: "boolean", nameDetails: "True if there are entries to redo" },
+    { name: "history", type: "T[]", nameDetails: "All past states from oldest to most recent" },
+    { name: "future", type: "T[]", nameDetails: "States available for redo" },
+    { name: "jump(index)", type: "(index: number) => void", nameDetails: "Teleport to any point in history — no need to undo one step at a time" },
+    { name: "clear()", type: "() => void", nameDetails: "Reset to initial value and clear all history" },
+  ]}
+/>
