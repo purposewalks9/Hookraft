@@ -5,7 +5,6 @@ export const siteConfig = {
   description:
     "Hookraft is a collection of composable React hooks for managing async flows, task queues, authentication, and undo/redo state. Build complex application logic that is predictable, maintainable, and easy to reason about.",
   links: {
-    tom: "https://x.com/purpose_walker",
     x: "https://x.com/intent/follow?screen_name=purpose_walker",
     discord: "https://discord.gg/CxzqwQ2EAa",
     github: "https://github.com/purposewalks9/Hookraft",

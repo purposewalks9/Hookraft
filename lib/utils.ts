@@ -53,7 +53,7 @@ export function constructMetadata({
       title,
       description,
       images: [image],
-      creator: siteConfig.links.tom.replace("https://x.com/", "@"),
+      creator: siteConfig.links.x.replace("https://x.com/", "@"),
     },
     metadataBase: new URL(siteConfig.url),
     icons: "/icon.svg",
