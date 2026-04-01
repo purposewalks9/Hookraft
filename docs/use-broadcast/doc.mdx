@@ -1,0 +1,266 @@
+## Installation
+
+<InstallationTabs item="@hookraft/usebroadcast">
+```bash
+pnpm add @hookraft/usebroadcast
+```
+</InstallationTabs>
+
+## Usage
+```tsx
+import { useBroadcast } from "@hookraft/usebroadcast"
+```
+```tsx
+const { state, broadcast, status, isSupported, listenerCount } = useBroadcast("my-channel", initialState, {
+  onMessage: (data, tabId) => console.log("Received from tab:", tabId, data),
+  onTabJoin: (tabId) => console.log("New tab joined:", tabId),
+  onTabLeave: (tabId) => console.log("Tab left:", tabId),
+})
+```
+
+## How it works
+
+Your browser can have many tabs open at the same time. By default those tabs are completely isolated — what happens in Tab 1 stays in Tab 1.
+
+`useBroadcast` connects tabs together using the browser's built-in `BroadcastChannel` API. The moment you call `broadcast()` in one tab, every other tab that uses the same channel name receives the update instantly — no server, no WebSockets required.
+
+```
+Tab 1 (user clicks logout)
+  │
+  │  broadcast(null)
+  │
+  ├──────────────────→ Tab 2 (automatically redirects to /login)
+  ├──────────────────→ Tab 3 (automatically redirects to /login)
+  └──────────────────→ Tab 4 (automatically redirects to /login)
+```
+
+## Full Examples
+
+### Example 1 — Logout across all tabs
+
+User logs out in one tab — every other open tab logs out automatically.
+
+```tsx
+import { useBroadcast } from "@hookraft/usebroadcast"
+
+function useAuthSync({ onLogout }: { onLogout: () => void }) {
+  const { broadcast } = useBroadcast<{ loggedIn: boolean }>(
+    "auth",
+    { loggedIn: true },
+    {
+      onMessage: (data) => {
+        if (!data.loggedIn) {
+          // another tab logged out — react here
+          onLogout()
+        }
+      },
+    }
+  )
+
+  const logoutEverywhere = () => {
+    // tell every other tab to log out
+    broadcast({ loggedIn: false })
+    // handle local logout yourself
+    onLogout()
+  }
+
+  return { logoutEverywhere }
+}
+```
+
+```tsx
+function LogoutButton() {
+  const { logoutEverywhere } = useAuthSync({
+    onLogout: () => {
+      localStorage.removeItem("token")
+      window.location.href = "/login"
+    },
+  })
+
+  return (
+    <button onClick={logoutEverywhere}>
+      Logout everywhere
+    </button>
+  )
+}
+```
+
+---
+
+### Example 2 — Sync cart across tabs
+
+User adds an item to the cart in Tab 1. The cart badge in Tab 2 updates instantly.
+
+```tsx
+import { useBroadcast } from "@hookraft/usebroadcast"
+
+type CartItem = {
+  id: string
+  name: string
+  price: number
+  quantity: number
+}
+
+function useCart() {
+  const { state: cart, broadcast } = useBroadcast<CartItem[]>("cart", [])
+
+  const addItem = (item: CartItem) => {
+    const updated = [...cart, item]
+    broadcast(updated) // updates this tab AND all others
+  }
+
+  const removeItem = (id: string) => {
+    const updated = cart.filter((i) => i.id !== id)
+    broadcast(updated)
+  }
+
+  const clearCart = () => broadcast([])
+
+  return {
+    cart,
+    addItem,
+    removeItem,
+    clearCart,
+    totalItems: cart.reduce((acc, i) => acc + i.quantity, 0),
+  }
+}
+```
+
+```tsx
+function CartBadge() {
+  const { totalItems } = useCart()
+
+  return (
+    <div>
+      Cart
+      {totalItems > 0 && <span>{totalItems}</span>}
+    </div>
+  )
+}
+```
+
+---
+
+### Example 3 — Sync notification badge
+
+New message arrives — every open tab shows the updated unread count instantly.
+
+```tsx
+import { useBroadcast } from "@hookraft/usebroadcast"
+
+function useNotifications() {
+  const { state: unreadCount, broadcast } = useBroadcast<number>(
+    "notifications",
+    0
+  )
+
+  const markAllRead = () => broadcast(0)
+  const increment = () => broadcast(unreadCount + 1)
+
+  return { unreadCount, markAllRead, increment }
+}
+```
+
+```tsx
+function NotificationBell() {
+  const { unreadCount, markAllRead } = useNotifications()
+
+  return (
+    <button onClick={markAllRead}>
+      🔔 {unreadCount > 0 && <span>{unreadCount}</span>}
+    </button>
+  )
+}
+```
+
+---
+
+### Example 4 — Track how many tabs are open
+
+```tsx
+import { useBroadcast } from "@hookraft/usebroadcast"
+
+function TabCounter() {
+  const { listenerCount, tabId, isSupported } = useBroadcast(
+    "presence",
+    null,
+    {
+      onTabJoin: (id) => console.log(`Tab ${id} joined`),
+      onTabLeave: (id) => console.log(`Tab ${id} left`),
+    }
+  )
+
+  if (!isSupported) {
+    return <p>Your browser does not support cross-tab sync.</p>
+  }
+
+  return (
+    <div>
+      <p>Your tab ID: {tabId}</p>
+      <p>Other tabs open: {listenerCount}</p>
+    </div>
+  )
+}
+```
+
+## `broadcast` vs `send`
+
+These two look similar but behave differently:
+
+```tsx
+const { state, broadcast, send } = useBroadcast("channel", 0)
+
+// broadcast — updates THIS tab AND sends to all other tabs
+broadcast(42)
+// state in this tab = 42
+// all other tabs receive 42 and update
+
+// send — only sends to other tabs, does NOT update this tab
+send(42)
+// state in this tab stays unchanged
+// other tabs receive 42
+```
+
+Use `broadcast` when you want all tabs in sync.
+Use `send` when you want to notify other tabs without changing your own state — for example a one-time signal like `"refresh"` or `"reload"`.
+
+## Browser Support
+
+`useBroadcast` is SSR safe. It checks for `window` before touching any browser API so it will not crash in server-side environments. If `BroadcastChannel` is not supported, `isSupported` returns `false` and the hook does nothing — no errors thrown.
+
+```tsx
+const { isSupported } = useBroadcast("channel", null)
+
+if (!isSupported) {
+  // show a fallback or skip the feature
+}
+```
+
+## Options
+
+<PropsTable
+  data={[
+    { name: "onMessage", type: "(data: T, tabId: string) => void", nameDetails: "Fires when another tab broadcasts a state update. Receives the new data and the sender tab ID" },
+    { name: "onTabJoin", type: "(tabId: string) => void", nameDetails: "Fires when a new tab opens and joins the same channel" },
+    { name: "onTabLeave", type: "(tabId: string) => void", nameDetails: "Fires when a tab closes or leaves the channel" },
+    { name: "syncState", type: "boolean", default: "true", nameDetails: "If true, local state updates automatically when another tab broadcasts. Set to false to only listen without syncing state" },
+    { name: "onConnect", type: "() => void", nameDetails: "Fires when the channel is successfully opened" },
+    { name: "onDisconnect", type: "() => void", nameDetails: "Fires when the channel is closed" },
+  ]}
+/>
+
+## Returns
+
+<PropsTable
+  data={[
+    { name: "state", type: "T", nameDetails: "Current state value — updates automatically when other tabs broadcast" },
+    { name: "broadcast(value)", type: "(value: T) => void", nameDetails: "Update state in this tab AND send the new value to all other tabs on the same channel" },
+    { name: "send(value)", type: "(value: T) => void", nameDetails: "Send a value to other tabs without updating local state" },
+    { name: "status", type: "BroadcastStatus", nameDetails: "Current channel state: idle | active | unsupported" },
+    { name: "isSupported", type: "boolean", nameDetails: "True if BroadcastChannel is supported in the current browser" },
+    { name: "tabId", type: "string", nameDetails: "Unique ID generated for the current tab session" },
+    { name: "listenerCount", type: "number", nameDetails: "Number of other tabs currently connected to the same channel" },
+    { name: "close()", type: "() => void", nameDetails: "Manually close the channel and disconnect from other tabs" },
+    { name: "reconnect()", type: "() => void", nameDetails: "Reopen a closed channel and reconnect to other tabs" },
+  ]}
+/>

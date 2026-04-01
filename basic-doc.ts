@@ -59,6 +59,11 @@ export const basicDoc: DocSchema = [
         id: "use-history",
         description: "Stop losing state changes. useHistory remembers every update so users can undo mistakes, redo actions, and navigate their full edit history.",
       },
+      {
+        title: "UseBroadcast",
+        id: "use-broadcast",
+        description: "Sync state across multiple browser tabs in real time. Built on the BroadcastChannel API — no server, no WebSockets required.",
+      },
     ],
   },
 ];
