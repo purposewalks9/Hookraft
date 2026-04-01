@@ -22,7 +22,7 @@ export function buildOgUrl(params?: { title?: string; description?: string }) {
 export function constructMetadata({
   title = siteConfig.name,
   description = siteConfig.description,
-  image = siteConfig.ogImage,
+  image = absoluteUrl("/og"),
   ...props
 }: {
   title?: string;
