@@ -64,6 +64,11 @@ export const basicDoc: DocSchema = [
         id: "use-broadcast",
         description: "Sync state across multiple browser tabs in real time. Built on the BroadcastChannel API — no server, no WebSockets required.",
       },
+      {
+        title: "UseForm",
+        id: "use-form",
+        description: "A simple, lightweight form management solution for React applications.",
+      }
     ],
   },
 ];

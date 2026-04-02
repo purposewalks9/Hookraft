@@ -1,0 +1,632 @@
+
+## Installation
+
+<InstallationTabs item="@hookraft/useform">
+```bash
+pnpm add @hookraft/useform
+```
+</InstallationTabs>
+
+## Usage
+
+```tsx
+import { useForm } from "@hookraft/useform"
+```
+
+```tsx
+const form = useForm({
+  fields: {
+    email: {
+      value: "",
+      rules: [
+        { required: true, message: "Email is required" },
+        { pattern: /^\S+@\S+\.\S+$/, message: "Invalid email address" },
+      ],
+    },
+    password: {
+      value: "",
+      rules: [
+        { required: true, message: "Password is required" },
+        { minLength: 8, message: "Must be at least 8 characters" },
+      ],
+    },
+  },
+  onSubmit: async (values) => await loginUser(values),
+  onSuccess: () => console.log("Logged in!"),
+  onError: (err) => console.error("Failed:", err),
+})
+```
+
+---
+
+## The problem it solves
+
+Every form in React makes you write the same boilerplate — field state, error state, loading state, validation logic, submit handling. For every single form.
+
+```tsx
+// Without useForm — 40+ lines before a single input
+const [email, setEmail] = useState("")
+const [password, setPassword] = useState("")
+const [emailError, setEmailError] = useState("")
+const [passwordError, setPasswordError] = useState("")
+const [isSubmitting, setIsSubmitting] = useState(false)
+
+const validate = () => { /* ... */ }
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  if (!validate()) return
+  setIsSubmitting(true)
+  try { await login({ email, password }) }
+  catch (err) { /* ... */ }
+  finally { setIsSubmitting(false) }
+}
+```
+
+```tsx
+// With useForm — everything in one place
+const form = useForm({
+  fields: {
+    email: { value: "", rules: [{ required: true }] },
+    password: { value: "", rules: [{ required: true }, { minLength: 8 }] },
+  },
+  onSubmit: async (values) => await login(values),
+})
+```
+
+---
+
+## How it works
+
+You define your fields once — with their initial values and validation rules. `useForm` gives you back everything you need: field state, error messages, submit handling, dirty tracking, and reset. Your component just reads from it and reacts.
+
+Every field in `form.fields` has its own state:
+
+```tsx
+form.fields.email.value     // current value
+form.fields.email.error     // error message or undefined
+form.fields.email.touched   // true if the user has interacted with it
+form.fields.email.isDirty   // true if the value changed from initial
+form.fields.email.isValid   // true if the field passes all rules
+form.fields.email.disabled  // true if the field is disabled
+```
+
+Connecting a field to an input is always the same pattern:
+
+```tsx
+<input
+  value={form.fields.email.value as string}
+  onChange={(e) => form.setValue("email", e.target.value)}
+  onBlur={() => form.setTouched("email")}
+/>
+{form.fields.email.error && <p>{form.fields.email.error}</p>}
+```
+
+> **Why `as string`?** Field values are typed as `string | number | boolean` to support all input types. Since HTML inputs always work with strings, the cast tells TypeScript you know it's a string here. If you defined the field with `value: ""`, the cast is safe.
+
+---
+
+## Full Examples
+
+### Login form
+
+The simplest case — two fields, validate on blur, redirect on success.
+
+```tsx
+import { useForm } from "@hookraft/useform"
+
+function LoginForm() {
+  const form = useForm({
+    fields: {
+      email: {
+        value: "",
+        rules: [
+          { required: true, message: "Email is required" },
+          { pattern: /^\S+@\S+\.\S+$/, message: "Enter a valid email" },
+        ],
+      },
+      password: {
+        value: "",
+        rules: [
+          { required: true, message: "Password is required" },
+          { minLength: 8, message: "Must be at least 8 characters" },
+        ],
+      },
+    },
+    validateOn: "blur",
+    onSubmit: async (values) => {
+      await fetch("/api/login", {
+        method: "POST",
+        body: JSON.stringify(values),
+      })
+    },
+    onSuccess: () => {
+      window.location.href = "/dashboard"
+    },
+    onError: (err) => {
+      console.error("Login failed:", err)
+    },
+  })
+
+  return (
+    <form onSubmit={form.handleSubmit}>
+      <div>
+        <input
+          type="email"
+          placeholder="Email"
+          value={form.fields.email.value as string}
+          onChange={(e) => form.setValue("email", e.target.value)}
+          onBlur={() => form.setTouched("email")}
+        />
+        {form.fields.email.error && <p>{form.fields.email.error}</p>}
+      </div>
+
+      <div>
+        <input
+          type="password"
+          placeholder="Password"
+          value={form.fields.password.value as string}
+          onChange={(e) => form.setValue("password", e.target.value)}
+          onBlur={() => form.setTouched("password")}
+        />
+        {form.fields.password.error && <p>{form.fields.password.error}</p>}
+      </div>
+
+      <button type="submit" disabled={form.isSubmitting}>
+        {form.isSubmitting ? "Logging in..." : "Login"}
+      </button>
+
+      {form.isSuccess && <p>Welcome back!</p>}
+      {form.isError && <p>Login failed. Please try again.</p>}
+    </form>
+  )
+}
+```
+
+---
+
+### Signup form with cross-field validation
+
+The `validate` function in a rule receives the current field value AND all other field values — use it for things like confirming passwords match.
+
+```tsx
+import { useForm } from "@hookraft/useform"
+
+function SignupForm() {
+  const form = useForm({
+    fields: {
+      username: {
+        value: "",
+        rules: [
+          { required: true, message: "Username is required" },
+          { minLength: 3, message: "Must be at least 3 characters" },
+          { maxLength: 20, message: "Must be 20 characters or less" },
+          {
+            pattern: /^[a-zA-Z0-9_]+$/,
+            message: "Only letters, numbers, and underscores",
+          },
+        ],
+      },
+      email: {
+        value: "",
+        rules: [
+          { required: true, message: "Email is required" },
+          { pattern: /^\S+@\S+\.\S+$/, message: "Invalid email" },
+        ],
+      },
+      password: {
+        value: "",
+        rules: [
+          { required: true, message: "Password is required" },
+          { minLength: 8, message: "Must be at least 8 characters" },
+        ],
+      },
+      confirmPassword: {
+        value: "",
+        rules: [
+          { required: true, message: "Please confirm your password" },
+          {
+            // validate receives (value, allValues) — allValues has every field
+            validate: (value, allValues) =>
+              value === allValues.password || "Passwords do not match",
+          },
+        ],
+      },
+    },
+    validateOn: "blur",
+    onSubmit: async (values) => {
+      await fetch("/api/signup", {
+        method: "POST",
+        body: JSON.stringify(values),
+      })
+    },
+    onSuccess: () => {
+      window.location.href = "/welcome"
+    },
+  })
+
+  return (
+    <form onSubmit={form.handleSubmit}>
+      {["username", "email", "password", "confirmPassword"].map((name) => (
+        <div key={name}>
+          <input
+            type={
+              name.includes("password") || name.includes("Password")
+                ? "password"
+                : "text"
+            }
+            placeholder={name}
+            value={form.fields[name].value as string}
+            onChange={(e) => form.setValue(name as any, e.target.value)}
+            onBlur={() => form.setTouched(name as any)}
+          />
+          {form.fields[name].error && (
+            <p style={{ color: "red", fontSize: 12 }}>
+              {form.fields[name].error}
+            </p>
+          )}
+        </div>
+      ))}
+
+      <button type="submit" disabled={form.isSubmitting}>
+        {form.isSubmitting ? "Creating account..." : "Sign Up"}
+      </button>
+    </form>
+  )
+}
+```
+
+---
+
+### Contact form with reset
+
+Use `form.reset()` to clear all fields back to their initial values. To call `reset` inside `onSuccess`, hold a ref to the form so it's available in the closure.
+
+```tsx
+import { useRef } from "react"
+import { useForm } from "@hookraft/useform"
+import type { UseFormReturn } from "@hookraft/useform"
+
+function ContactForm() {
+  // Hold a ref so we can call reset() inside onSuccess
+  const formRef = useRef<UseFormReturn<any>>(null!)
+
+  const form = useForm({
+    fields: {
+      name: {
+        value: "",
+        rules: [{ required: true, message: "Name is required" }],
+      },
+      email: {
+        value: "",
+        rules: [
+          { required: true, message: "Email is required" },
+          { pattern: /^\S+@\S+\.\S+$/, message: "Invalid email" },
+        ],
+      },
+      message: {
+        value: "",
+        rules: [
+          { required: true, message: "Message is required" },
+          { minLength: 20, message: "Message must be at least 20 characters" },
+          { maxLength: 500, message: "Message must be 500 characters or less" },
+        ],
+      },
+    },
+    onSubmit: async (values) => {
+      await fetch("/api/contact", {
+        method: "POST",
+        body: JSON.stringify(values),
+      })
+    },
+    onSuccess: () => {
+      // Use the ref to reset — form variable isn't in scope here yet
+      formRef.current.reset()
+    },
+  })
+
+  // Keep the ref in sync
+  formRef.current = form
+
+  return (
+    <form onSubmit={form.handleSubmit}>
+      <input
+        placeholder="Your name"
+        value={form.fields.name.value as string}
+        onChange={(e) => form.setValue("name", e.target.value)}
+        onBlur={() => form.setTouched("name")}
+      />
+      {form.fields.name.error && <p>{form.fields.name.error}</p>}
+
+      <input
+        placeholder="Your email"
+        value={form.fields.email.value as string}
+        onChange={(e) => form.setValue("email", e.target.value)}
+        onBlur={() => form.setTouched("email")}
+      />
+      {form.fields.email.error && <p>{form.fields.email.error}</p>}
+
+      <textarea
+        placeholder="Your message (20–500 characters)"
+        value={form.fields.message.value as string}
+        onChange={(e) => form.setValue("message", e.target.value)}
+        onBlur={() => form.setTouched("message")}
+      />
+      {form.fields.message.error && <p>{form.fields.message.error}</p>}
+
+      <div>
+        <button type="submit" disabled={form.isSubmitting}>
+          {form.isSubmitting ? "Sending..." : "Send Message"}
+        </button>
+
+        {/* reset a single field */}
+        <button
+          type="button"
+          onClick={() => form.resetField("message")}
+          disabled={!form.fields.message.isDirty}
+        >
+          Clear message
+        </button>
+
+        {/* reset the whole form */}
+        <button
+          type="button"
+          onClick={form.reset}
+          disabled={!form.isDirty}
+        >
+          Reset all
+        </button>
+      </div>
+
+      {form.isSuccess && <p>Message sent successfully!</p>}
+    </form>
+  )
+}
+```
+
+---
+
+###  Validate on change
+
+By default validation fires on blur. Set `validateOn: "change"` to validate on every keystroke — good for live feedback like username availability or password strength.
+
+```tsx
+const form = useForm({
+  fields: {
+    username: {
+      value: "",
+      rules: [
+        { required: true },
+        { minLength: 3, message: "Too short" },
+        { pattern: /^[a-z0-9]+$/, message: "Lowercase letters and numbers only" },
+      ],
+    },
+  },
+  validateOn: "change",
+})
+
+<input
+  value={form.fields.username.value as string}
+  onChange={(e) => form.setValue("username", e.target.value)}
+/>
+{form.fields.username.error && <p>{form.fields.username.error}</p>}
+```
+
+---
+
+### Validate on submit only
+
+Use `validateOn: "submit"` when you don't want to show errors until the user tries to submit. No errors appear while typing or on blur — only after the first submit attempt.
+
+```tsx
+const form = useForm({
+  fields: {
+    email: {
+      value: "",
+      rules: [
+        { required: true, message: "Email is required" },
+        { pattern: /^\S+@\S+\.\S+$/, message: "Invalid email" },
+      ],
+    },
+    password: {
+      value: "",
+      rules: [{ required: true, message: "Password is required" }],
+    },
+  },
+  validateOn: "submit", // errors only appear after submit is clicked
+  onSubmit: async (values) => await login(values),
+})
+
+<form onSubmit={form.handleSubmit}>
+  <input
+    value={form.fields.email.value as string}
+    onChange={(e) => form.setValue("email", e.target.value)}
+    // no onBlur needed — validation won't run on blur anyway
+  />
+  {form.fields.email.error && <p>{form.fields.email.error}</p>}
+
+  <button type="submit">Login</button>
+</form>
+```
+
+---
+
+###  Server-side errors
+
+Use `setError` to apply errors returned from your API to specific fields after submission.
+
+```tsx
+const form = useForm({
+  fields: {
+    email: { value: "", rules: [{ required: true }] },
+    password: { value: "", rules: [{ required: true }] },
+  },
+  onSubmit: async (values) => {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      body: JSON.stringify(values),
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+
+      // Map API errors back to specific fields
+      if (data.field === "email") form.setError("email", data.message)
+      if (data.field === "password") form.setError("password", data.message)
+
+      throw new Error(data.message) // triggers onError and sets isError = true
+    }
+  },
+})
+```
+
+---
+
+### Disabled fields
+
+Set `disabled: true` on a field to mark it as disabled. Read it from `form.fields.name.disabled` to pass it to your input.
+
+```tsx
+const form = useForm({
+  fields: {
+    email: {
+      value: "user@example.com",
+      disabled: true, // pre-filled and locked
+    },
+    displayName: {
+      value: "",
+      rules: [{ required: true, message: "Display name is required" }],
+    },
+  },
+  onSubmit: async (values) => await updateProfile(values),
+})
+
+<form onSubmit={form.handleSubmit}>
+  <input
+    type="email"
+    value={form.fields.email.value as string}
+    disabled={form.fields.email.disabled}
+    onChange={(e) => form.setValue("email", e.target.value)}
+  />
+
+  <input
+    placeholder="Display name"
+    value={form.fields.displayName.value as string}
+    disabled={form.fields.displayName.disabled}
+    onChange={(e) => form.setValue("displayName", e.target.value)}
+    onBlur={() => form.setTouched("displayName")}
+  />
+  {form.fields.displayName.error && <p>{form.fields.displayName.error}</p>}
+
+  <button type="submit">Save</button>
+</form>
+```
+
+---
+
+### Checking form status with `is()`
+
+Use `form.is()` as an alternative to the boolean flags when you want to check status in one place — useful for switch statements or conditional rendering based on multiple states.
+
+```tsx
+const form = useForm({
+  fields: {
+    email: { value: "", rules: [{ required: true }] },
+  },
+  onSubmit: async (values) => await subscribe(values),
+})
+
+// These are equivalent:
+form.isSubmitting          // boolean flag
+form.is("submitting")      // same thing via is()
+
+form.isSuccess             // boolean flag
+form.is("success")         // same thing via is()
+
+// Useful for rendering different UI per status:
+{form.is("idle") && <p>Fill in your email to subscribe.</p>}
+{form.is("submitting") && <p>Subscribing...</p>}
+{form.is("success") && <p>You're subscribed!</p>}
+{form.is("error") && <p>Something went wrong. Try again.</p>}
+```
+
+---
+
+## Validation Rules
+
+Every field can have an array of `rules`. Rules are checked in order — the first one that fails stops validation and returns its error message.
+
+```tsx
+rules: [
+  { required: true, message: "This field is required" },
+  { minLength: 3, message: "Too short" },
+  { maxLength: 50, message: "Too long" },
+  { min: 18, message: "Must be at least 18" },
+  { max: 99, message: "Must be 99 or less" },
+  { pattern: /^[a-z]+$/, message: "Lowercase only" },
+  {
+    validate: (value, allValues) => {
+      if (value === allValues.username) return "Cannot match your username"
+      return true // return true = valid, return string = error message
+    },
+  },
+]
+```
+
+The `validate` function receives the current field value and all other field values — use it for cross-field rules like confirming passwords match or ensuring two fields are not the same.
+
+---
+
+## Options
+
+<PropsTable
+  data={[
+    { name: "fields", type: "FieldsConfig", nameDetails: "Field definitions with initial values and validation rules" },
+    { name: "onSubmit", type: "(values: FormValues) => Promise<void> | void", nameDetails: "Called when form is submitted and all fields pass validation" },
+    { name: "onSuccess", type: "(values: FormValues) => void", nameDetails: "Fires when onSubmit resolves successfully" },
+    { name: "onError", type: "(error: unknown, values: FormValues) => void", nameDetails: "Fires when onSubmit throws an error" },
+    { name: "onChange", type: "(values: FormValues, fieldName: string) => void", nameDetails: "Fires whenever any field value changes" },
+    { name: "validateOn", type: "change | blur | submit", default: "blur", nameDetails: "When to run validation. blur = on field exit, change = every keystroke, submit = only on submit attempt" },
+  ]}
+/>
+
+---
+
+## Field Options
+
+<PropsTable
+  data={[
+    { name: "value", type: "string | number | boolean", nameDetails: "Initial value for the field" },
+    { name: "rules", type: "FieldRule[]", nameDetails: "Array of validation rules to run against the field value" },
+    { name: "disabled", type: "boolean", default: "false", nameDetails: "If true the field is marked as disabled — read it from form.fields.name.disabled to pass to your input" },
+  ]}
+/>
+
+---
+
+## Returns
+
+<PropsTable
+  data={[
+    { name: "fields", type: "FieldsState", nameDetails: "All field states — value, error, touched, isDirty, isValid, disabled per field" },
+    { name: "values", type: "FormValues", nameDetails: "Current values of all fields as a flat object" },
+    { name: "errors", type: "FormErrors", nameDetails: "Current errors of all fields as a flat object" },
+    { name: "status", type: "FormStatus", nameDetails: "Current form state: idle | submitting | success | error" },
+    { name: "isValid", type: "boolean", nameDetails: "True if all fields pass validation" },
+    { name: "isDirty", type: "boolean", nameDetails: "True if any field has changed from its initial value" },
+    { name: "isSubmitting", type: "boolean", nameDetails: "True while onSubmit is running" },
+    { name: "isSuccess", type: "boolean", nameDetails: "True after a successful submission" },
+    { name: "isError", type: "boolean", nameDetails: "True if the last submission threw an error" },
+    { name: "submitError", type: "unknown", nameDetails: "The error thrown by onSubmit if it failed" },
+    { name: "is(status)", type: "(s: FormStatus) => boolean", nameDetails: "Check the current form status — form.is('submitting'), form.is('success'), etc." },
+    { name: "setValue(name, value)", type: "(name, value) => void", nameDetails: "Update a field value" },
+    { name: "setTouched(name)", type: "(name) => void", nameDetails: "Mark a field as touched and trigger blur validation" },
+    { name: "setError(name, error)", type: "(name, error) => void", nameDetails: "Set a field error manually — useful for server-side validation errors" },
+    { name: "clearError(name)", type: "(name) => void", nameDetails: "Clear a specific field error" },
+    { name: "validateField(name)", type: "(name) => boolean", nameDetails: "Validate a single field and return whether it is valid" },
+    { name: "validateAll()", type: "() => boolean", nameDetails: "Validate all fields and return whether the whole form is valid" },
+    { name: "handleSubmit(e?)", type: "(e?) => Promise<void>", nameDetails: "Pass directly to a form element's onSubmit — handles preventDefault automatically" },
+    { name: "submit()", type: "() => Promise<void>", nameDetails: "Submit the form programmatically without a form element" },
+    { name: "reset()", type: "() => void", nameDetails: "Reset all fields to their initial values and clear all errors" },
+    { name: "resetField(name)", type: "(name) => void", nameDetails: "Reset a single field to its initial value and clear its error" },
+  ]}
+/>
