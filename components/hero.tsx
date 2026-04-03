@@ -3,45 +3,6 @@
 import { BlurReveal } from "@/components/spell-ui/blur-reveal";
 import { RichButton } from "@/components/spell-ui/rich-button";
 import Link from "next/link";
-import { useState } from "react";
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  return (
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1800);
-      }}
-      className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-white/10 dark:hover:bg-white/5"
-    >
-      {copied ? (
-        <>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path
-              d="M2 6l3 3 5-5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Copied
-        </>
-      ) : (
-        <>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <rect x="4" y="1" width="7" height="8" rx="1" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M1 4h2v6a1 1 0 001 1h5v1H3a2 2 0 01-2-2V4z" fill="currentColor" />
-          </svg>
-          Copy
-        </>
-      )}
-    </button>
-  );
-}
 
 export function Hero() {
   return (
@@ -96,16 +57,6 @@ export function Hero() {
                 <Link href="/docs/doorway">Docs</Link>
               </RichButton>
             </div>
-          </div>
-        </div>
-
-        {/* Install Command Box - Theme aware */}
-        <div className="relative w-full max-w-sm">
-          <div className="flex items-center justify-between rounded-xl border border-border bg-card px-5 py-3.5 shadow-sm">
-            <span className="font-mono text-sm text-muted-foreground">
-              <span className="text-foreground">$</span> npm install hookraft
-            </span>
-            <CopyButton text="npm install hookraft" />
           </div>
         </div>
       </section>

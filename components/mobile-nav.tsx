@@ -51,6 +51,7 @@ export function MobileNav({
           </div>
         </Button>
       </PopoverTrigger>
+
       <PopoverContent
         className="bg-background/90 no-scrollbar h-(--radix-popover-content-available-height) w-(--radix-popover-content-available-width) overflow-y-auto rounded-none border-none p-0 shadow-none backdrop-blur duration-100"
         align="start"
@@ -79,6 +80,14 @@ export function MobileNav({
               </div>
             ))}
           </div>
+
+          {/* ✅ Added Sponsor link */}
+          <div className="flex flex-col gap-3 mt-4 border-t border-border pt-6">
+            <MobileLink href="/sponsor" onOpenChange={setOpen}>
+              Sponsor
+            </MobileLink>
+          </div>
+
         </div>
       </PopoverContent>
     </Popover>

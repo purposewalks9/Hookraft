@@ -15,7 +15,7 @@ export function SponsorsCircle() {
   const dots = 24; // tiny outer dots
 
   return (
-    <div className="py-24 px-4 bg-background">
+    <div className="py-16 px-4 bg-background">
       <div className="max-w-5xl mx-auto flex justify-center">
         
         {/* Container scales with screen */}
@@ -47,23 +47,6 @@ export function SponsorsCircle() {
                 style={{
                   left: `calc(50% + ${Math.cos(angle) * 38}%)`,
                   top: `calc(50% + ${Math.sin(angle) * 38}%)`,
-                  transform: "translate(-50%, -50%)",
-                }}
-              />
-            );
-          })}
-
-          {/* Small outer dots */}
-          {Array.from({ length: dots }).map((_, i) => {
-            const angle = (i * 2 * Math.PI) / dots;
-
-            return (
-              <div
-                key={i}
-                className="absolute w-[1.5%] aspect-square rounded-full bg-border/70"
-                style={{
-                  left: `calc(50% + ${Math.cos(angle) * 46}%)`,
-                  top: `calc(50% + ${Math.sin(angle) * 46}%)`,
                   transform: "translate(-50%, -50%)",
                 }}
               />

@@ -95,25 +95,43 @@ function PlanCard({ plan }: { plan: any }) {
         </div>
     );
 }
-
 export function PricingSection() {
     return (
-        <section className="relative py-20 px-4 w-full mx-auto text-center overflow-hidden pb-20l max-w-[1400px]">
+        <section className="relative py-20 px-4 w-full mx-auto text-center overflow-hidden max-w-[1400px]">
+
             {/* Heading */}
             <div className="max-w-3xl mx-auto mb-14">
-                <h2 className="text-xl md:text-3xl font-medium tracking-tight leading-[1.15] text-foreground">
-                    Sponsor Hookraft,{" "}
-                    <HighlightedText
-                        from="left"
-                        delay={0.1}
-                        className="px-2 py-1 rounded-md  text-white"
-                    >
-                        get exclusive Hooks
-                    </HighlightedText>{" "}
-                    and help us keep it free for everyone
+                <h2 className="text-xl md:text-3xl font-medium tracking-tight leading-snug md:leading-[1.15] text-foreground">
+                    
+                    {/* Mobile version (shorter) */}
+                    <span className="sm:hidden">
+                        Sponsor Hookraft,{" "}
+                        <HighlightedText
+                            from="left"
+                            delay={0.1}
+                            className="px-2 py-1 rounded-md text-white"
+                        >
+                            get exclusive Hooks
+                        </HighlightedText>
+                    </span>
+
+                    {/* Desktop version (full text) */}
+                    <span className="hidden sm:inline">
+                        Sponsor Hookraft,{" "}
+                        <HighlightedText
+                            from="left"
+                            delay={0.1}
+                            className="px-2 py-1 rounded-md text-white"
+                        >
+                            get exclusive Hooks
+                        </HighlightedText>{" "}
+                        and help us keep it free for everyone
+                    </span>
+
                 </h2>
             </div>
 
+            {/* Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {plans.map((plan) => (
                     <PlanCard key={plan.id} plan={plan} />

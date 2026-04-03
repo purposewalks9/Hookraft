@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { HookLogo } from "@/components/hook-logo";
+
 
 const links = {
   Resources: [
@@ -23,17 +24,15 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 md:gap-8">
           {/* Brand Column */}
           <div className="flex flex-col gap-5">
-            <Link href="/" className="flex items-center gap-2 w-fit">
-              <span className="font-semibold text-xl tracking-tighter text-foreground">
-                Hookraft
-              </span>
+            <div className="">
+             <Link href="/" className="flex items-center gap-1.5">
+              <HookLogo size={80} />
             </Link>
 
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[260px]">
-              Logic hooks for your React views.<br />
-              No UI. No styles. Just clean, declarative behaviour.
+              Custom hooks for your client-side needs.
             </p>
-
+          </div>
             {/* Social Icons */}
             <div className="flex items-center gap-5 mt-2">
               <Link
@@ -61,7 +60,7 @@ export function Footer() {
               </Link>
 
               <Link
-                href="https://discord.gg/CxzqwQ2EAa"
+                href="https://discord.gg/utV9wVYu"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-all hover:scale-110"
