@@ -1,3 +1,5 @@
+import { DocSchema } from "@/lib/types";
+
 export const basicDoc: DocSchema = [
   {
     title: "Core",
