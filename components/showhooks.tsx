@@ -12,20 +12,22 @@ export function HooksShowcase() {
   return (
     <section className="relative mx-auto pb-20 px-4 w-full max-w-[1400px]">
       
-      <div className="mb-8">
-        <ShimmerText className="text-3xl font-semibold mb-2 text-foreground">
+      {/* Heading */}
+      <div className="mb-6 sm:mb-8">
+        <ShimmerText className="text-[clamp(1.25rem,2.5vw,1.875rem)] font-semibold text-foreground tracking-tight">
           Every hook you&apos;ll actually need
         </ShimmerText>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {/* Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {hooks.map((hook) => (
           <Link
             key={hook.id}
             href={`/docs/${hook.id}`}
-            className="group block  border-r  p-4 hover:border-border/80 hover:bg-accent/40 transition-all duration-200"
+            className="group block p-4 rounded-xl border border-border bg-card/40 hover:bg-accent/40 hover:border-border/80 transition-all duration-200"
           >
-            <h2 className=" text-sm font-semibold text-foreground group-hover:text-foreground/80">
+            <h2 className="text-sm font-semibold text-foreground group-hover:text-foreground/80">
               {hook.title}
             </h2>
 

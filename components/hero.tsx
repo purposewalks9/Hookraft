@@ -34,7 +34,7 @@ export function Hero() {
             </BlurReveal>
 
             <p className="text-base md:text-lg leading-6 text-muted-foreground">
-              Hookraft provides a collection of custom hooks that abstract away common patterns and complexities in React development. Focus on building your UI, while Hookraft takes care of the logic.
+              Focus on building your UI, while Hookraft takes care of the logic.
             </p>
 
             <div className="flex flex-row gap-3 mt-2 w-auto">
