@@ -30,13 +30,11 @@ export function Hero() {
               letterSpacing="-0.020em"
               className="font-medium text-3xl md:text-4xl lg:text-5xl tracking-tight text-foreground"
             >
-              Declarative lifecycle hooks for your React components.
+              Declarative custom hooks for your React components.
             </BlurReveal>
 
             <p className="text-base md:text-lg leading-6 text-muted-foreground">
-              Stop scattering side effects across useEffect
-              <br />
-              Declare what happens when your UI enters, loads, or exits.
+              Hookraft provides a collection of custom hooks that abstract away common patterns and complexities in React development. Focus on building your UI, while Hookraft takes care of the logic.
             </p>
 
             <div className="flex flex-row gap-3 mt-2 w-auto">
