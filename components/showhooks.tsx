@@ -25,7 +25,7 @@ export function HooksShowcase() {
           <Link
             key={hook.id}
             href={`/docs/${hook.id}`}
-            className="group block p-4 rounded-xl border border-border bg-card/40 hover:bg-accent/40 hover:border-border/80 transition-all duration-200"
+            className="group block p-4 border-r  hover:bg-accent/40 hover:border-border/80 transition-all duration-200"
           >
             <h2 className="text-sm font-semibold text-foreground group-hover:text-foreground/80">
               {hook.title}
