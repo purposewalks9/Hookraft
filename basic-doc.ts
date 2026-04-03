@@ -1,8 +1,6 @@
-import { DocSchema } from "@/lib/types";
-
 export const basicDoc: DocSchema = [
   {
-    title: "Getting Started",
+    title: "Core",
     items: [
       {
         title: "Introduction",
@@ -11,18 +9,25 @@ export const basicDoc: DocSchema = [
       },
     ],
   },
+
   {
-    title: "Lifecycle",
+    title: "Control Flow & Lifecycle",
     items: [
       {
         title: "Doorway",
         id: "doorway",
         description: "Connect conditional rendering to side effects.",
       },
+      {
+        title: "UsePipeline",
+        id: "use-pipeline",
+        description: "Orchestrate complex multi-step async flows with dependency management, parallel execution, rollback, and per-step retry.",
+      },
     ],
   },
+
   {
-    title: "Async & Data",
+    title: "Data Fetching & Async",
     items: [
       {
         title: "UseRequest",
@@ -34,41 +39,49 @@ export const basicDoc: DocSchema = [
         id: "use-queue",
         description: "Manage and process async task queues in React.",
       },
+    ],
+  },
+
+  {
+    title: "Real-time & Communication",
+    items: [
       {
-        title: "UsePipeline",
-        id: "use-pipeline",
-        description: "Orchestrate complex multi-step async flows with dependency management, parallel execution, rollback, and per-step retry.",
+        title: "UseWebSocket",
+        id: "use-websocket",
+        description: "A complete WebSocket hook with auto-reconnect, exponential backoff, message queuing, heartbeat, and full lifecycle callbacks.",
+      },
+      {
+        title: "UseBroadcast",
+        id: "use-broadcast",
+        description: "Sync state across multiple browser tabs in real time using BroadcastChannel.",
       },
     ],
   },
+
   {
-    title: "Auth & Security",
+    title: "State Management",
+    items: [
+      {
+        title: "UseHistory",
+        id: "use-history",
+        description: "Track state changes with undo/redo and full history navigation.",
+      },
+      {
+        title: "UseForm",
+        id: "use-form",
+        description: "Lightweight form state and validation management for React.",
+      },
+    ],
+  },
+
+  {
+    title: "Authentication & Security",
     items: [
       {
         title: "UseAuth",
         id: "use-auth",
         description: "JWT auth with brute force protection and bot detection.",
       },
-    ],
-  },
-  {
-    title: "State",
-    items: [
-      {
-        title: "UseHistory",
-        id: "use-history",
-        description: "Stop losing state changes. useHistory remembers every update so users can undo mistakes, redo actions, and navigate their full edit history.",
-      },
-      {
-        title: "UseBroadcast",
-        id: "use-broadcast",
-        description: "Sync state across multiple browser tabs in real time. Built on the BroadcastChannel API — no server, no WebSockets required.",
-      },
-      {
-        title: "UseForm",
-        id: "use-form",
-        description: "A simple, lightweight form management solution for React applications.",
-      }
     ],
   },
 ];
