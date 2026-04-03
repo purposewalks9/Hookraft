@@ -24,9 +24,8 @@ export default function SiteHeader({ docSchema }: { docSchema?: DocSchema }) {
               Docs
             </Link>
             <Link
-              href="#"
-              className="pointer-events-none text-muted-foreground/50 hover:text-foreground transition-colors"
-              aria-disabled="true"
+              href="/sponsor"
+              className=" text-muted-foreground hover:text-foreground transition-colors"
             >
               Sponsor
             </Link>

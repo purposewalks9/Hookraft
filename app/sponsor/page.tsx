@@ -1,17 +1,15 @@
 import { Footer } from "@/components/footer";
-import { Hero } from "@/components/hero";
-import { HooksShowcase } from "@/components/showhooks";
 import SiteHeader from "@/components/site-header";
 import { PricingSection } from "@/components/sponsor";
 import { getDocSchema } from "@/lib/doc";
+import { SponsorsCircle } from "@/components/sponsorcircle";
 const docSchema = await getDocSchema();
 
 export default function Home() {
   return (
     <div className=" flex flex-col relative min-h-dvh pt-14 ">
       <SiteHeader docSchema={docSchema} />
-      <Hero />
-      <HooksShowcase />
+        <SponsorsCircle />
       <PricingSection />
       <Footer />
     </div>

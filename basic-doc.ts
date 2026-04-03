@@ -2,7 +2,7 @@ import { DocSchema } from "@/lib/types";
 
 export const basicDoc: DocSchema = [
   {
-    title: "Core",
+    title: "Getting Started",
     items: [
       {
         title: "Introduction",
