@@ -59,6 +59,14 @@ export function MobileNav({
         alignOffset={-16}
         sideOffset={14}
       >
+         {/* ✅ Added Sponsor link */}
+          <div className="flex flex-col gap-3 mt-4 border-b border-border pt-6">
+            <MobileLink href="/sponsor" onOpenChange={setOpen}>
+              Sponsor
+            </MobileLink>
+          </div>
+
+
         <div className="flex flex-col gap-12 overflow-auto px-4 py-6">
           <div className="flex flex-col gap-8">
             {docSchema.map((group, index) => (
@@ -81,13 +89,7 @@ export function MobileNav({
             ))}
           </div>
 
-          {/* ✅ Added Sponsor link */}
-          <div className="flex flex-col gap-3 mt-4 border-t border-border pt-6">
-            <MobileLink href="/sponsor" onOpenChange={setOpen}>
-              Sponsor
-            </MobileLink>
-          </div>
-
+         
         </div>
       </PopoverContent>
     </Popover>
