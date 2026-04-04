@@ -8,6 +8,20 @@
       "when": 1775304305532,
       "tag": "0000_chemical_darkstar",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775327355665,
+      "tag": "0001_far_multiple_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775329614951,
+      "tag": "0002_bumpy_gladiator",
+      "breakpoints": true
     }
   ]
 }
