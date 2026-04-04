@@ -6,43 +6,26 @@ import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
-  LogOut,
   Mail,
   User,
-  Shield,
   Award,
   Crown,
   Gem,
   Sparkles,
-  Copy,
-  Check,
+  Globe,
+  LayoutGrid,
+  MessageCircle,
+  MessageSquare,
+  ImageIcon,
 } from "lucide-react";
 import SiteHeader from "@/components/site-header";
 import { Footer } from "@/components/footer";
 import ShimmerText from "@/components/spell-ui/shimmer-text";
 
 const PLAN_META = {
-  silver: {
-    label: "Silver",
-    icon: Award,
-    bg: "bg-slate-500/10",
-    border: "border-slate-500/20",
-    text: "text-slate-500",
-  },
-  gold: {
-    label: "Gold",
-    icon: Crown,
-    bg: "bg-yellow-500/10",
-    border: "border-yellow-500/20",
-    text: "text-yellow-500",
-  },
-  diamond: {
-    label: "Diamond",
-    icon: Gem,
-    bg: "bg-cyan-400/10",
-    border: "border-cyan-400/20",
-    text: "text-cyan-400",
-  },
+  silver: { label: "Silver", icon: Award, text: "text-slate-500" },
+  gold: { label: "Gold", icon: Crown, text: "text-yellow-500" },
+  diamond: { label: "Diamond", icon: Gem, text: "text-cyan-400" },
 };
 
 const HOOKRAFT_EMAIL = "boypee71@gmail.com";
@@ -53,7 +36,6 @@ export default function SettingsPage() {
   const [plan, setPlan] = useState<string | null>(null);
   const [sponsorId, setSponsorId] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!session?.user && !isPending) router.push("/signin");
@@ -64,7 +46,6 @@ export default function SettingsPage() {
       fetch("/api/sponsorship")
         .then((r) => r.json())
         .then((data) => {
-          // ✅ Only show the plan if payment was actually verified by webhook
           if (data.verified === true) {
             setPlan(data.plan);
             setSponsorId(data.sponsorId);
@@ -84,19 +65,19 @@ export default function SettingsPage() {
     });
   }
 
-  function copyId() {
-    if (!sponsorId) return;
-    navigator.clipboard.writeText(sponsorId);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
   if (isPending || !session?.user) return null;
 
   const { name, email, image } = session.user;
   const planMeta = plan ? PLAN_META[plan as keyof typeof PLAN_META] : null;
-
   const accountId = "HK-" + (session.user.id ?? "").slice(0, 6).toUpperCase();
+
+  const instructions = [
+    { icon: LayoutGrid, label: "Account ID", hint: sponsorId ?? accountId, mono: true },
+    { icon: MessageCircle, label: "Discord username"},
+    { icon: Globe, label: "Website URL" },
+    { icon: ImageIcon, label: "Brand logo" },
+    { icon: MessageSquare, label: "Additional info"},
+  ];
 
   return (
     <div className="flex flex-col relative min-h-dvh bg-background">
@@ -112,8 +93,8 @@ export default function SettingsPage() {
 
           <div className="space-y-6">
 
+            {/* Profile card */}
             <div className="border-x overflow-hidden">
-
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-5">
                   {image ? (
@@ -137,48 +118,63 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 </div>
-               </div>
-               </div>
+              </div>
+            </div>
 
             {/* Sponsorship card */}
-            <div className=" border-x overflow-hidden">
-
+            <div className="border-x overflow-hidden">
               <div className="p-6 space-y-5">
                 {planLoading ? (
                   <div className="h-14 bg-muted/40 rounded-lg animate-pulse" />
                 ) : planMeta ? (
                   <>
-                    <div className={`flex items-center  p-4}`}>
+                    <div className="flex items-center p-4">
                       <span className="w-9 h-9 flex items-center justify-center shrink-0">
                         <planMeta.icon className={`w-4 h-4 ${planMeta.text}`} />
                       </span>
                       <div>
-                        <ShimmerText className={`text-sm font-semibold ${planMeta.text}`}>{planMeta.label} Sponsor</ShimmerText>
+                        <ShimmerText className={`text-sm font-semibold ${planMeta.text}`}>
+                          {planMeta.label} Sponsor
+                        </ShimmerText>
                       </div>
                     </div>
 
-                    <div className="rounded-lg  p-5 space-y-3">
-                      <p className="text-sm font-medium">🎉 Thank you for sponsoring Hookraft!</p>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        To get your brand featured, please send us an email with the following information:
+                    <div className="rounded-lg p-5 space-y-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                        Send the following to get your brand featured:
                       </p>
-                      <ul className="space-y-1.5 text-sm text-muted-foreground">
-                        <li> Your <span className="text-foreground font-medium">Account ID</span>: <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{sponsorId ?? accountId}</span></li>
-                        <li> Your <span className="text-foreground font-medium">Discord username</span></li>
-                        <li> Your <span className="text-foreground font-medium">website URL</span></li>
-                        <li> Your <span className="text-foreground font-medium">brand logo</span> (PNG or SVG)</li>
-                        <li> Any <span className="text-foreground font-medium">additional info</span> you'd like displayed</li>
-                      </ul>
-                      <p className="text-sm text-muted-foreground pt-1">
-                        Send everything to:{" "}
-                        <a
-                          href={`mailto:${HOOKRAFT_EMAIL}`}
-                          className="font-bold text-foreground underline underline-offset-2 hover:opacity-80 transition-opacity"
+
+                      <div className="space-y-2 mb-4">
+                        {instructions.map(({ icon: Icon, label, hint, mono }) => (
+                          <div
+                            key={label}
+                            className="flex items-center gap-3 px-4 py-2.5  border border-border/50 text-sm"
+                          >
+                            <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            <span className="text-muted-foreground">{label}</span>
+                            <span
+                              className={`ml-auto text-xs ${mono
+                                  ? "font-mono bg-background border border-border/60 px-1.5 py-0.5 rounded"
+                                  : "text-muted-foreground/60"
+                                }`}
+                            >
+                              {hint}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-2 px-4 py-2.5 border border-border text-sm">
+                        <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground">Send to</span>
+
+                        <a href={`mailto:${HOOKRAFT_EMAIL}`}
+                          className="ml-auto font-medium underline underline-offset-2 hover:opacity-80 transition-opacity"
                         >
                           {HOOKRAFT_EMAIL}
                         </a>
-                      </p>
-                    </div>
+                      </div>
+                    </div>  {/* ← closes the rounded-lg p-5 div */}
                   </>
                 ) : (
                   <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/40 border border-border/50">
@@ -203,6 +199,7 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
+
           </div>
         </div>
       </main>
