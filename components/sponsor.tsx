@@ -15,7 +15,7 @@ const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 const POLL_INTERVAL_MS = 4000;
 
 const PLAN_AMOUNTS: Record<string, number> = {
-  silver: 10000,
+  silver: 100,
   gold: 50000,
   diamond: 100000,
 };
