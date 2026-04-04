@@ -2,24 +2,22 @@
 
 import { useState, useEffect, useRef } from "react";
 import {
-  Gem, Crown, Award, Lock, ExternalLink,
+  Gem, Crown, Award, Lock,
   CheckCircle, Loader2, XCircle,
 } from "lucide-react";
 import { HighlightedText } from "./spell-ui/highlighted-text";
 import { RichButton } from "./spell-ui/rich-button";
-import { Button } from "./ui/button";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { nanoid } from "nanoid";
 
-// How long to poll waiting for the webhook (ms)
-const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-const POLL_INTERVAL_MS = 4000;          // every 4 seconds
+const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+const POLL_INTERVAL_MS = 4000;
 
-const FLUTTERWAVE_BASE_LINKS: Record<string, string> = {
-  silver: "https://flutterwave.com/pay/puhpuyfpqo1x",
-  gold: "https://flutterwave.com/pay/your-gold-link",
-  diamond: "https://flutterwave.com/pay/your-diamond-link",
+const PLAN_AMOUNTS: Record<string, number> = {
+  silver: 10000,
+  gold: 50000,
+  diamond: 100000,
 };
 
 const plans = [
@@ -62,29 +60,53 @@ const plans = [
   },
 ] as const;
 
+function loadFlutterwaveScript(): Promise<void> {
+  return new Promise((resolve) => {
+    if (document.getElementById("flutterwave-sdk")) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "flutterwave-sdk";
+    script.src = "https://checkout.flutterwave.com/v3.js";
+    script.onload = () => resolve();
+    document.body.appendChild(script);
+  });
+}
+
 function PlanCard({
   plan,
   isLoggedIn,
+  userEmail,
+  userName,
+  autoStartPlanId,
 }: {
   plan: (typeof plans)[number];
   isLoggedIn: boolean;
+  userEmail: string;
+  userName: string;
+  autoStartPlanId: string | null;
 }) {
   const Icon = plan.icon;
   const router = useRouter();
 
-  type Step = "idle" | "paying" | "polling" | "done" | "timeout";
+  type Step = "idle" | "polling" | "done" | "timeout";
   const [step, setStep] = useState<Step>("idle");
-  const [txRef, setTxRef] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Clean up timers on unmount
+  // Auto-start polling when Flutterwave redirects back on mobile (?paid=planId)
   useEffect(() => {
-    return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-      if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current);
-    };
+    if (autoStartPlanId === plan.id && isLoggedIn) {
+      startPolling();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStartPlanId, isLoggedIn]);
+
+  useEffect(() => {
+    return () => stopPolling();
   }, []);
 
   function stopPolling() {
@@ -92,33 +114,9 @@ function PlanCard({
     if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current);
   }
 
-  async function handleOpenPayment() {
-    if (!isLoggedIn) {
-      router.push("/login");
-      return;
-    }
-
-    // 1. Generate a unique tx_ref for this payment attempt
-    const ref = `HK-${plan.id}-${nanoid(10)}`;
-    setTxRef(ref);
-
-    // 2. Save an unverified row to the DB so webhook can match it later
-    await fetch("/api/sponsor", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: plan.id, txRef: ref }),
-    });
-
-    // 3. Open Flutterwave with tx_ref appended so it comes back in the webhook
-    const link = `${FLUTTERWAVE_BASE_LINKS[plan.id]}?tx_ref=${ref}`;
-    window.open(link, "_blank");
-    setStep("paying");
-  }
-
   function startPolling() {
     setStep("polling");
 
-    // Poll every 4 seconds
     pollIntervalRef.current = setInterval(async () => {
       try {
         const res = await fetch("/api/sponsorship");
@@ -126,17 +124,76 @@ function PlanCard({
         if (data.verified === true && data.plan === plan.id) {
           stopPolling();
           setStep("done");
+          window.history.replaceState({}, "", "/sponsor");
         }
       } catch {
-        // network hiccup — keep polling
+        // keep polling on network hiccup
       }
     }, POLL_INTERVAL_MS);
 
-    // Stop polling after 5 minutes and show timeout message
     pollTimeoutRef.current = setTimeout(() => {
       stopPolling();
       setStep("timeout");
     }, POLL_TIMEOUT_MS);
+  }
+
+  async function handlePay() {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const ref = `HK-${plan.id}-${nanoid(10)}`;
+
+      // Save unverified row so webhook can match by tx_ref
+      await fetch("/api/sponsor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: plan.id, txRef: ref }),
+      });
+
+      await loadFlutterwaveScript();
+      setLoading(false);
+
+      // @ts-ignore
+      window.FlutterwaveCheckout({
+        public_key: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY,
+        tx_ref: ref,
+        amount: PLAN_AMOUNTS[plan.id],
+        currency: "NGN",
+        payment_options: "card, banktransfer, ussd",
+        // Mobile: Flutterwave redirects here after payment
+        redirect_url: `${window.location.origin}/sponsor?paid=${plan.id}`,
+        customer: {
+          email: userEmail,
+          name: userName,
+        },
+        customizations: {
+          title: "Hookraft Sponsorship",
+          description: `${plan.name} Sponsor tier`,
+          logo: `${window.location.origin}/icon.svg`,
+        },
+        callback: function (response: { status: string }) {
+          // Desktop: fires when popup payment completes
+          if (response.status === "successful" || response.status === "completed") {
+            startPolling();
+          } else {
+            setStep("idle");
+          }
+        },
+        onclose: function () {
+          // User closed without paying
+          setStep("idle");
+          setLoading(false);
+        },
+      });
+    } catch (err) {
+      console.error("Payment error:", err);
+      setLoading(false);
+    }
   }
 
   return (
@@ -176,34 +233,19 @@ function PlanCard({
           </RichButton>
         )}
 
-        {/* Idle — open payment */}
+        {/* Idle */}
         {isLoggedIn && step === "idle" && (
-          <RichButton className="w-full gap-2 cursor-pointer" onClick={handleOpenPayment}>
-            <ExternalLink className="size-3.5" />
-            Sponsor — {plan.name}
+          <RichButton
+            className="w-full gap-2 cursor-pointer"
+            onClick={handlePay}
+            disabled={loading}
+          >
+            {loading && <Loader2 className="size-3.5 animate-spin" />}
+            {loading ? "Loading..." : `Sponsor — ${plan.name}`}
           </RichButton>
         )}
 
-        {/* Paying — waiting for user to complete payment */}
-        {isLoggedIn && step === "paying" && (
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground text-center">
-              Complete your payment in the opened tab, then click below
-            </p>
-            <Button className="w-full gap-2 cursor-pointer" onClick={startPolling}>
-              <CheckCircle className="size-4" />
-              I've completed payment
-            </Button>
-            <button
-              onClick={() => setStep("idle")}
-              className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
-
-        {/* Polling — waiting for webhook to confirm */}
+        {/* Polling */}
         {isLoggedIn && step === "polling" && (
           <div className="flex flex-col items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -213,7 +255,7 @@ function PlanCard({
           </div>
         )}
 
-        {/* Done — webhook confirmed */}
+        {/* Done */}
         {step === "done" && (
           <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-sm font-medium">
             <CheckCircle className="size-4" />
@@ -221,13 +263,13 @@ function PlanCard({
           </div>
         )}
 
-        {/* Timeout — webhook never fired in time */}
+        {/* Timeout */}
         {step === "timeout" && (
           <div className="space-y-2">
             <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-xs">
               <XCircle className="size-4 shrink-0 mt-0.5" />
               <span>
-                We couldn't verify your payment yet. If you paid, it may take a few minutes to reflect.{" "}
+                Payment not detected yet. If you paid, it may take a few more minutes.{" "}
                 <button
                   className="underline underline-offset-2 hover:opacity-80 cursor-pointer"
                   onClick={startPolling}
@@ -251,6 +293,8 @@ function PlanCard({
 
 export function PricingSection() {
   const { data: session } = authClient.useSession();
+  const searchParams = useSearchParams();
+  const autoStartPlanId = searchParams.get("paid");
 
   return (
     <section className="relative py-20 px-4 w-full mx-auto text-center overflow-hidden max-w-[1400px]">
@@ -278,6 +322,9 @@ export function PricingSection() {
             key={plan.id}
             plan={plan}
             isLoggedIn={!!session?.user}
+            userEmail={session?.user?.email ?? ""}
+            userName={session?.user?.name ?? ""}
+            autoStartPlanId={autoStartPlanId}
           />
         ))}
       </div>
