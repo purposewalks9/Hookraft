@@ -15,9 +15,9 @@ const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 const POLL_INTERVAL_MS = 4000;
 
 const PLAN_AMOUNTS: Record<string, number> = {
-  silver: 100,
-  gold: 50000,
-  diamond: 100000,
+  silver: 10000,
+  gold: 20000,
+  diamond: 50000,
 };
 
 const plans = [
@@ -257,7 +257,7 @@ function PlanCard({
 
         {/* Done */}
         {step === "done" && (
-          <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-sm font-medium">
+          <div className="flex items-center justify-center gap-2 p-3 rounded-lg  text-green-600 dark:text-green-400 text-sm font-medium">
             <CheckCircle className="size-4" />
             Payment verified! Check your settings.
           </div>

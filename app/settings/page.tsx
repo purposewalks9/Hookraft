@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import SiteHeader from "@/components/site-header";
 import { Footer } from "@/components/footer";
+import ShimmerText from "@/components/spell-ui/shimmer-text";
 
 const PLAN_META = {
   silver: {
@@ -44,7 +45,7 @@ const PLAN_META = {
   },
 };
 
-const HOOKRAFT_EMAIL = "sponsor@hookraft.site";
+const HOOKRAFT_EMAIL = "boypee71@gmail.com";
 
 export default function SettingsPage() {
   const { data: session, isPending } = authClient.useSession();
@@ -111,12 +112,7 @@ export default function SettingsPage() {
 
           <div className="space-y-6">
 
-            {/* Profile card */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="px-6 py-4 border-b border-border bg-muted/30">
-                <h2 className="text-sm font-medium">Profile</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Your account information</p>
-              </div>
+            <div className="border-x overflow-hidden">
 
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-5">
@@ -141,87 +137,37 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 </div>
-
-                <div className="h-px bg-border" />
-
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/40 border border-border/50">
-                    <span className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-widest mb-1">Full Name</p>
-                      <p className="text-sm font-medium truncate">{name ?? "—"}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/40 border border-border/50">
-                    <span className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-widest mb-1">Email Address</p>
-                      <p className="text-sm font-medium truncate">{email ?? "—"}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/40 border border-border/50">
-                    <span className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
-                      <Shield className="w-4 h-4 text-muted-foreground" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-widest mb-1">Account ID</p>
-                      <p className="text-sm font-mono font-medium">{sponsorId ?? accountId}</p>
-                    </div>
-                    <button
-                      onClick={copyId}
-                      className="shrink-0 w-8 h-8 rounded-md hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
-                      title="Copy ID"
-                    >
-                      {copied ? (
-                        <Check className="w-3.5 h-3.5 text-green-500" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+               </div>
+               </div>
 
             {/* Sponsorship card */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="px-6 py-4 border-b border-border bg-muted/30">
-                <h2 className="text-sm font-medium">Sponsorship</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Your Hookraft sponsor tier</p>
-              </div>
+            <div className=" border-x overflow-hidden">
 
               <div className="p-6 space-y-5">
                 {planLoading ? (
                   <div className="h-14 bg-muted/40 rounded-lg animate-pulse" />
                 ) : planMeta ? (
                   <>
-                    <div className={`flex items-center gap-4 p-4 rounded-lg border ${planMeta.bg} ${planMeta.border}`}>
-                      <span className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
+                    <div className={`flex items-center  p-4}`}>
+                      <span className="w-9 h-9 flex items-center justify-center shrink-0">
                         <planMeta.icon className={`w-4 h-4 ${planMeta.text}`} />
                       </span>
                       <div>
-                        <p className="text-[11px] text-muted-foreground uppercase tracking-widest mb-1">Active Tier</p>
-                        <p className={`text-sm font-semibold ${planMeta.text}`}>{planMeta.label} Sponsor</p>
+                        <ShimmerText className={`text-sm font-semibold ${planMeta.text}`}>{planMeta.label} Sponsor</ShimmerText>
                       </div>
                     </div>
 
-                    <div className="rounded-lg border border-border bg-muted/20 p-5 space-y-3">
+                    <div className="rounded-lg  p-5 space-y-3">
                       <p className="text-sm font-medium">🎉 Thank you for sponsoring Hookraft!</p>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         To get your brand featured, please send us an email with the following information:
                       </p>
                       <ul className="space-y-1.5 text-sm text-muted-foreground">
-                        <li>• Your <span className="text-foreground font-medium">Account ID</span>: <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{sponsorId ?? accountId}</span></li>
-                        <li>• Your <span className="text-foreground font-medium">Discord username</span></li>
-                        <li>• Your <span className="text-foreground font-medium">website URL</span></li>
-                        <li>• Your <span className="text-foreground font-medium">brand logo</span> (PNG or SVG)</li>
-                        <li>• Any <span className="text-foreground font-medium">additional info</span> you'd like displayed</li>
+                        <li> Your <span className="text-foreground font-medium">Account ID</span>: <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{sponsorId ?? accountId}</span></li>
+                        <li> Your <span className="text-foreground font-medium">Discord username</span></li>
+                        <li> Your <span className="text-foreground font-medium">website URL</span></li>
+                        <li> Your <span className="text-foreground font-medium">brand logo</span> (PNG or SVG)</li>
+                        <li> Any <span className="text-foreground font-medium">additional info</span> you'd like displayed</li>
                       </ul>
                       <p className="text-sm text-muted-foreground pt-1">
                         Send everything to:{" "}
@@ -257,14 +203,6 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
-
-            {/* Security card */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="px-6 py-4 border-b border-border bg-muted/30">
-                <h2 className="text-sm font-medium">Security</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Manage your session</p>
-              </div>
-              /</div>
           </div>
         </div>
       </main>
