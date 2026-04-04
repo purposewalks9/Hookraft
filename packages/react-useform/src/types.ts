@@ -3,20 +3,13 @@ export type FormStatus = "idle" | "submitting" | "success" | "error"
 export type FieldValue = string | number | boolean
 
 export interface FieldRule {
-
   required?: boolean
-
   minLength?: number
-
   maxLength?: number
-
   min?: number
-
-
+  max?: number        // ← add this line
   pattern?: RegExp
-
   validate?: (value: FieldValue, allValues: Record<string, FieldValue>) => boolean | string
-
   message?: string
 }
 

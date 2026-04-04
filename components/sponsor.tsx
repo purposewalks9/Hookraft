@@ -14,7 +14,7 @@ const plans = [
         period: "Per month (+tax)",
         badge: null,
         features: [
-            "Support Spell UI",
+            "Support Hookraft",
             "Custom Role on Discord server",
             "Small logo & link in Sponsor page",
         ],
