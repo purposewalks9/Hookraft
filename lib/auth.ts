@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
-import { nanoid } from "nanoid";
 import { nextCookies } from "better-auth/next-js";
 import { getBaseURL } from "./get-base-url";
 import * as schema from "@/db/schemas/auth";
@@ -13,7 +12,6 @@ export const auth = betterAuth({
     provider: "pg",
     usePlural: true,
     schema,
-    generateId: () => nanoid(10), // ← back inside drizzleAdapter
   }),
   socialProviders: {
     github: {
