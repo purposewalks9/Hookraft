@@ -97,12 +97,12 @@ function PlanCard({
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-start polling when Flutterwave redirects back on mobile (?paid=planId)
+ 
   useEffect(() => {
     if (autoStartPlanId === plan.id && isLoggedIn) {
       startPolling();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [autoStartPlanId, isLoggedIn]);
 
   useEffect(() => {
@@ -127,7 +127,7 @@ function PlanCard({
           window.history.replaceState({}, "", "/sponsor");
         }
       } catch {
-        // keep polling on network hiccup
+      
       }
     }, POLL_INTERVAL_MS);
 
@@ -148,7 +148,7 @@ function PlanCard({
     try {
       const ref = `HK-${plan.id}-${nanoid(10)}`;
 
-      // Save unverified row so webhook can match by tx_ref
+     
       await fetch("/api/sponsor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -158,14 +158,14 @@ function PlanCard({
       await loadFlutterwaveScript();
       setLoading(false);
 
-      // @ts-ignore
+    
       window.FlutterwaveCheckout({
         public_key: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY,
         tx_ref: ref,
         amount: PLAN_AMOUNTS[plan.id],
         currency: "NGN",
         payment_options: "card, banktransfer, ussd",
-        // Mobile: Flutterwave redirects here after payment
+     
         redirect_url: `${window.location.origin}/sponsor?paid=${plan.id}`,
         customer: {
           email: userEmail,
@@ -177,7 +177,7 @@ function PlanCard({
           logo: `${window.location.origin}/icon.svg`,
         },
         callback: function (response: { status: string }) {
-          // Desktop: fires when popup payment completes
+         
           if (response.status === "successful" || response.status === "completed") {
             startPolling();
           } else {
@@ -185,7 +185,7 @@ function PlanCard({
           }
         },
         onclose: function () {
-          // User closed without paying
+        
           setStep("idle");
           setLoading(false);
         },
@@ -217,7 +217,7 @@ function PlanCard({
             {plan.price}
           </span>
         </div>
-        <p className="text-xs text-muted-foreground text-left mb-6">One-time payment</p>
+
 
         <ul className="space-y-2.5 mb-8 text-left text-sm text-muted-foreground flex-1">
           {plan.features.map((feature, i) => (
