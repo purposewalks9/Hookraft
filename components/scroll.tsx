@@ -1,4 +1,4 @@
-// components/ScrollSpark.tsx
+
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -30,7 +30,7 @@ export default function ScrollSpark() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     let accent = getComputedStyle(document.documentElement)
-      .getPropertyValue('--accent').trim() || '#6366f1'; // fallback color
+      .getPropertyValue('--accent').trim() || '#6366f1';
 
     const themeObs = new MutationObserver(() => {
       accent = getComputedStyle(document.documentElement)

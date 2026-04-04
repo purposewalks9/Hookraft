@@ -69,7 +69,6 @@ export function useForm<T extends FieldsConfig>(
   const onErrorRef = useRef(onError)
   const onChangeRef = useRef(onChange)
 
-  // Keep refs fresh
   fieldConfigsRef.current = fieldConfigs
   onSubmitRef.current = onSubmit
   onSuccessRef.current = onSuccess

@@ -12,14 +12,14 @@ export function HooksShowcase() {
   return (
     <section className="relative mx-auto pb-20 px-4 w-full max-w-[1400px]">
       
-      {/* Heading */}
+    
       <div className="mb-6 sm:mb-8">
         <ShimmerText className="text-[clamp(1.25rem,2.5vw,1.875rem)] font-semibold text-foreground tracking-tight">
           Every hook you&apos;ll actually need
         </ShimmerText>
       </div>
 
-      {/* Grid */}
+    
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {hooks.map((hook) => (
           <Link

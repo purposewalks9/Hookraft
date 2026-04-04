@@ -11,20 +11,19 @@ const placeholderItems = [
   { icon: Users, color: "#60a5fa" },
 ];
 export function SponsorsCircle() {
-  const items = 10; // number of outer circles
-  const dots = 24; // tiny outer dots
+  const items = 10; 
+  const dots = 24; 
 
   return (
     <div className="py-16 px-4 bg-background">
       <div className="max-w-5xl mx-auto flex justify-center">
         
-        {/* Container scales with screen */}
         <div className="relative w-[90vw] max-w-[620px] aspect-square">
 
-          {/* Outer border */}
+       
           <div className="absolute inset-0 rounded-full border border-border/50" />
 
-          {/* Center circle */}
+      
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-[40%] aspect-square rounded-full border border-border/40 bg-card/60 flex items-center justify-center text-center p-4">
               <div>
@@ -36,7 +35,6 @@ export function SponsorsCircle() {
             </div>
           </div>
 
-          {/* Main empty circles */}
           {Array.from({ length: items }).map((_, index) => {
             const angle = (index * 2 * Math.PI) / items;
 

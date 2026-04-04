@@ -2,14 +2,16 @@
 
 import { BlurReveal } from "@/components/spell-ui/blur-reveal";
 import { RichButton } from "@/components/spell-ui/rich-button";
+import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 
 export function Hero() {
+  const { data: session, isPending } = authClient.useSession();
+
   return (
     <div className="flex flex-col items-center w-full pb-12 md:pb-24 gap-8 md:gap-16 px-4">
       <section className="relative flex flex-col items-center justify-center pb-20 px-4 text-center w-full max-w-[1400px] overflow-hidden bg-background">
 
-        {/* Subtle Grid Background - Works in both themes */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -21,7 +23,6 @@ export function Hero() {
           }}
         />
 
-        {/* Soft Glow - Only visible in dark mode */}
         <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] rounded-full bg-yellow-500/10 dark:bg-yellow-600/10 blur-[100px]" />
 
         <div className="flex flex-col items-center w-full pt-6 pb-6 md:pt-14 md:pb-24 gap-12 md:gap-20 px-4">
@@ -38,13 +39,16 @@ export function Hero() {
             </p>
 
             <div className="flex flex-row gap-3 mt-2 w-auto">
-              <RichButton
-                size="lg"
-                className="transition-transform rounded-md tracking-tight active:scale-[0.97] will-change-transform ease-out duration-150 px-6"
-                asChild
-              >
-                <Link href="/docs/introduction">Get Started</Link>
-              </RichButton>
+         
+              {!isPending && !session?.user && (
+                <RichButton
+                  size="lg"
+                  className="transition-transform rounded-md tracking-tight active:scale-[0.97] will-change-transform ease-out duration-150 px-6"
+                  asChild
+                >
+                  <Link href="/login">Sign in</Link>
+                </RichButton>
+              )}
 
               <RichButton
                 size="lg"

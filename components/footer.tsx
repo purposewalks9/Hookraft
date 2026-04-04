@@ -22,7 +22,7 @@ export function Footer() {
     <footer className="w-full border-t border-border bg-background mt-auto">
       <div className="max-w-screen-2xl mx-auto px-6 py-16 md:py-20">
         <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 md:gap-8">
-          {/* Brand Column */}
+       
           <div className="flex flex-col gap-5">
             <div className="">
              <Link href="/" className="flex items-center gap-1.5">
@@ -33,7 +33,7 @@ export function Footer() {
               Custom hooks for your client-side needs.
             </p>
           </div>
-            {/* Social Icons */}
+          
             <div className="flex items-center gap-5 mt-2">
               <Link
                 href="https://github.com/purposewalks9/Hookraft"
@@ -73,7 +73,6 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Links Columns */}
           {Object.entries(links).map(([group, items]) => (
             <div key={group} className="flex flex-col gap-3">
               <p className="text-xs font-medium text-foreground tracking-widest uppercase">
@@ -97,7 +96,7 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Bottom Bar */}
+    
         <div className="mt-16 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p>
             © {new Date().getFullYear()} Hookraft. All rights reserved.

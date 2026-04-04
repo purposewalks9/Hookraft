@@ -56,17 +56,15 @@ function PlanCard({ plan }: { plan: any }) {
         <div className="relative flex flex-col h-full group">
            
             <div className="flex-1  border-r  p-6 flex flex-col hover:border-accent/30 transition-colors">
-                {/* Icon */}
+        
                 <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center mb-5">
                     <Icon size={24} color={plan.accent} strokeWidth={2.5} />
                 </div>
 
-                {/* Name */}
                 <h3 className="text-2xl font-medium text-foreground text-left mb-4">
                     {plan.name}
                 </h3>
 
-                {/* Price */}
                 <div className="mb-6 text-left">
                     <span className="text-4xl font-semibold tracking-tighter text-foreground">
                         {plan.price}
@@ -74,7 +72,7 @@ function PlanCard({ plan }: { plan: any }) {
                 
                 </div>
 
-                {/* Features */}
+            
                 <ul className="space-y-2.5 mb-8 text-sm text-muted-foreground flex-1">
                     {plan.features.map((feature: string, i: number) => (
                         <li key={i} className="flex items-start gap-3 text-[13px] leading-snug">
@@ -84,7 +82,7 @@ function PlanCard({ plan }: { plan: any }) {
                     ))}
                 </ul>
 
-                {/* Button */}
+               
                 <RichButton
                     disabled
                     className="w-full py-3 rounded-xl font-medium text-sm text-white cursor-not-allowed opacity-75 hover:opacity-60 transition-opacity"
@@ -99,11 +97,10 @@ export function PricingSection() {
     return (
         <section className="relative py-20 px-4 w-full mx-auto text-center overflow-hidden max-w-[1400px]">
 
-            {/* Heading */}
             <div className="max-w-3xl mx-auto mb-14">
                 <h2 className="text-xl md:text-3xl font-medium tracking-tight leading-snug md:leading-[1.15] text-foreground">
                     
-                    {/* Mobile version (shorter) */}
+                   
                     <span className="sm:hidden">
                         Sponsor Hookraft,{" "}
                         <HighlightedText
@@ -115,7 +112,7 @@ export function PricingSection() {
                         </HighlightedText>
                     </span>
 
-                    {/* Desktop version (full text) */}
+               
                     <span className="hidden sm:inline">
                         Sponsor Hookraft,{" "}
                         <HighlightedText
@@ -131,7 +128,7 @@ export function PricingSection() {
                 </h2>
             </div>
 
-            {/* Cards */}
+          
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {plans.map((plan) => (
                     <PlanCard key={plan.id} plan={plan} />

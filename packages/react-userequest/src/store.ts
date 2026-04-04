@@ -1,17 +1,7 @@
 import type { CacheEntry, InFlightEntry } from "./types"
 
-/**
- * Global in-memory cache — lives in JS RAM only.
- * Never touches localStorage, sessionStorage, or any browser storage.
- * Cleared automatically when the page refreshes or tab closes.
- */
 const cache = new Map<string, CacheEntry<unknown>>()
 
-/**
- * In-flight registry — tracks requests currently in progress.
- * If a request for the same key is already in flight,
- * new subscribers attach to the existing Promise instead of firing a new request.
- */
 const inFlight = new Map<string, InFlightEntry<unknown>>()
 
 export function getCached<T>(key: string, cacheTime: number): T | null {
