@@ -11,6 +11,12 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { nanoid } from "nanoid";
 
+declare global {
+  interface Window {
+    FlutterwaveCheckout: (options: Record<string, unknown>) => void;
+  }
+}
+
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 const POLL_INTERVAL_MS = 4000;
 
@@ -97,12 +103,11 @@ function PlanCard({
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
- 
   useEffect(() => {
     if (autoStartPlanId === plan.id && isLoggedIn) {
       startPolling();
     }
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStartPlanId, isLoggedIn]);
 
   useEffect(() => {
@@ -127,7 +132,7 @@ function PlanCard({
           window.history.replaceState({}, "", "/sponsor");
         }
       } catch {
-      
+        // keep polling on network hiccup
       }
     }, POLL_INTERVAL_MS);
 
@@ -148,7 +153,6 @@ function PlanCard({
     try {
       const ref = `HK-${plan.id}-${nanoid(10)}`;
 
-     
       await fetch("/api/sponsor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -158,14 +162,12 @@ function PlanCard({
       await loadFlutterwaveScript();
       setLoading(false);
 
-    
       window.FlutterwaveCheckout({
         public_key: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY,
         tx_ref: ref,
         amount: PLAN_AMOUNTS[plan.id],
         currency: "NGN",
         payment_options: "card, banktransfer, ussd",
-     
         redirect_url: `${window.location.origin}/sponsor?paid=${plan.id}`,
         customer: {
           email: userEmail,
@@ -177,7 +179,6 @@ function PlanCard({
           logo: `${window.location.origin}/icon.svg`,
         },
         callback: function (response: { status: string }) {
-         
           if (response.status === "successful" || response.status === "completed") {
             startPolling();
           } else {
@@ -185,7 +186,6 @@ function PlanCard({
           }
         },
         onclose: function () {
-        
           setStep("idle");
           setLoading(false);
         },
@@ -217,7 +217,6 @@ function PlanCard({
             {plan.price}
           </span>
         </div>
-
 
         <ul className="space-y-2.5 mb-8 text-left text-sm text-muted-foreground flex-1">
           {plan.features.map((feature, i) => (
@@ -257,7 +256,7 @@ function PlanCard({
 
         {/* Done */}
         {step === "done" && (
-          <div className="flex items-center justify-center gap-2 p-3 rounded-lg  text-green-600 dark:text-green-400 text-sm font-medium">
+          <div className="flex items-center justify-center gap-2 p-3  text-green-600 dark:text-green-400 text-sm font-medium">
             <CheckCircle className="size-4" />
             Payment verified! Check your settings.
           </div>
