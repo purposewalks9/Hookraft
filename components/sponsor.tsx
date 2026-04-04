@@ -43,7 +43,7 @@ const plans = [
     id: "gold",
     name: "Gold",
     icon: Crown,
-    price: "₦50,000",
+    price: "₦20,000",
     badge: "Best Value",
     features: [
       "All Silver features",
@@ -56,7 +56,7 @@ const plans = [
     id: "diamond",
     name: "Diamond",
     icon: Gem,
-    price: "₦100,000",
+    price: "₦50,000",
     features: [
       "All Platinum features",
       "Early access to upcoming components",
@@ -212,7 +212,7 @@ function PlanCard({
 
         <h3 className="text-2xl font-medium text-foreground text-left mb-4">{plan.name}</h3>
 
-        <div className="mb-1 text-left">
+        <div className="mb-3 text-left">
           <span className="text-4xl font-semibold tracking-tighter text-foreground">
             {plan.price}
           </span>
