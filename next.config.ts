@@ -9,15 +9,15 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
+        protocol: "https" as const,   // ← add "as const"
         hostname: "avatars.githubusercontent.com",
       },
       {
-        protocol: "https",
+        protocol: "https" as const,   // ← add "as const"
         hostname: "lh3.googleusercontent.com",
       },
     ],
-  },  
+  },
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   rewrites: async () => {
     return [
