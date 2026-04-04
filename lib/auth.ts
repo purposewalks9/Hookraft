@@ -13,10 +13,8 @@ export const auth = betterAuth({
     provider: "pg",
     usePlural: true,
     schema,
+    generateId: () => nanoid(10), // ← back inside drizzleAdapter
   }),
-  advanced: {
-    generateId: () => nanoid(10), // ← moved here
-  },
   socialProviders: {
     github: {
       clientId: process.env.GITHUB_CLIENT_ID ?? "",
