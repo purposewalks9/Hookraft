@@ -17,7 +17,7 @@ const COLORS = [
 export function DemoColor() {
   const [color, setColor] = useState("#378ADD")
   const { resolvedTheme } = useTheme()
-  const actionRef = useRef<HTMLButtonElement>(null)
+  const actionRef = useRef<HTMLElement>(null)
 
   useKeyCursor({
     keys: { Tab: actionRef },
@@ -28,7 +28,6 @@ export function DemoColor() {
 
   return (
     <div className="flex flex-col items-center gap-4 p-6">
-      {/* Color swatches */}
       <div className="flex gap-2.5">
         {COLORS.map((c) => (
           <button
