@@ -25,6 +25,11 @@ export const basicDoc: DocSchema = [
         id: "use-pipeline",
         description: "Orchestrate complex multi-step async flows with dependency management, parallel execution, rollback, and per-step retry.",
       },
+      {
+        title: "UseKeyCursor",
+        id: "use-key-cursor",
+        description: "Declarative key cursor with dynamic positioning and auto-cleanup.",
+      },
     ],
   },
 

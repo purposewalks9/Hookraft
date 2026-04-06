@@ -1,0 +1,194 @@
+import { Demo } from './demo'
+import { DemoOrigin } from './demo-origin'
+import { DemoColor } from './demo-color'
+import { DemoCanvas, DemoPreview, DemoCode } from '@/components/demo-canvas'
+
+<DemoCanvas>
+  <DemoPreview>
+    <Demo />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+## Installation
+
+<InstallationTabs item="@hookraft/use-key-cursor">
+```bash
+pnpm add @hookraft/use-key-cursor
+```
+</InstallationTabs>
+
+---
+
+## useKeyCursor
+
+Animate a circle cursor to any element when the user presses a keyboard key. The cursor flies from a corner of the screen, lands on the target, squeezes to simulate a click, then fades out. Designed for modal close buttons, confirm dialogs, and any keyboard-driven UX that needs to feel alive.
+
+Bindings are automatically silenced when the user is typing inside an `input`, `textarea`, `select`, or `contenteditable` element — so you never interfere with normal keyboard input.
+
+```tsx
+import { useKeyCursor } from "@hookraft/use-key-cursor"
+```
+
+```tsx
+useKeyCursor({
+  keys: {
+    Escape: closeRef,
+    Enter:  confirmRef,
+  },
+  origin: "top-right",
+  color:  "#000000",
+  theme:  "system",
+})
+```
+
+### Full Example
+
+```tsx
+"use client"
+
+import { useRef, useState } from "react"
+import { useKeyCursor } from "@hookraft/use-key-cursor"
+
+function DeleteModal({ onClose, onConfirm }) {
+  const closeRef   = useRef<HTMLButtonElement>(null)
+  const confirmRef = useRef<HTMLButtonElement>(null)
+
+  useKeyCursor({
+    keys: {
+      Escape: closeRef,
+      Enter:  confirmRef,
+    },
+    origin: "top-right",
+    color:  "#dc2626",
+    theme:  "system",
+    onTrigger: (key, el) => {
+      console.log(`${key} triggered`, el.textContent)
+    },
+  })
+
+  return (
+    <div className="modal">
+      <h2>Delete file?</h2>
+      <p>This action cannot be undone.</p>
+      <div className="actions">
+        <button ref={closeRef}   onClick={onClose}>Cancel</button>
+        <button ref={confirmRef} onClick={onConfirm}>Delete</button>
+      </div>
+    </div>
+  )
+}
+```
+
+You can also target elements using a CSS selector string instead of a ref:
+
+```tsx
+useKeyCursor({
+  keys: {
+    Escape: "#cancel-btn",
+    Enter:  "#confirm-btn",
+    d:      deleteRef,
+  },
+})
+```
+
+### Options
+
+<PropsTable
+  data={[
+    {
+      name: "keys",
+      type: "Record<string, RefObject<HTMLElement> | string>",
+      nameDetails: "Map of keyboard keys to target elements. Values can be a React ref or a CSS selector string. Key names match KeyboardEvent.key — use Escape, Enter, d, ArrowUp, etc."
+    },
+    {
+      name: "origin",
+      type: "\"top-right\" | \"top-left\" | \"bottom-right\" | \"bottom-left\"",
+      default: "\"top-right\"",
+      nameDetails: "The corner of the screen the cursor spawns from before flying to the target"
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#000000\"",
+      nameDetails: "The accent color of the cursor ring. Only the ring color is customizable — size and fill are fixed by design"
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\" | \"system\"",
+      default: "\"system\"",
+      nameDetails: "Controls the cursor fill. light gives a white fill, dark gives a black fill. system auto-detects from next-themes, Tailwind dark class, data-theme attribute, or OS preference"
+    },
+    {
+      name: "onTrigger",
+      type: "(key: string, element: HTMLElement) => void",
+      nameDetails: "Callback fired after the cursor lands and clicks the target. Receives the key that was pressed and the element that was clicked"
+    },
+    {
+      name: "ignoreWhen",
+      type: "() => boolean",
+      nameDetails: "Optional escape hatch — return true to suppress all key bindings. Useful when a menu, drawer, or other overlay is open and you want full keyboard control back"
+    },
+  ]}
+/>
+
+---
+
+## Examples
+
+### Origin
+
+Change where the cursor spawns from. Useful for matching the position of a keyboard shortcut hint in your UI.
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoOrigin />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo-origin.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+### Color
+
+The ring color is the only visual property you can customize. Use it to match your brand or signal intent — red for destructive actions, green for confirm, and so on.
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoColor />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo-color.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+## Usage
+
+```tsx
+import { useKeyCursor } from "@hookraft/use-key-cursor"
+```
+
+```tsx
+useKeyCursor({
+  keys: {
+    Escape: closeRef,
+    Enter:  confirmRef,
+  },
+  origin: "top-right",
+  color:  "#000000",
+  theme:  "system",
+})
+```
+
+## Notes
+
+The cursor element is appended directly to `document.body` and removed on unmount — no portals or extra wrappers needed
+`z-index` is `999999` so the cursor renders above modals and overlays
+Fires a real `.click()` on the target element so all existing `onClick` handlers work without any changes
+If the cursor is already animating, subsequent keypresses are ignored until the animation finishes
+Works in Next.js App Router — add `"use client"` to the component that calls the hook

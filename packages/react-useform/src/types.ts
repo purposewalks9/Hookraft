@@ -7,7 +7,7 @@ export interface FieldRule {
   minLength?: number
   maxLength?: number
   min?: number
-  max?: number        // ← add this line
+  max?: number        
   pattern?: RegExp
   validate?: (value: FieldValue, allValues: Record<string, FieldValue>) => boolean | string
   message?: string

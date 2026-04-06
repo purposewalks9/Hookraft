@@ -20,6 +20,7 @@
     "@content-collections/next": "^0.2.7",
     "@fontsource-variable/geist-mono": "^5.2.7",
     "@fontsource/geist": "^5.2.8",
+    "@hookraft/use-key-cursor": "^0.1.0",
     "@icons-pack/react-simple-icons": "^13.7.0",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
@@ -69,7 +70,8 @@
     "remark-gfm": "^4.0.1",
     "spotify-url-info": "^3.2.18",
     "tailwind-merge": "^3.3.1",
-    "three": "^0.181.2"
+    "three": "^0.181.2",
+    "use-claude-support": "^0.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
