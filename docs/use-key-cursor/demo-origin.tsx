@@ -15,15 +15,14 @@ export function DemoOrigin() {
 
   useKeyCursor({
     keys: {
-      Enter: submitRef,
-      Escape: cancelRef,
+      Enter: submitRef as React.RefObject<HTMLElement>,
+      Escape: cancelRef as React.RefObject<HTMLElement>,
     },
     origin,
     color: resolvedTheme === "dark" ? "#ffffff" : "#000000",
     theme: resolvedTheme === "dark" ? "dark" : "light",
     onTrigger: (key) => setLastKey(key),
   })
-
   const origins: CursorOrigin[] = [
     "top-right",
     "top-left",

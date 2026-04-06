@@ -20,7 +20,7 @@ export function DemoColor() {
   const actionRef = useRef<HTMLElement>(null)
 
   useKeyCursor({
-    keys: { Tab: actionRef },
+    keys: { Tab: actionRef as React.RefObject<HTMLElement> },
     origin: "top-right",
     color,
     theme: resolvedTheme === "dark" ? "dark" : "light",

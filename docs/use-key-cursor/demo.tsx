@@ -11,15 +11,15 @@ export function Demo() {
   const closeRef   = useRef<HTMLButtonElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
 
-  useKeyCursor({
-    keys: {
-      Escape: closeRef,
-      Delete: confirmRef,
-    },
-    origin: "top-right",
-    color: resolvedTheme === "dark" ? "#ffffff" : "#000000",
-    theme: resolvedTheme === "dark" ? "dark" : "light",
-  })
+ useKeyCursor({
+  keys: {
+    Escape: closeRef as React.RefObject<HTMLElement>,
+    Delete: confirmRef as React.RefObject<HTMLElement>,
+  },
+  origin: "top-right",
+  color: resolvedTheme === "dark" ? "#ffffff" : "#000000",
+  theme: resolvedTheme === "dark" ? "dark" : "light",
+})
 
   return (
     <div className="flex flex-col items-center gap-3 p-6">
