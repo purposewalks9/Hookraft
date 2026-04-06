@@ -6,18 +6,18 @@ import { useTheme } from "next-themes"
 import { RichButton } from "@/components/spell-ui/rich-button"
 
 const COLORS = [
-  { label: "Black",  value: "#000000" },
-  { label: "Blue",   value: "#378ADD" },
-  { label: "Teal",   value: "#1D9E75" },
-  { label: "Coral",  value: "#D85A30" },
-  { label: "Pink",   value: "#D4537E" },
+  { label: "Black", value: "#000000" },
+  { label: "Blue", value: "#378ADD" },
+  { label: "Teal", value: "#1D9E75" },
+  { label: "Coral", value: "#D85A30" },
+  { label: "Pink", value: "#D4537E" },
   { label: "Purple", value: "#7F77DD" },
 ]
 
 export function DemoColor() {
   const [color, setColor] = useState("#378ADD")
   const { resolvedTheme } = useTheme()
-  const actionRef = useRef<HTMLElement>(null)
+  const actionRef = useRef<HTMLButtonElement>(null)
 
   useKeyCursor({
     keys: { Tab: actionRef as React.RefObject<HTMLElement> },
