@@ -1,0 +1,150 @@
+import { Demo } from './demo'
+import { DemoCanvas, DemoPreview, DemoCode } from '@/components/demo-canvas'
+
+<DemoCanvas>
+  <DemoPreview>
+    <Demo />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+## Installation
+
+<InstallationTabs item="@hookraft/use-copy">
+```bash
+pnpm add @hookraft/use-copy
+```
+</InstallationTabs>
+
+---
+
+## useCopy
+
+Animate text characters flying toward the copy icon when the user clicks it. Each character launches from its original screen position and swoops into the button with a scale-to-zero effect — giving a satisfying "sucked in" feel before the clipboard write completes.
+
+Works on any element with text content: code blocks, install commands, wallet addresses, invite links, or any copyable string.
+
+```tsx
+import { useCopy } from "@hookraft/use-copy"
+```
+
+```tsx
+const { textRef, iconRef, copied, trigger } = useCopy()
+```
+
+### Full Example
+
+```tsx
+"use client"
+
+import { useRef } from "react"
+import { useCopy } from "@hookraft/use-copy"
+
+function CopyCommand() {
+  const { textRef, iconRef, copied, trigger } = useCopy()
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg border px-4 py-3 font-mono text-sm">
+      <code ref={textRef}>npm install @hookraft/use-copy</code>
+      <button ref={iconRef} onClick={trigger} aria-label="Copy">
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </button>
+    </div>
+  )
+}
+```
+
+You can also tune the animation timing to match your UI's feel:
+
+```tsx
+const { textRef, iconRef, copied, trigger } = useCopy({
+  duration:   300,   // how fast each char flies in ms
+  stagger:    15,    // delay between chars launching in ms
+  resetDelay: 2000,  // how long "copied" stays true after animation
+})
+```
+
+### Options
+
+<PropsTable
+  data={[
+    {
+      name: "duration",
+      type: "number",
+      default: "400",
+      nameDetails: "Duration of the fly-to-icon animation for each character in milliseconds. Lower values feel snappier, higher values feel more dramatic"
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "20",
+      nameDetails: "Delay between each character launching in milliseconds. Set to 0 for all characters to move simultaneously, or higher for a wave effect"
+    },
+    {
+      name: "resetDelay",
+      type: "number",
+      default: "1500",
+      nameDetails: "How long the copied state stays true after the animation completes. Controls how long your check icon or success state is visible"
+    },
+  ]}
+/>
+
+### Return Value
+
+<PropsTable
+  data={[
+    {
+      name: "textRef",
+      type: "RefObject<HTMLElement>",
+      nameDetails: "Attach to the element containing the text you want to copy and animate. Works with any HTML element — code, span, p, pre, etc."
+    },
+    {
+      name: "iconRef",
+      type: "RefObject<HTMLButtonElement>",
+      nameDetails: "Attach to the copy button. Characters fly toward the center of this element during the animation"
+    },
+    {
+      name: "copied",
+      type: "boolean",
+      nameDetails: "True from the moment the user clicks until resetDelay ms after the animation ends. Use this to swap between your copy and check icons"
+    },
+    {
+      name: "trigger",
+      type: "() => void",
+      nameDetails: "Call this in the onClick handler of your copy button. Writes text to the clipboard and kicks off the animation. Debounced — ignored if an animation is already running"
+    },
+  ]}
+/>
+
+---
+
+## Usage
+
+```tsx
+import { useCopy } from "@hookraft/use-copy"
+```
+
+```tsx
+const { textRef, iconRef, copied, trigger } = useCopy({
+  duration:   400,
+  stagger:    20,
+  resetDelay: 1500,
+})
+```
+
+## Notes
+
+Character spans are appended directly to `document.body` on click and removed when the animation finishes — no wrappers or portals needed
+
+The original text element's opacity is set to `0` during the animation and restored immediately after, so layout is never affected
+
+Uses the Web Animations API under the hood — no animation library required
+
+If the user clicks again while an animation is running, the second click is silently ignored until the first animation completes
+
+The clipboard write happens immediately on click, before the animation starts — so slow connections or animation jank never block the copy
+
+Works in Next.js App Router — add `"use client"` to the component that calls the hook

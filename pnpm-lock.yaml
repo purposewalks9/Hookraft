@@ -26,6 +26,9 @@ importers:
       '@fontsource/geist':
         specifier: ^5.2.8
         version: 5.2.8
+      '@hookraft/use-copy':
+        specifier: ^0.1.0
+        version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       '@hookraft/use-key-cursor':
         specifier: ^0.1.0
         version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
@@ -906,6 +909,12 @@ packages:
 
   '@fontsource/geist@5.2.8':
     resolution: {integrity: sha512-pI54klK6vz8fVpAVyV+iODGLEzw73cs1XJqV9PIXgW8MYMmBcwK6lKKaWqJrNHwEx8ppz9cuhussb6arXQ/PVQ==}
+
+  '@hookraft/use-copy@0.1.0':
+    resolution: {integrity: sha512-xovXM0u1ckLtYt80oF59SvKH4/7ywrGT+gMif2ElMUs2OUel+HUbF/GEDEXlYt/J3DKyIyBt1zv9kvXUvXGtjg==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
 
   '@hookraft/use-key-cursor@0.1.0':
     resolution: {integrity: sha512-D6xh7rmDcPFajj4zJ5ZaD1f/vcKfv43ghZh8o37H3mxOZ+Hq/G7rzVdJ9l+3LC2ra/i+MzXXC4CxQyXWxnA3KA==}
@@ -5123,6 +5132,11 @@ snapshots:
   '@fontsource-variable/geist-mono@5.2.7': {}
 
   '@fontsource/geist@5.2.8': {}
+
+  '@hookraft/use-copy@0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
+    dependencies:
+      react: 19.1.2
+      react-dom: 19.1.2(react@19.1.2)
 
   '@hookraft/use-key-cursor@0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
     dependencies:

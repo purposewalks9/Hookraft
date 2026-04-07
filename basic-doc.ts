@@ -78,6 +78,11 @@ export const basicDoc: DocSchema = [
         id: "use-form",
         description: "Lightweight form state and validation management for React.",
       },
+      {
+        title: "UseCopy",
+        id: "use-copy",
+        description: "Copy text to the clipboard with visual feedback.",
+      }
     ],
   },
 
