@@ -17,7 +17,7 @@ const { textRef, iconRef, copied, trigger } = useCopy()
         aria-label={copied ? "Copied!" : "Copy to clipboard"}
         className="shrink-0 rounded p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
       >
-        {copied ? <CheckIcon /> : <CopyIcon />}
+        <CopyIcon />
       </button>
     </div>
   )
