@@ -1,10 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react"
-import type {
-  BroadcastMessage,
-  BroadcastStatus,
-  UseBroadcastOptions,
-  UseBroadcastReturn,
-} from "./types"
 
 // Generate a unique ID for this tab session
 function generateTabId(): string {
@@ -19,29 +13,73 @@ function isBroadcastSupported(): boolean {
   )
 }
 
-/**
- * useBroadcast
- *
- * Sync state across multiple browser tabs in real time.
- * Built on the BroadcastChannel API — no server, no WebSockets.
- *
- * @example
- * // Logout across all tabs
- * const { broadcast } = useBroadcast("auth", { user: null }, {
- *   onMessage: (data) => {
- *     if (!data.user) router.push("/login")
- *   }
- * })
- *
- * // Sync cart across all tabs
- * const { state: cart, broadcast } = useBroadcast("cart", [])
- * broadcast([...cart, newItem]) // updates every open tab instantly
- */
+// ─── Namespace ────────────────────────────────────────────────────────────────
+
+export declare namespace useBroadcast {
+  type Status = "idle" | "active" | "unsupported"
+
+  type MessageType =
+    | "state_update"
+    | "tab_join"
+    | "tab_leave"
+    | "ping"
+    | "pong"
+
+  interface Message<T> {
+    type: MessageType
+    payload?: T
+    tabId: string
+    timestamp: number
+  }
+
+  interface Options<T> {
+    /** Fires when any other tab sends a new state update. Receives the new state value. */
+    onMessage?: (data: T, tabId: string) => void
+    /** Fires when a new tab joins the broadcast channel. */
+    onTabJoin?: (tabId: string) => void
+    /** Fires when a tab leaves or closes. */
+    onTabLeave?: (tabId: string) => void
+    /**
+     * If true, syncs state FROM other tabs automatically.
+     * If false, only listens to messages without updating local state.
+     * Defaults to true.
+     */
+    syncState?: boolean
+    /** Fires when the channel is successfully opened. */
+    onConnect?: () => void
+    /** Fires when the channel is closed. */
+    onDisconnect?: () => void
+  }
+
+  interface Return<T> {
+    /** Current state value — synced across all tabs */
+    state: T
+    /** Update state in this tab AND broadcast to all other tabs */
+    broadcast: (value: T) => void
+    /** Send a message to other tabs without updating local state */
+    send: (value: T) => void
+    /** Current channel status */
+    status: Status
+    /** True if BroadcastChannel is supported in this browser */
+    isSupported: boolean
+    /** Unique ID for the current tab */
+    tabId: string
+    /** Number of other tabs currently listening on this channel */
+    listenerCount: number
+    /** Manually close the channel */
+    close: () => void
+    /** Reopen a closed channel */
+    reconnect: () => void
+  }
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export function useBroadcast<T>(
   channelName: string,
   initialState: T,
-  options: UseBroadcastOptions<T> = {}
-): UseBroadcastReturn<T> {
+  options: useBroadcast.Options<T> = {}
+): useBroadcast.Return<T> {
   const {
     onMessage,
     onTabJoin,
@@ -56,7 +94,7 @@ export function useBroadcast<T>(
   const channelRef = useRef<BroadcastChannel | null>(null)
 
   const [state, setState] = useState<T>(initialState)
-  const [status, setStatus] = useState<BroadcastStatus>(
+  const [status, setStatus] = useState<useBroadcast.Status>(
     supported ? "idle" : "unsupported"
   )
   const [listenerCount, setListenerCount] = useState(0)
@@ -83,7 +121,7 @@ export function useBroadcast<T>(
     setStatus("active")
     onConnectRef.current?.()
 
-    channel.onmessage = (event: MessageEvent<BroadcastMessage<T>>) => {
+    channel.onmessage = (event: MessageEvent<useBroadcast.Message<T>>) => {
       const { type, payload, tabId: senderId } = event.data
 
       // Ignore messages from this tab
@@ -105,7 +143,7 @@ export function useBroadcast<T>(
             type: "pong",
             tabId,
             timestamp: Date.now(),
-          } satisfies BroadcastMessage<T>)
+          } satisfies useBroadcast.Message<T>)
           break
 
         case "tab_leave":
@@ -125,7 +163,7 @@ export function useBroadcast<T>(
       type: "tab_join",
       tabId,
       timestamp: Date.now(),
-    } satisfies BroadcastMessage<T>)
+    } satisfies useBroadcast.Message<T>)
   }, [channelName, supported, syncState, tabId])
 
   const closeChannel = useCallback(() => {
@@ -136,7 +174,7 @@ export function useBroadcast<T>(
       type: "tab_leave",
       tabId,
       timestamp: Date.now(),
-    } satisfies BroadcastMessage<T>)
+    } satisfies useBroadcast.Message<T>)
 
     channelRef.current.close()
     channelRef.current = null
@@ -160,7 +198,7 @@ export function useBroadcast<T>(
         payload: value,
         tabId,
         timestamp: Date.now(),
-      } satisfies BroadcastMessage<T>)
+      } satisfies useBroadcast.Message<T>)
     },
     [tabId]
   )
@@ -173,7 +211,7 @@ export function useBroadcast<T>(
         payload: value,
         tabId,
         timestamp: Date.now(),
-      } satisfies BroadcastMessage<T>)
+      } satisfies useBroadcast.Message<T>)
     },
     [tabId]
   )

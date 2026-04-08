@@ -1,6 +1,6 @@
 {
   "name": "@hookraft/usebroadcast",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Sync state across multiple browser tabs in real time. Built on the BroadcastChannel API — no server, no WebSockets required.",
   "author": "virus",
   "license": "MIT",
