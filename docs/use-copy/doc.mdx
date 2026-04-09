@@ -61,9 +61,9 @@ You can also tune the animation timing to match your UI's feel:
 
 ```tsx
 const { textRef, iconRef, copied, trigger } = useCopy({
-  duration:   300,   // how fast each char flies in ms
-  stagger:    15,    // delay between chars launching in ms
-  resetDelay: 2000,  // how long "copied" stays true after animation
+  duration:   200,
+  stagger:    5,
+  resetDelay: 1500,
 })
 ```
 
@@ -74,13 +74,13 @@ const { textRef, iconRef, copied, trigger } = useCopy({
     {
       name: "duration",
       type: "number",
-      default: "400",
+      default: "200",
       nameDetails: "Duration of the fly-to-icon animation for each character in milliseconds. Lower values feel snappier, higher values feel more dramatic"
     },
     {
       name: "stagger",
       type: "number",
-      default: "20",
+      default: "5",
       nameDetails: "Delay between each character launching in milliseconds. Set to 0 for all characters to move simultaneously, or higher for a wave effect"
     },
     {
@@ -92,18 +92,18 @@ const { textRef, iconRef, copied, trigger } = useCopy({
   ]}
 />
 
-### Return Value
+### Returns
 
 <PropsTable
   data={[
     {
       name: "textRef",
-      type: "RefObject<HTMLElement>",
+      type: "React.RefObject<HTMLElement | null>",
       nameDetails: "Attach to the element containing the text you want to copy and animate. Works with any HTML element — code, span, p, pre, etc."
     },
     {
       name: "iconRef",
-      type: "RefObject<HTMLButtonElement>",
+      type: "React.RefObject<HTMLButtonElement | null>",
       nameDetails: "Attach to the copy button. Characters fly toward the center of this element during the animation"
     },
     {
@@ -121,30 +121,11 @@ const { textRef, iconRef, copied, trigger } = useCopy({
 
 ---
 
-## Usage
-
-```tsx
-import { useCopy } from "@hookraft/use-copy"
-```
-
-```tsx
-const { textRef, iconRef, copied, trigger } = useCopy({
-  duration:   400,
-  stagger:    20,
-  resetDelay: 1500,
-})
-```
-
 ## Notes
 
-Character spans are appended directly to `document.body` on click and removed when the animation finishes — no wrappers or portals needed
-
-The original text element's opacity is set to `0` during the animation and restored immediately after, so layout is never affected
-
-Uses the Web Animations API under the hood — no animation library required
-
-If the user clicks again while an animation is running, the second click is silently ignored until the first animation completes
-
-The clipboard write happens immediately on click, before the animation starts — so slow connections or animation jank never block the copy
-
-Works in Next.js App Router — add `"use client"` to the component that calls the hook
+- Character spans are appended directly to `document.body` on click and removed when the animation finishes — no wrappers or portals needed
+- The original text element's opacity is set to `0` during the animation and restored immediately after, so layout is never affected
+- Uses the Web Animations API under the hood — no animation library required
+- If the user clicks again while an animation is running, the second click is silently ignored until the first animation completes
+- The clipboard write happens immediately on click, before the animation starts — so slow connections or animation jank never block the copy
+- Works in Next.js App Router — add `"use client"` to the component that calls the hook

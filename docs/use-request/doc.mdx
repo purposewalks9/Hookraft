@@ -6,7 +6,10 @@ pnpm add @hookraft/userequest
 ```
 </InstallationTabs>
 
-## Usage
+---
+
+## useRequest
+
 ```tsx
 import { useRequest } from "@hookraft/userequest"
 ```
@@ -18,7 +21,7 @@ const { data, status, error, isLoading, refetch } = useRequest("/api/user", {
 })
 ```
 
-## Why it exists
+### Why it exists
 
 When multiple components on the same page need the same data, most apps fire one request per component:
 
@@ -37,7 +40,7 @@ Without deduplication — **3 identical network requests fire at the same time**
 
 With `useRequest` — **1 request fires**. All 3 components wait for the same Promise and receive the same data when it resolves. The server never sees the duplicates.
 
-## Full Example
+### Full Example
 
 A dashboard where three completely separate components all need the same user data — only one network request fires.
 
@@ -55,7 +58,7 @@ type User = {
 
 export function useUser() {
   return useRequest<User>("/api/user", {
-    cacheTime: 60000, // cache for 60 seconds
+    cacheTime: 60000,
     onError: () => console.error("Failed to load user"),
   })
 }
@@ -113,22 +116,21 @@ export function PlanBadge() {
 
 All three components call `useUser()` which calls `useRequest("/api/user")`. Only **one** network request fires. When it resolves, all three components update at the same time.
 
-## Manual Mode
+### Manual Mode
 
 By default `useRequest` fires on mount. Set `manual: true` to control when it runs.
 
 ```tsx
 const { data, isLoading, refetch } = useRequest("/api/report", {
-  manual: true, // don't fetch on mount
+  manual: true,
 })
 
-// Only fires when the user clicks the button
 <button onClick={refetch} disabled={isLoading}>
   {isLoading ? "Loading..." : "Generate Report"}
 </button>
 ```
 
-## Force Refresh
+### Force Refresh
 
 `refetch()` always bypasses the cache and fires a fresh request — useful for pull-to-refresh or manual sync buttons.
 
@@ -140,7 +142,7 @@ const { data, refetch } = useRequest("/api/notifications")
 </button>
 ```
 
-## Custom Fetcher
+### Custom Fetcher
 
 By default `useRequest` uses `fetch` + `res.json()`. Pass your own fetcher to use axios, a GraphQL client, or any async function.
 
@@ -155,7 +157,7 @@ const { data } = useRequest("/api/products", {
 })
 ```
 
-## Clearing the Cache
+### Clearing the Cache
 
 Use `clear()` to wipe the cached data for a key — useful after a mutation that changes the data on the server.
 
@@ -168,12 +170,11 @@ const updateProfile = async (newName: string) => {
     body: JSON.stringify({ name: newName }),
   })
 
-  // clear the cache so next render fetches fresh data
   clear()
 }
 ```
 
-## Null Key
+### Null Key
 
 Pass `null` as the key to skip the request entirely — useful for conditional fetching.
 
@@ -182,7 +183,7 @@ const { data } = useRequest(isLoggedIn ? "/api/user" : null)
 // request only fires when isLoggedIn is true
 ```
 
-## Options
+### Options
 
 <PropsTable
   data={[
@@ -192,21 +193,21 @@ const { data } = useRequest(isLoggedIn ? "/api/user" : null)
     { name: "manual", type: "boolean", default: "false", nameDetails: "If true the request does not fire on mount — call refetch() manually" },
     { name: "onSuccess", type: "(data: T) => void", nameDetails: "Fires when the request completes successfully" },
     { name: "onError", type: "(error: unknown) => void", nameDetails: "Fires when the request fails" },
-    { name: "onStatusChange", type: "(status: RequestStatus) => void", nameDetails: "Fires whenever status changes" },
+    { name: "onStatusChange", type: "(status: useRequest.Status) => void", nameDetails: "Fires whenever status changes" },
   ]}
 />
 
-## Returns
+### Returns
 
 <PropsTable
   data={[
     { name: "data", type: "T | undefined", nameDetails: "The response data — undefined until the request succeeds" },
-    { name: "status", type: "RequestStatus", nameDetails: "Current state: idle | loading | success | error" },
+    { name: "status", type: "useRequest.Status", nameDetails: "Current state: idle | loading | success | error" },
     { name: "error", type: "unknown", nameDetails: "The error thrown if the request failed" },
     { name: "isLoading", type: "boolean", nameDetails: "True while the request is in flight" },
     { name: "isSuccess", type: "boolean", nameDetails: "True if the request completed successfully" },
     { name: "isError", type: "boolean", nameDetails: "True if the request failed" },
-    { name: "is(status)", type: "(s: RequestStatus) => boolean", nameDetails: "Check the current status" },
+    { name: "is(status)", type: "(s: useRequest.Status) => boolean", nameDetails: "Check the current status" },
     { name: "refetch()", type: "() => Promise<void>", nameDetails: "Force a fresh request — always bypasses cache" },
     { name: "clear()", type: "() => void", nameDetails: "Clear the cached data for this key and reset to idle" },
   ]}

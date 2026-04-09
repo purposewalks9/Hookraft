@@ -1,36 +1,53 @@
 import { useState, useRef, useCallback } from "react"
 
-export type QueueStatus = "idle" | "running" | "paused" | "done"
+export declare namespace useQueue {
+  type Status = "idle" | "running" | "paused" | "done"
 
-export interface QueueItem<T> {
-  id: string
-  data: T
-  status: "pending" | "processing" | "completed" | "failed"
-  error?: unknown
+  type Item<T> = {
+    id: string
+    data: T
+    status: "pending" | "processing" | "completed" | "failed"
+    error?: unknown
+  }
+
+  type Options<T> = {
+    onProcess: (item: T) => Promise<void>
+    onSuccess?: (item: T) => void
+    onError?: (item: T, error: unknown) => void
+    onDone?: () => void
+    concurrency?: number
+  }
+
+  type Return<T> = {
+    status: Status
+    is: (status: Status) => boolean
+    add: (data: T) => string
+    start: () => void
+    pause: () => void
+    clear: () => void
+    reset: () => void
+    items: Item<T>[]
+    pending: Item<T>[]
+    processing: Item<T>[]
+    completed: Item<T>[]
+    failed: Item<T>[]
+  }
 }
 
-export interface UseQueueOptions<T> {
-  onProcess: (item: T) => Promise<void>
-  onSuccess?: (item: T) => void
-  onError?: (item: T, error: unknown) => void
-  onDone?: () => void
-  concurrency?: number
-}
-
-export function useQueue<T>(options: UseQueueOptions<T>) {
+export function useQueue<T>(options: useQueue.Options<T>): useQueue.Return<T> {
   const { onProcess, onSuccess, onError, onDone, concurrency = 1 } = options
 
-  const [items, setItems] = useState<QueueItem<T>[]>([])
-  const [status, setStatus] = useState<QueueStatus>("idle")
+  const [items, setItems] = useState<useQueue.Item<T>[]>([])
+  const [status, setStatus] = useState<useQueue.Status>("idle")
   const pausedRef = useRef(false)
   const runningRef = useRef(0)
 
-  const updateItem = useCallback((id: string, patch: Partial<QueueItem<T>>) => {
+  const updateItem = useCallback((id: string, patch: Partial<useQueue.Item<T>>) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)))
   }, [])
 
   const add = useCallback((data: T) => {
-    const item: QueueItem<T> = {
+    const item: useQueue.Item<T> = {
       id: crypto.randomUUID(),
       data,
       status: "pending",
@@ -39,7 +56,7 @@ export function useQueue<T>(options: UseQueueOptions<T>) {
     return item.id
   }, [])
 
-  const process = useCallback(async (snapshot: QueueItem<T>[]) => {
+  const process = useCallback(async (snapshot: useQueue.Item<T>[]) => {
     const pending = snapshot.filter((i) => i.status === "pending")
 
     if (pending.length === 0) {
@@ -103,7 +120,7 @@ export function useQueue<T>(options: UseQueueOptions<T>) {
     setStatus("idle")
   }, [])
 
-  const is = useCallback((s: QueueStatus) => status === s, [status])
+  const is = useCallback((s: useQueue.Status) => status === s, [status])
 
   return {
     status,

@@ -1,0 +1,247 @@
+## Installation
+
+<InstallationTabs item="@hookraft/useengagement">
+```bash
+pnpm add @hookraft/useengagement
+```
+</InstallationTabs>
+
+---
+
+## useEngagement
+
+```tsx
+import { useEngagement } from "@hookraft/useengagement"
+```
+```tsx
+const { data, isActive, flush } = useEngagement({
+  onSync: async (data) => {
+    await fetch("/api/analytics", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  },
+  idleTimeout: 3000,
+  trackClicks: true,
+  trackScroll: true,
+})
+```
+
+### What it is
+
+`useEngagement` silently tracks how a user behaves on a page — clicks, scroll depth, active time, and idle time. When the user leaves, it sends the data to your backend.
+
+No third party analytics. Just your data, your backend, your control.
+
+```
+User lands on page
+      ↓
+Hook starts tracking automatically:
+  - active/idle time ticking every second
+  - clicks counted + element IDs recorded
+  - scroll depth updated as user scrolls
+      ↓
+User leaves (tab close, navigate away, tab switch)
+      ↓
+If online  → onSync fires instantly
+If offline → data saved to localStorage
+             syncs automatically when network returns
+```
+
+### Full Examples
+
+#### Basic page analytics
+
+Track every page in your app by adding the hook to a shared layout or page component.
+
+```tsx
+import { useEngagement } from "@hookraft/useengagement"
+
+function BlogPost({ postId }: { postId: string }) {
+  useEngagement({
+    onSync: async (data) => {
+      await fetch("/api/analytics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          postId,
+          userId: getCurrentUserId(),
+          device: navigator.userAgent,
+        }),
+      })
+    },
+    idleTimeout: 5000,
+  })
+
+  return <article>...</article>
+}
+```
+
+---
+
+#### Show live engagement data
+
+Use `data` to display real-time engagement info — useful for debugging or building an engagement indicator.
+
+```tsx
+import { useEngagement } from "@hookraft/useengagement"
+
+function Page() {
+  const { data, isActive } = useEngagement({
+    onSync: async (data) => await sendToBackend(data),
+  })
+
+  return (
+    <div>
+      <article>Your content here</article>
+
+      <div>
+        <p>Active: {isActive ? "yes" : "idle"}</p>
+        <p>Active time: {data.activeTime}s</p>
+        <p>Idle time: {data.idleTime}s</p>
+        <p>Scroll depth: {data.scrollDepth}%</p>
+        <p>Total clicks: {data.totalClicks}</p>
+        <p>Clicked elements: {data.clickTargets.join(", ") || "none"}</p>
+      </div>
+    </div>
+  )
+}
+```
+
+---
+
+#### Manual flush before navigation
+
+Call `flush()` before navigating away to make sure data is sent before the page unmounts.
+
+```tsx
+import { useEngagement } from "@hookraft/useengagement"
+import { useRouter } from "next/navigation"
+
+function CheckoutPage() {
+  const router = useRouter()
+
+  const { flush } = useEngagement({
+    onSync: async (data) => await sendAnalytics(data),
+  })
+
+  const handleContinue = async () => {
+    flush()
+    router.push("/checkout/payment")
+  }
+
+  return (
+    <div>
+      <button onClick={handleContinue}>Continue to payment</button>
+    </div>
+  )
+}
+```
+
+---
+
+#### Offline support
+
+Data is automatically saved to localStorage when the user is offline and synced when the network returns. You don't need to do anything extra — it's built in.
+
+```tsx
+useEngagement({
+  onSync: async (data) => {
+    await fetch("/api/analytics", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  },
+  storageKey: "my_app_engagement",
+  maxQueue: 30,
+})
+```
+
+---
+
+#### What your backend receives
+
+```ts
+// POST /api/analytics
+{
+  pageUrl: "https://myapp.com/blog/how-to-use-react",
+  totalClicks: 7,
+  clickTargets: ["subscribe-btn", "share-btn", "nav-home"],
+  activeTime: 142,
+  idleTime: 38,
+  scrollDepth: 84,
+  enteredAt: 1743200000000,
+  exitAt: 1743200180000
+}
+```
+
+Add your own metadata (userId, device, region) inside `onSync` before sending to your backend — `useEngagement` intentionally leaves those fields to you.
+
+### How active time works
+
+The hook runs a ticker every second. Each tick is classified as either active or idle:
+
+```
+active  → user moved mouse, typed, scrolled, or clicked in the last idleTimeout ms
+idle    → no activity for idleTimeout ms
+hidden  → user switched to another tab
+```
+
+Only active ticks add to `activeTime`. Idle and hidden ticks add to `idleTime`. This means `activeTime + idleTime = total time on page`.
+
+### How offline sync works
+
+```
+User goes offline
+      ↓
+onSync is skipped
+      ↓
+Data saved to localStorage under storageKey
+      ↓
+Network returns
+      ↓
+Queued entries sent to onSync one by one
+      ↓
+localStorage cleared on success
+```
+
+If sending a queued entry fails, the loop stops to avoid partial sends. The remaining entries stay in localStorage for the next opportunity.
+
+### Options
+
+<PropsTable
+  data={[
+    { name: "onSync", type: "(data: useEngagement.EngagementData) => void | Promise<void>", nameDetails: "Called when engagement data is ready. Fires on page exit, tab switch, or manual flush. Also called for queued offline entries when network returns" },
+    { name: "idleTimeout", type: "number", default: "3000", nameDetails: "Milliseconds of inactivity before the user is considered idle" },
+    { name: "trackClicks", type: "boolean", default: "true", nameDetails: "Whether to count clicks and record clicked element IDs" },
+    { name: "trackScroll", type: "boolean", default: "true", nameDetails: "Whether to track how far down the page the user scrolled" },
+    { name: "storageKey", type: "string", default: "hookraft_engagement_queue", nameDetails: "localStorage key used to store offline data" },
+    { name: "maxQueue", type: "number", default: "20", nameDetails: "Maximum number of offline entries to keep in localStorage" },
+  ]}
+/>
+
+### Returns
+
+<PropsTable
+  data={[
+    { name: "data", type: "useEngagement.EngagementData", nameDetails: "Live snapshot of current engagement data — updates every second" },
+    { name: "isActive", type: "boolean", nameDetails: "True when the user is actively engaging — false when idle or tab is hidden" },
+    { name: "flush()", type: "() => void", nameDetails: "Manually trigger a sync with the current data snapshot — useful before navigation" },
+  ]}
+/>
+
+### EngagementData shape
+
+<PropsTable
+  data={[
+    { name: "pageUrl", type: "string", nameDetails: "The full URL of the page being tracked" },
+    { name: "totalClicks", type: "number", nameDetails: "Total number of clicks made on the page" },
+    { name: "clickTargets", type: "string[]", nameDetails: "Unique list of element IDs that were clicked" },
+    { name: "activeTime", type: "number", nameDetails: "Seconds the user was actively engaging with the page" },
+    { name: "idleTime", type: "number", nameDetails: "Seconds the user was idle or the tab was hidden" },
+    { name: "scrollDepth", type: "number", nameDetails: "Maximum scroll depth reached as a percentage (0-100)" },
+    { name: "enteredAt", type: "number", nameDetails: "Unix timestamp in ms when the user landed on the page" },
+    { name: "exitAt", type: "number | null", nameDetails: "Unix timestamp in ms when the user left or flush was called. Null while still on page" },
+  ]}
+/>

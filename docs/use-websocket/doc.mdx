@@ -6,7 +6,10 @@ pnpm add @hookraft/usewebsocket
 ```
 </InstallationTabs>
 
-## Usage
+---
+
+## useWebSocket
+
 ```tsx
 import { useWebSocket } from "@hookraft/usewebsocket"
 ```
@@ -23,7 +26,7 @@ const { status, messages, lastMessage, send, disconnect, reconnect } = useWebSoc
 })
 ```
 
-## The problem it solves
+### The problem it solves
 
 Building a WebSocket connection in React requires handling many things manually — connecting, reconnecting on failure, queuing messages while offline, keeping the connection alive with heartbeats, and cleaning up on unmount. Most developers either skip these features or spend hours getting them right.
 
@@ -59,9 +62,9 @@ const { status, messages, send } = useWebSocket({
 })
 ```
 
-## Full Examples
+### Full Examples
 
-### Chat room
+#### Chat room
 
 A full real-time chat room. Messages arrive instantly, send works even if briefly disconnected (queued and flushed on reconnect).
 
@@ -108,7 +111,6 @@ function ChatRoom({ roomId }: { roomId: string }) {
 
   return (
     <div>
-      {/* Connection status */}
       <div>
         <span>{status}</span>
         {status === "reconnecting" && (
@@ -116,7 +118,6 @@ function ChatRoom({ roomId }: { roomId: string }) {
         )}
       </div>
 
-      {/* Messages */}
       <ul>
         {messages.map((msg) => (
           <li key={msg.id}>
@@ -125,7 +126,6 @@ function ChatRoom({ roomId }: { roomId: string }) {
         ))}
       </ul>
 
-      {/* Input */}
       <div>
         <input
           value={input}
@@ -145,7 +145,7 @@ function ChatRoom({ roomId }: { roomId: string }) {
 
 ---
 
-### Live dashboard
+#### Live dashboard
 
 Real-time data feed — stock prices, sports scores, sensor readings. Reconnects automatically if the connection drops.
 
@@ -162,7 +162,7 @@ function StockTicker() {
   const { lastMessage, status, isConnected } = useWebSocket<StockUpdate>({
     url: "wss://api.example.com/stocks",
     reconnect: true,
-    messageLimit: 1, // we only care about the latest price
+    messageLimit: 1,
     onMessage: (data) => console.log(`${data.symbol}: $${data.price}`),
   })
 
@@ -186,7 +186,7 @@ function StockTicker() {
 
 ---
 
-### Manual connect
+#### Manual connect
 
 Set `autoConnect: false` to connect only when the user triggers it — useful for opt-in real-time features.
 
@@ -196,7 +196,7 @@ import { useWebSocket } from "@hookraft/usewebsocket"
 function LiveNotifications() {
   const { status, messages, connect, disconnect, isConnected } = useWebSocket({
     url: "wss://api.example.com/notifications",
-    autoConnect: false, // don't connect on mount
+    autoConnect: false,
     reconnect: true,
   })
 
@@ -220,7 +220,7 @@ function LiveNotifications() {
 
 ---
 
-### Custom message parser
+#### Custom message parser
 
 By default messages are parsed with `JSON.parse`. Use `parseMessage` to handle custom formats or filter out certain messages.
 
@@ -235,11 +235,10 @@ type ServerEvent = {
 function EventStream() {
   const { messages } = useWebSocket<ServerEvent>({
     url: "wss://api.example.com/events",
-    // Custom parser — skip heartbeat messages
     parseMessage: (raw) => {
       try {
         const parsed = JSON.parse(raw) as ServerEvent
-        if (parsed.type === "heartbeat") return null // skip
+        if (parsed.type === "heartbeat") return null
         return parsed
       } catch {
         return null
@@ -261,7 +260,7 @@ function EventStream() {
 
 ---
 
-### Send before connected (message queuing)
+#### Message queuing
 
 If `queueWhileOffline` is true (default), messages sent before the connection opens are queued and automatically flushed when connected.
 
@@ -271,7 +270,7 @@ import { useWebSocket } from "@hookraft/usewebsocket"
 function App() {
   const { send, queuedCount, status } = useWebSocket({
     url: "wss://api.example.com",
-    queueWhileOffline: true, // default
+    queueWhileOffline: true,
   })
 
   return (
@@ -281,7 +280,6 @@ function App() {
         <p>{queuedCount} message(s) queued — will send when connected</p>
       )}
 
-      {/* This works even before the connection opens */}
       <button onClick={() => send({ text: "Hello!" })}>
         Send (queued if offline)
       </button>
@@ -290,7 +288,7 @@ function App() {
 }
 ```
 
-## How reconnect works
+### How reconnect works
 
 When the connection drops, `useWebSocket` waits and tries again using **exponential backoff** — each retry waits longer than the last, up to a maximum delay.
 
@@ -307,7 +305,7 @@ Attempt 5 → wait 30s → reconnect (max interval)
 
 You control this with `reconnectAttempts`, `reconnectInterval`, and `maxReconnectInterval`.
 
-## How heartbeat works
+### How heartbeat works
 
 Some WebSocket servers close idle connections. The heartbeat keeps the connection alive by sending a ping message on a regular interval.
 
@@ -323,7 +321,7 @@ useWebSocket({
 
 Responses of `"pong"` or the same message as the heartbeat are automatically ignored and not added to the message list.
 
-## Options
+### Options
 
 <PropsTable
   data={[
@@ -334,7 +332,7 @@ Responses of `"pong"` or the same message as the heartbeat are automatically ign
     { name: "reconnectAttempts", type: "number", default: "5", nameDetails: "Maximum number of reconnect attempts before giving up" },
     { name: "reconnectInterval", type: "number", default: "2000", nameDetails: "Base interval in ms between reconnect attempts. Doubles each attempt (exponential backoff)" },
     { name: "maxReconnectInterval", type: "number", default: "30000", nameDetails: "Maximum reconnect interval in ms — backoff is capped at this value" },
-    { name: "heartbeat", type: "HeartbeatConfig", nameDetails: "Keep connection alive by sending a ping message on an interval" },
+    { name: "heartbeat", type: "useWebSocket.HeartbeatConfig", nameDetails: "Keep connection alive by sending a ping message on an interval" },
     { name: "messageLimit", type: "number", default: "100", nameDetails: "Maximum number of messages to keep in the messages array" },
     { name: "queueWhileOffline", type: "boolean", default: "true", nameDetails: "Queue messages sent while disconnected and flush them when reconnected" },
     { name: "onConnect", type: "() => void", nameDetails: "Fires when the connection is established" },
@@ -344,29 +342,29 @@ Responses of `"pong"` or the same message as the heartbeat are automatically ign
     { name: "onReconnect", type: "(attempt: number) => void", nameDetails: "Fires on each reconnect attempt with the attempt number" },
     { name: "onReconnectFailed", type: "() => void", nameDetails: "Fires when all reconnect attempts are exhausted" },
     { name: "parseMessage", type: "(raw: string) => T | null", nameDetails: "Custom message parser. Return null to skip a message. Defaults to JSON.parse" },
-    { name: "serializeMessage", type: "(data: T) => string", nameDetails: "Custom message serializer. Defaults to JSON.stringify" },
+    { name: "serializeMessage", type: "(data: TSend) => string", nameDetails: "Custom message serializer. Defaults to JSON.stringify" },
   ]}
 />
 
-## Returns
+### Returns
 
 <PropsTable
   data={[
-    { name: "status", type: "WebSocketStatus", nameDetails: "Current connection state: idle | connecting | connected | disconnected | reconnecting | error" },
-    { name: "messages", type: "T[]", nameDetails: "All received messages up to messageLimit" },
-    { name: "lastMessage", type: "T | null", nameDetails: "The most recently received message" },
+    { name: "status", type: "useWebSocket.Status", nameDetails: "Current connection state: idle | connecting | connected | disconnected | reconnecting | error" },
+    { name: "messages", type: "TMessage[]", nameDetails: "All received messages up to messageLimit" },
+    { name: "lastMessage", type: "TMessage | null", nameDetails: "The most recently received message" },
     { name: "isConnecting", type: "boolean", nameDetails: "True while connecting or reconnecting" },
     { name: "isConnected", type: "boolean", nameDetails: "True when connection is open and ready" },
     { name: "isDisconnected", type: "boolean", nameDetails: "True when manually disconnected" },
     { name: "isError", type: "boolean", nameDetails: "True when all reconnect attempts failed" },
     { name: "reconnectCount", type: "number", nameDetails: "Number of reconnect attempts made so far" },
     { name: "queuedCount", type: "number", nameDetails: "Number of messages waiting to be sent when reconnected" },
-    { name: "send(data)", type: "(data: T) => void", nameDetails: "Send a message. If disconnected and queueWhileOffline is true, queues it for later" },
+    { name: "send(data)", type: "(data: TSend) => void", nameDetails: "Send a message. If disconnected and queueWhileOffline is true, queues it for later" },
     { name: "sendRaw(data)", type: "(data: string) => void", nameDetails: "Send a raw string message without serialization" },
     { name: "connect()", type: "() => void", nameDetails: "Manually open the connection" },
     { name: "disconnect()", type: "() => void", nameDetails: "Manually close the connection and stop reconnecting" },
     { name: "reconnect()", type: "() => void", nameDetails: "Force close and reopen the connection" },
     { name: "clearMessages()", type: "() => void", nameDetails: "Clear the messages array" },
-    { name: "is(status)", type: "(s: WebSocketStatus) => boolean", nameDetails: "Check the current connection status" },
+    { name: "is(status)", type: "(s: useWebSocket.Status) => boolean", nameDetails: "Check the current connection status" },
   ]}
 />

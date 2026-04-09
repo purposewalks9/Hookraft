@@ -1,14 +1,101 @@
 import { useState, useCallback, useRef } from "react"
-import type {
-  PipelineStep,
-  PipelineStepState,
-  PipelineStatus,
-  PipelineContext,
-  UsePipelineOptions,
-  UsePipelineReturn,
-} from "./types"
 
-function buildInitialSteps(steps: PipelineStep[]): PipelineStepState[] {
+// ─── Namespace ────────────────────────────────────────────────────────────────
+
+export declare namespace usePipeline {
+  type StepStatus =
+    | "idle"
+    | "running"
+    | "complete"
+    | "failed"
+    | "skipped"
+    | "rollingback"
+    | "rolledback"
+
+  type Status =
+    | "idle"
+    | "running"
+    | "complete"
+    | "failed"
+    | "rollingback"
+    | "rolledback"
+
+  interface Context {
+    /** Results from all previously completed steps keyed by step id */
+    results: Record<string, unknown>
+    /** Current attempt number for this step (starts at 1) */
+    attempt: number
+  }
+
+  interface Step<TResult = unknown> {
+    /** Unique identifier for this step */
+    id: string
+    /** The async function to run for this step */
+    run: (context: Context) => Promise<TResult>
+    /** Optional rollback function called if pipeline fails */
+    rollback?: (context: Context) => Promise<void> | void
+    /** Step IDs this step depends on — will wait for them to complete first */
+    dependsOn?: string[]
+    /** If true, runs in parallel with other parallel steps at the same dependency level */
+    parallel?: boolean
+    /** Retry this step N times before marking as failed */
+    retries?: number
+  }
+
+  interface StepState {
+    id: string
+    status: StepStatus
+    error?: unknown
+    result?: unknown
+    attempts: number
+    startedAt?: Date
+    completedAt?: Date
+  }
+
+  interface Options<TSteps extends Step[]> {
+    /** The steps to run in the pipeline */
+    steps: TSteps
+    /** Fires when a step completes successfully */
+    onStepComplete?: (id: string, result: unknown) => void
+    /** Fires when a step fails */
+    onStepFailed?: (id: string, error: unknown) => void
+    /** Fires when a step starts rolling back */
+    onStepRollback?: (id: string) => void
+    /** Fires when all steps complete successfully */
+    onComplete?: (results: Record<string, unknown>) => void
+    /** Fires when pipeline fails */
+    onFailed?: (failedStepId: string, error: unknown) => void
+    /** Fires when rollback completes */
+    onRollback?: () => void
+  }
+
+  interface Return {
+    /** Current pipeline status */
+    status: Status
+    /** All steps with their current state */
+    steps: StepState[]
+    /** Progress percentage 0-100 based on completed steps */
+    progress: number
+    /** The step currently running */
+    current: string | null
+    /** Results from all completed steps */
+    results: Record<string, unknown>
+    /** Start the pipeline */
+    start: () => Promise<void>
+    /** Retry a specific failed step and continue from there */
+    retry: (stepId: string) => Promise<void>
+    /** Manually trigger rollback of all completed steps */
+    rollback: () => Promise<void>
+    /** Reset pipeline back to idle */
+    reset: () => void
+    /** Check current pipeline status */
+    is: (status: Status) => boolean
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function buildInitialSteps(steps: usePipeline.Step[]): usePipeline.StepState[] {
   return steps.map((s) => ({
     id: s.id,
     status: "idle",
@@ -16,7 +103,7 @@ function buildInitialSteps(steps: PipelineStep[]): PipelineStepState[] {
   }))
 }
 
-function getExecutionOrder(steps: PipelineStep[]): string[][] {
+function getExecutionOrder(steps: usePipeline.Step[]): string[][] {
   // Topological sort — group steps into waves based on dependencies
   const resolved = new Set<string>()
   const waves: string[][] = []
@@ -49,9 +136,11 @@ function getExecutionOrder(steps: PipelineStep[]): string[][] {
   return waves
 }
 
-export function usePipeline<TSteps extends PipelineStep[]>(
-  options: UsePipelineOptions<TSteps>
-): UsePipelineReturn {
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+export function usePipeline<TSteps extends usePipeline.Step[]>(
+  options: usePipeline.Options<TSteps>
+): usePipeline.Return {
   const {
     steps: stepDefs,
     onStepComplete,
@@ -62,15 +151,15 @@ export function usePipeline<TSteps extends PipelineStep[]>(
     onRollback,
   } = options
 
-  const [status, setStatus] = useState<PipelineStatus>("idle")
-  const [steps, setSteps] = useState<PipelineStepState[]>(
+  const [status, setStatus] = useState<usePipeline.Status>("idle")
+  const [steps, setSteps] = useState<usePipeline.StepState[]>(
     buildInitialSteps(stepDefs)
   )
   const [current, setCurrent] = useState<string | null>(null)
   const resultsRef = useRef<Record<string, unknown>>({})
 
   const updateStep = useCallback(
-    (id: string, patch: Partial<PipelineStepState>) => {
+    (id: string, patch: Partial<usePipeline.StepState>) => {
       setSteps((prev) =>
         prev.map((s) => (s.id === id ? { ...s, ...patch } : s))
       )
@@ -97,7 +186,7 @@ export function usePipeline<TSteps extends PipelineStep[]>(
         setCurrent(stepId)
 
         try {
-          const context: PipelineContext = {
+          const context: usePipeline.Context = {
             results: { ...resultsRef.current },
             attempt,
           }
@@ -131,7 +220,6 @@ export function usePipeline<TSteps extends PipelineStep[]>(
   const rollback = useCallback(async () => {
     setStatus("rollingback")
 
-    // Rollback completed steps in reverse order
     const completedSteps = [...stepDefs]
       .reverse()
       .filter((s) => {
@@ -173,20 +261,17 @@ export function usePipeline<TSteps extends PipelineStep[]>(
       let startProcessing = !fromStepId
 
       for (const wave of waves) {
-        // Check if this wave contains our start point
         if (!startProcessing && fromStepId && wave.includes(fromStepId)) {
           startProcessing = true
         }
         if (!startProcessing) continue
 
-        // Split wave into parallel and sequential
         const parallelSteps = wave.filter((id) => {
           const def = stepDefs.find((s) => s.id === id)
           return def?.parallel
         })
         const sequentialSteps = wave.filter((id) => !parallelSteps.includes(id))
 
-        // Run sequential steps one by one
         for (const stepId of sequentialSteps) {
           if (fromStepId && stepId !== fromStepId && !startProcessing) continue
           const success = await runStep(stepId)
@@ -200,7 +285,6 @@ export function usePipeline<TSteps extends PipelineStep[]>(
           }
         }
 
-        // Run parallel steps simultaneously
         if (parallelSteps.length > 0) {
           const results = await Promise.allSettled(
             parallelSteps.map((id) => runStep(id))
@@ -245,7 +329,6 @@ export function usePipeline<TSteps extends PipelineStep[]>(
         return
       }
 
-      // Reset the failed step and any steps that depend on it
       setSteps((prev) =>
         prev.map((s) => {
           if (s.id === stepId) return { ...s, status: "idle", error: undefined }
@@ -266,7 +349,7 @@ export function usePipeline<TSteps extends PipelineStep[]>(
   }, [stepDefs])
 
   const is = useCallback(
-    (s: PipelineStatus) => status === s,
+    (s: usePipeline.Status) => status === s,
     [status]
   )
 

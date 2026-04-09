@@ -1,21 +1,16 @@
 import { useEffect, useRef } from "react"
-import type { QueueStatus } from "./useQueue"
+import { useQueue } from "./useQueue"
 
-export interface QueueProps {
-  /** Current queue status */
-  when: QueueStatus
-  /** Fires when queue starts running */
-  onRunning?: () => void
-  /** Fires when queue is paused */
-  onPaused?: () => void
-  /** Fires when queue is done */
-  onDone?: () => void
-  /** Fires when queue goes idle */
-  onIdle?: () => void
-  /** What to render when queue is idle */
-  fallback?: React.ReactNode
-  /** Your component */
-  children: React.ReactNode
+export declare namespace Queue {
+  type Props = {
+    when: useQueue.Status
+    onRunning?: () => void
+    onPaused?: () => void
+    onDone?: () => void
+    onIdle?: () => void
+    fallback?: React.ReactNode
+    children: React.ReactNode
+  }
 }
 
 export function Queue({
@@ -26,8 +21,8 @@ export function Queue({
   onIdle,
   fallback = null,
   children,
-}: QueueProps) {
-  const prevWhen = useRef<QueueStatus | null>(null)
+}: Queue.Props) {
+  const prevWhen = useRef<useQueue.Status | null>(null)
 
   useEffect(() => {
     if (prevWhen.current === when) return

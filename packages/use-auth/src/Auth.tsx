@@ -1,8 +1,20 @@
 import { useEffect, type ReactNode } from "react"
-import { AuthStatus } from "./types"
+import { useAuth } from "./useAuth"
+
+// ─── Namespace ────────────────────────────────────────────────────────────────
+
+export declare namespace Auth {
+  type Status = useAuth.Status
+  type LockoutReason = useAuth.LockoutReason
+  type LockoutState = useAuth.LockoutState
+  type StorageType = useAuth.StorageType
+  type TokenPayload = useAuth.TokenPayload
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
 
 interface AuthProps {
-  when: AuthStatus
+  when: Auth.Status
   children?: ReactNode
   fallback?: ReactNode
   onAuthenticated?: () => void
@@ -36,22 +48,22 @@ function AuthRoot({
 
 // ─── Slot components ─────────────────────────────────────────────────────────
 
-function Authenticated({ when, children }: { when: AuthStatus; children: ReactNode }) {
+function Authenticated({ when, children }: { when: Auth.Status; children: ReactNode }) {
   if (when !== "authenticated") return null
   return <>{children}</>
 }
 
-function Loading({ when, children }: { when: AuthStatus; children: ReactNode }) {
+function Loading({ when, children }: { when: Auth.Status; children: ReactNode }) {
   if (when !== "loading") return null
   return <>{children}</>
 }
 
-function Locked({ when, children }: { when: AuthStatus; children: ReactNode }) {
+function Locked({ when, children }: { when: Auth.Status; children: ReactNode }) {
   if (when !== "locked") return null
   return <>{children}</>
 }
 
-function Error({ when, children }: { when: AuthStatus; children: ReactNode }) {
+function Error({ when, children }: { when: Auth.Status; children: ReactNode }) {
   if (when !== "error") return null
   return <>{children}</>
 }

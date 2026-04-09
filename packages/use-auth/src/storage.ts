@@ -1,8 +1,8 @@
-import { StorageType } from "./types"
+import { useAuth } from "./useAuth"
 
 const memoryStore: Record<string, string> = {}
 
-export function createStorage(type: StorageType) {
+export function createStorage(type: useAuth.StorageType) {
   function get(key: string): string | null {
     if (type === "memory") return memoryStore[key] ?? null
     try {

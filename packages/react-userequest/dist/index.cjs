@@ -186,10 +186,7 @@ function useRequest(key, options = {}) {
     setError(void 0);
     updateStatus("idle");
   }, [key, updateStatus]);
-  const is = (0, import_react.useCallback)(
-    (s) => status === s,
-    [status]
-  );
+  const is = (0, import_react.useCallback)((s) => status === s, [status]);
   return {
     data,
     status,

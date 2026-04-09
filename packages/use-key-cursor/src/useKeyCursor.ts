@@ -1,13 +1,37 @@
 "use client"
 
 import { useEffect, useRef, useCallback } from "react"
-import type { UseKeyCursorOptions, CursorOrigin, CursorTheme } from "./types"
+import type { RefObject } from "react"
 
 const CURSOR_SIZE = 36
 const FLY_DURATION = 480
 const CLICK_DURATION = 280
 
-function resolveTheme(theme: CursorTheme): "light" | "dark" {
+
+export declare namespace useKeyCursor {
+  type Origin =
+    | "top-right"
+    | "top-left"
+    | "bottom-right"
+    | "bottom-left"
+
+  type Theme = "light" | "dark" | "system"
+
+  type KeyTarget = RefObject<HTMLElement> | string
+
+  interface Options {
+    keys: Record<string, KeyTarget>
+    origin?: Origin
+    color?: string
+    theme?: Theme
+    onTrigger?: (key: string, element: HTMLElement) => void
+    ignoreWhen?: () => boolean
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function resolveTheme(theme: useKeyCursor.Theme): "light" | "dark" {
   if (theme === "light" || theme === "dark") return theme
 
   const html = document.documentElement
@@ -22,7 +46,7 @@ function resolveTheme(theme: CursorTheme): "light" | "dark" {
     : "light"
 }
 
-function getOriginCoords(origin: CursorOrigin): { x: number; y: number } {
+function getOriginCoords(origin: useKeyCursor.Origin): { x: number; y: number } {
   const W = window.innerWidth
   const H = window.innerHeight
   const pad = 32
@@ -36,7 +60,7 @@ function getOriginCoords(origin: CursorOrigin): { x: number; y: number } {
 }
 
 function resolveTarget(
-  value: UseKeyCursorOptions["keys"][string]
+  value: useKeyCursor.KeyTarget
 ): HTMLElement | null {
   if (typeof value === "string") {
     return document.querySelector<HTMLElement>(value)
@@ -119,7 +143,7 @@ function paintCursor(
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useKeyCursor(options: UseKeyCursorOptions): void {
+export function useKeyCursor(options: useKeyCursor.Options): void {
   const {
     keys,
     origin      = "top-right",
@@ -129,7 +153,6 @@ export function useKeyCursor(options: UseKeyCursorOptions): void {
     ignoreWhen,
   } = options
 
-  // Keep latest values accessible inside stable callbacks
   const keysRef        = useRef(keys)
   const originRef      = useRef(origin)
   const colorRef       = useRef(color)
@@ -152,7 +175,6 @@ export function useKeyCursor(options: UseKeyCursorOptions): void {
 
       const { x, y } = getOriginCoords(originRef.current)
 
-      // Snap to origin (no transition)
       wrap.style.transition = "none"
       wrap.style.left       = `${x}px`
       wrap.style.top        = `${y}px`
@@ -163,14 +185,12 @@ export function useKeyCursor(options: UseKeyCursorOptions): void {
       outer.style.transform = "scale(1)"
       inner.style.transform = "scale(1)"
 
-      // One rAF tick so the browser paints the snap position first
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const rect = targetEl.getBoundingClientRect()
           const tx   = rect.left + rect.width  / 2
           const ty   = rect.top  + rect.height / 2
 
-          // Fly
           wrap.style.transition = [
             `left ${FLY_DURATION}ms cubic-bezier(0.33,0,0.2,1)`,
             `top  ${FLY_DURATION}ms cubic-bezier(0.33,0,0.2,1)`,
@@ -178,17 +198,13 @@ export function useKeyCursor(options: UseKeyCursorOptions): void {
           wrap.style.left = `${tx}px`
           wrap.style.top  = `${ty}px`
 
-          // On landing
           setTimeout(() => {
-            // Click squeeze
             outer.style.transform = "scale(0.7)"
             inner.style.transform = "scale(0.7)"
 
-            // Fire the real click
             targetEl.click()
             onTriggerRef.current?.(key, targetEl)
 
-            // Restore + fade out
             setTimeout(() => {
               outer.style.transform = "scale(1)"
               inner.style.transform = "scale(1)"
@@ -213,9 +229,9 @@ export function useKeyCursor(options: UseKeyCursorOptions): void {
     const wrap = createCursorEl()
 
     const handler = (e: KeyboardEvent) => {
-      if (animatingRef.current)            return
+      if (animatingRef.current)                   return
       if (isTypingTarget(document.activeElement)) return
-      if (ignoreWhenRef.current?.())       return
+      if (ignoreWhenRef.current?.())              return
 
       const binding = keysRef.current[e.key]
       if (!binding) return

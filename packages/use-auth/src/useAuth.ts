@@ -1,23 +1,83 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import {
-  AuthStatus,
-  LockoutReason,
-  LockoutState,
-  TokenPayload,
-  UseAuthOptions,
-  UseAuthReturn,
-}  from "./types"
 import { createStorage } from "./storage"
 import { decodeJWT, getTokenExpiry, isExpired } from "./jwt"
+
 const DEFAULT_MAX_ATTEMPTS = 5
 const DEFAULT_LOCKOUT_DURATION = 30 // seconds
 const DEFAULT_MIN_ATTEMPT_INTERVAL = 500 // ms
 const DEFAULT_STORAGE_KEY = "hookraft_auth_token"
 const REFRESH_BEFORE_EXPIRY_MS = 60 * 1000 // refresh 60s before token expires
 
+// ─── Namespace ────────────────────────────────────────────────────────────────
+
+export declare namespace useAuth {
+  type Status = "idle" | "loading" | "authenticated" | "locked" | "error"
+  type LockoutReason = "max_attempts" | "bot_detection"
+  type StorageType = "localStorage" | "sessionStorage" | "memory"
+
+  interface TokenPayload {
+    sub?: string
+    exp?: number
+    iat?: number
+    [key: string]: unknown
+  }
+
+  interface LockoutState {
+    reason: LockoutReason
+    lockedUntil: Date
+  }
+
+  interface Options<C = unknown, U = unknown> {
+    // Core
+    onLogin: (credentials: C) => Promise<{ token: string; user?: U }>
+    onLogout?: () => Promise<void> | void
+    onRefresh?: () => Promise<string>
+    onError?: (error: unknown) => void
+
+    // JWT
+    decodeToken?: boolean
+
+    // Token expiry
+    onTokenExpired?: () => void
+
+    // Storage
+    storage?: StorageType
+    storageKey?: string
+
+    // Brute force / rate limiting
+    maxAttempts?: number
+    lockoutDuration?: number     // seconds
+    minAttemptInterval?: number  // ms — attempts faster than this = bot detection
+  }
+
+  interface Return<C = unknown, U = unknown> {
+    // State
+    status: Status
+    is: (s: Status) => boolean
+    user: U | undefined
+    token: string | null
+
+    // Actions
+    login: (credentials: C) => Promise<void>
+    logout: () => Promise<void>
+
+    // JWT
+    tokenPayload: TokenPayload | null
+    tokenExpiresAt: Date | null
+
+    // Brute force
+    attempts: number
+    lockout: LockoutState | null
+    remainingTime: number
+    lockoutReason: LockoutReason | null
+  }
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export function useAuth<C = unknown, U = unknown>(
-  options: UseAuthOptions<C, U>
-): UseAuthReturn<C, U> {
+  options: useAuth.Options<C, U>
+): useAuth.Return<C, U> {
   const {
     onLogin,
     onLogout,
@@ -34,13 +94,13 @@ export function useAuth<C = unknown, U = unknown>(
 
   const store = useRef(createStorage(storageType))
 
-  const [status, setStatus] = useState<AuthStatus>("idle")
+  const [status, setStatus] = useState<useAuth.Status>("idle")
   const [user, setUser] = useState<U | undefined>(undefined)
   const [token, setToken] = useState<string | null>(null)
-  const [tokenPayload, setTokenPayload] = useState<TokenPayload | null>(null)
+  const [tokenPayload, setTokenPayload] = useState<useAuth.TokenPayload | null>(null)
   const [tokenExpiresAt, setTokenExpiresAt] = useState<Date | null>(null)
   const [attempts, setAttempts] = useState(0)
-  const [lockout, setLockout] = useState<LockoutState | null>(null)
+  const [lockout, setLockout] = useState<useAuth.LockoutState | null>(null)
   const [remainingTime, setRemainingTime] = useState(0)
 
   const lastAttemptTime = useRef<number>(0)
@@ -120,7 +180,7 @@ export function useAuth<C = unknown, U = unknown>(
   // ─── Lockout countdown ───────────────────────────────────────────────────────
 
   const startLockoutCountdown = useCallback(
-    (until: Date, reason: LockoutReason) => {
+    (until: Date, reason: useAuth.LockoutReason) => {
       if (lockoutTimerRef.current) clearInterval(lockoutTimerRef.current)
 
       const tick = () => {
@@ -143,9 +203,9 @@ export function useAuth<C = unknown, U = unknown>(
   )
 
   const triggerLockout = useCallback(
-    (reason: LockoutReason) => {
+    (reason: useAuth.LockoutReason) => {
       const until = new Date(Date.now() + lockoutDuration * 1000)
-      const state: LockoutState = { reason, lockedUntil: until }
+      const state: useAuth.LockoutState = { reason, lockedUntil: until }
       setLockout(state)
       setStatus("locked")
       startLockoutCountdown(until, reason)
@@ -182,7 +242,6 @@ export function useAuth<C = unknown, U = unknown>(
 
   const login = useCallback(
     async (credentials: C) => {
-      // Bot detection — too fast
       const now = Date.now()
       if (now - lastAttemptTime.current < minAttemptInterval) {
         triggerLockout("bot_detection")
@@ -190,7 +249,6 @@ export function useAuth<C = unknown, U = unknown>(
       }
       lastAttemptTime.current = now
 
-      // Already locked
       if (status === "locked") return
 
       setStatus("loading")
@@ -237,7 +295,7 @@ export function useAuth<C = unknown, U = unknown>(
 
   // ─── is() helper ─────────────────────────────────────────────────────────────
 
-  const is = useCallback((s: AuthStatus) => status === s, [status])
+  const is = useCallback((s: useAuth.Status) => status === s, [status])
 
   // ─── Return ───────────────────────────────────────────────────────────────────
 

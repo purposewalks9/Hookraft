@@ -50,7 +50,7 @@ useKeyCursor({
 ```tsx
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { useKeyCursor } from "@hookraft/use-key-cursor"
 
 function DeleteModal({ onClose, onConfirm }) {
@@ -101,12 +101,12 @@ useKeyCursor({
   data={[
     {
       name: "keys",
-      type: "Record<string, RefObject<HTMLElement> | string>",
+      type: "Record<string, useKeyCursor.KeyTarget>",
       nameDetails: "Map of keyboard keys to target elements. Values can be a React ref or a CSS selector string. Key names match KeyboardEvent.key — use Escape, Enter, d, ArrowUp, etc."
     },
     {
       name: "origin",
-      type: "\"top-right\" | \"top-left\" | \"bottom-right\" | \"bottom-left\"",
+      type: "useKeyCursor.Origin",
       default: "\"top-right\"",
       nameDetails: "The corner of the screen the cursor spawns from before flying to the target"
     },
@@ -118,7 +118,7 @@ useKeyCursor({
     },
     {
       name: "theme",
-      type: "\"light\" | \"dark\" | \"system\"",
+      type: "useKeyCursor.Theme",
       default: "\"system\"",
       nameDetails: "Controls the cursor fill. light gives a white fill, dark gives a black fill. system auto-detects from next-themes, Tailwind dark class, data-theme attribute, or OS preference"
     },
@@ -167,28 +167,11 @@ The ring color is the only visual property you can customize. Use it to match yo
   </DemoCode>
 </DemoCanvas>
 
-## Usage
-
-```tsx
-import { useKeyCursor } from "@hookraft/use-key-cursor"
-```
-
-```tsx
-useKeyCursor({
-  keys: {
-    Escape: closeRef,
-    Enter:  confirmRef,
-  },
-  origin: "top-right",
-  color:  "#000000",
-  theme:  "system",
-})
-```
+---
 
 ## Notes
 
-The cursor element is appended directly to `document.body` and removed on unmount — no portals or extra wrappers needed
-`z-index` is `999999` so the cursor renders above modals and overlays
-Fires a real `.click()` on the target element so all existing `onClick` handlers work without any changes
-If the cursor is already animating, subsequent keypresses are ignored until the animation finishes
-Works in Next.js App Router — add `"use client"` to the component that calls the hook
+ The cursor element is appended directly to `document.body` and removed on unmount — no portals or extra wrappers needed `z-index` is `999999` so the cursor renders above modals and overlays
+ Fires a real `.click()` on the target element so all existing `onClick` handlers work without any changes
+ If the cursor is already animating, subsequent keypresses are ignored until the animation finishes
+ Works in Next.js App Router — add `"use client"` to the component that calls the hook

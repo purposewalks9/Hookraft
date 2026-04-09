@@ -1,6 +1,6 @@
 {
   "name": "@hookraft/useauth",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Strict, composable authentication hook for React. JWT decoding, brute force protection, bot detection, token refresh, and flexible storage built in.",
   "author": "virus",
   "license": "MIT",

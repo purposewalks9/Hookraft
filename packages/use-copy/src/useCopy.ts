@@ -1,11 +1,25 @@
 import { useRef, useCallback, useState } from "react"
-import type { UseCopyOptions, UseCopyReturn } from "./types.js"
+
+export declare namespace useCopy {
+  type Options = {
+    duration?: number
+    stagger?: number
+    resetDelay?: number
+  }
+
+  type Return = {
+    textRef: React.RefObject<HTMLElement | null>
+    iconRef: React.RefObject<HTMLButtonElement | null>
+    copied: boolean
+    trigger: () => void
+  }
+}
 
 export function useCopy({
   duration = 200,
   stagger = 5,
   resetDelay = 1500,
-}: UseCopyOptions = {}): UseCopyReturn {
+}: useCopy.Options = {}): useCopy.Return {
   const textRef = useRef<HTMLElement | null>(null)
   const iconRef = useRef<HTMLButtonElement | null>(null)
   const [copied, setCopied] = useState(false)

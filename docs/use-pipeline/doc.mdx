@@ -6,7 +6,10 @@ pnpm add @hookraft/usepipeline
 ```
 </InstallationTabs>
 
-## Usage
+---
+
+## usePipeline
+
 ```tsx
 import { usePipeline } from "@hookraft/usepipeline"
 ```
@@ -38,7 +41,7 @@ const pipeline = usePipeline({
 })
 ```
 
-## Full Example
+### Full Example
 
 This example shows a real checkout flow — validate cart, charge payment, create order and send email in parallel, then update inventory. Each step has a rollback so if anything fails, everything is cleanly reversed.
 
@@ -62,7 +65,6 @@ function CheckoutFlow() {
       {
         id: "payment",
         run: async (ctx) => {
-          // ctx.results contains results from previous steps
           const cart = ctx.results["validate"]
           const res = await fetch("/api/payment/charge", {
             method: "POST",
@@ -77,8 +79,8 @@ function CheckoutFlow() {
             body: JSON.stringify(payment),
           })
         },
-        dependsOn: ["payment"],
-        retries: 2, // retry up to 2 times before failing
+        dependsOn: ["validate"],
+        retries: 2,
       },
 
       // Step 3 — runs after payment, sequential
@@ -110,7 +112,7 @@ function CheckoutFlow() {
           })
         },
         dependsOn: ["payment"],
-        parallel: true, // runs at the same time as create-order
+        parallel: true,
       },
 
       // Step 5 — runs after create-order completes
@@ -182,7 +184,7 @@ function CheckoutFlow() {
 }
 ```
 
-## How steps connect
+### How steps connect
 
 Steps run in the order defined by `dependsOn`. If a step has no `dependsOn` it runs immediately. Steps that share the same `dependsOn` and have `parallel: true` run at the same time.
 
@@ -198,11 +200,11 @@ inventory
 
 Each step receives `ctx.results` — an object containing the return values of all previously completed steps. This lets you pass data from one step to the next without any external state.
 
-## Options
+### Options
 
 <PropsTable
   data={[
-    { name: "steps", type: "PipelineStep[]", nameDetails: "Array of steps to run in the pipeline" },
+    { name: "steps", type: "usePipeline.Step[]", nameDetails: "Array of steps to run in the pipeline" },
     { name: "onStepComplete", type: "(id: string, result: unknown) => void", nameDetails: "Fires when a step completes successfully" },
     { name: "onStepFailed", type: "(id: string, error: unknown) => void", nameDetails: "Fires when a step fails after all retries" },
     { name: "onStepRollback", type: "(id: string) => void", nameDetails: "Fires when a step starts rolling back" },
@@ -212,26 +214,26 @@ Each step receives `ctx.results` — an object containing the return values of a
   ]}
 />
 
-## Step Options
+### Step Options
 
 <PropsTable
   data={[
     { name: "id", type: "string", nameDetails: "Unique identifier for this step" },
-    { name: "run", type: "(ctx: PipelineContext) => Promise<unknown>", nameDetails: "The async function to execute. Receives results from previous steps via ctx.results" },
-    { name: "rollback", type: "(ctx: PipelineContext) => Promise<void>", nameDetails: "Called in reverse order if the pipeline fails. Use this to undo what run did" },
+    { name: "run", type: "(ctx: usePipeline.Context) => Promise<unknown>", nameDetails: "The async function to execute. Receives results from previous steps via ctx.results" },
+    { name: "rollback", type: "(ctx: usePipeline.Context) => Promise<void>", nameDetails: "Called in reverse order if the pipeline fails. Use this to undo what run did" },
     { name: "dependsOn", type: "string[]", nameDetails: "Step IDs that must complete before this step runs" },
     { name: "parallel", type: "boolean", nameDetails: "If true, runs at the same time as other parallel steps at the same dependency level" },
     { name: "retries", type: "number", default: "0", nameDetails: "How many times to retry this step before marking it as failed" },
   ]}
 />
 
-## Returns
+### Returns
 
 <PropsTable
   data={[
-    { name: "status", type: "PipelineStatus", nameDetails: "Current pipeline state: idle | running | complete | failed | rollingback | rolledback" },
-    { name: "is(status)", type: "(s: PipelineStatus) => boolean", nameDetails: "Check the current pipeline status" },
-    { name: "steps", type: "PipelineStepState[]", nameDetails: "All steps with their individual status, result, error, and attempt count" },
+    { name: "status", type: "usePipeline.Status", nameDetails: "Current pipeline state: idle | running | complete | failed | rollingback | rolledback" },
+    { name: "is(status)", type: "(s: usePipeline.Status) => boolean", nameDetails: "Check the current pipeline status" },
+    { name: "steps", type: "usePipeline.StepState[]", nameDetails: "All steps with their individual status, result, error, and attempt count" },
     { name: "current", type: "string | null", nameDetails: "The ID of the step currently running" },
     { name: "progress", type: "number", nameDetails: "Completion percentage from 0 to 100 based on completed steps" },
     { name: "results", type: "Record<string, unknown>", nameDetails: "Results returned by each completed step keyed by step ID" },

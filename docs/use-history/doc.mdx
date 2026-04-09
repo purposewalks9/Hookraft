@@ -6,7 +6,10 @@ pnpm add @hookraft/usehistory
 ```
 </InstallationTabs>
 
-## Usage
+---
+
+## useHistory
+
 ```tsx
 import { useHistory } from "@hookraft/usehistory"
 ```
@@ -19,7 +22,8 @@ const { state, set, undo, redo, canUndo, canRedo } = useHistory("", {
 })
 ```
 
-## Full Example
+### Full Example
+
 ```tsx
 function TextEditor() {
   const { state, set, undo, redo, canUndo, canRedo, clear, history, jump } = useHistory("", {
@@ -42,7 +46,6 @@ function TextEditor() {
         <button onClick={clear}>Clear</button>
       </div>
 
-      {/* History timeline — click any entry to jump to it */}
       {history.length > 0 && (
         <ul>
           {history.map((entry, index) => (
@@ -59,7 +62,7 @@ function TextEditor() {
 }
 ```
 
-## Options
+### Options
 
 <PropsTable
   data={[
@@ -70,7 +73,7 @@ function TextEditor() {
   ]}
 />
 
-## Returns
+### Returns
 
 <PropsTable
   data={[

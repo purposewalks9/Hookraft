@@ -6,7 +6,10 @@ pnpm add @hookraft/usebroadcast
 ```
 </InstallationTabs>
 
-## Usage
+---
+
+## useBroadcast
+
 ```tsx
 import { useBroadcast } from "@hookraft/usebroadcast"
 ```
@@ -18,7 +21,7 @@ const { state, broadcast, status, isSupported, listenerCount } = useBroadcast("m
 })
 ```
 
-## How it works
+### How it works
 
 Your browser can have many tabs open at the same time. By default those tabs are completely isolated — what happens in Tab 1 stays in Tab 1.
 
@@ -34,9 +37,9 @@ Tab 1 (user clicks logout)
   └──────────────────→ Tab 4 (automatically redirects to /login)
 ```
 
-## Full Examples
+### Full Examples
 
-### Logout across all tabs
+#### Logout across all tabs
 
 User logs out in one tab — every other open tab logs out automatically.
 
@@ -50,7 +53,6 @@ function useAuthSync({ onLogout }: { onLogout: () => void }) {
     {
       onMessage: (data) => {
         if (!data.loggedIn) {
-          // another tab logged out — react here
           onLogout()
         }
       },
@@ -58,9 +60,7 @@ function useAuthSync({ onLogout }: { onLogout: () => void }) {
   )
 
   const logoutEverywhere = () => {
-    // tell every other tab to log out
     broadcast({ loggedIn: false })
-    // handle local logout yourself
     onLogout()
   }
 
@@ -87,7 +87,7 @@ function LogoutButton() {
 
 ---
 
-### Sync cart across tabs
+#### Sync cart across tabs
 
 User adds an item to the cart in Tab 1. The cart badge in Tab 2 updates instantly.
 
@@ -106,7 +106,7 @@ function useCart() {
 
   const addItem = (item: CartItem) => {
     const updated = [...cart, item]
-    broadcast(updated) // updates this tab AND all others
+    broadcast(updated)
   }
 
   const removeItem = (id: string) => {
@@ -141,7 +141,7 @@ function CartBadge() {
 
 ---
 
-###  Sync notification badge
+#### Sync notification badge
 
 New message arrives — every open tab shows the updated unread count instantly.
 
@@ -175,7 +175,7 @@ function NotificationBell() {
 
 ---
 
-###  Track how many tabs are open
+#### Track how many tabs are open
 
 ```tsx
 import { useBroadcast } from "@hookraft/usebroadcast"
@@ -203,7 +203,7 @@ function TabCounter() {
 }
 ```
 
-## `broadcast` vs `send`
+### `broadcast` vs `send`
 
 These two look similar but behave differently:
 
@@ -221,10 +221,9 @@ send(42)
 // other tabs receive 42
 ```
 
-Use `broadcast` when you want all tabs in sync.
-Use `send` when you want to notify other tabs without changing your own state — for example a one-time signal like `"refresh"` or `"reload"`.
+Use `broadcast` when you want all tabs in sync. Use `send` when you want to notify other tabs without changing your own state — for example a one-time signal like `"refresh"` or `"reload"`.
 
-## Browser Support
+### Browser Support
 
 `useBroadcast` is SSR safe. It checks for `window` before touching any browser API so it will not crash in server-side environments. If `BroadcastChannel` is not supported, `isSupported` returns `false` and the hook does nothing — no errors thrown.
 
@@ -236,7 +235,7 @@ if (!isSupported) {
 }
 ```
 
-## Options
+### Options
 
 <PropsTable
   data={[
@@ -249,14 +248,14 @@ if (!isSupported) {
   ]}
 />
 
-## Returns
+### Returns
 
 <PropsTable
   data={[
     { name: "state", type: "T", nameDetails: "Current state value — updates automatically when other tabs broadcast" },
     { name: "broadcast(value)", type: "(value: T) => void", nameDetails: "Update state in this tab AND send the new value to all other tabs on the same channel" },
     { name: "send(value)", type: "(value: T) => void", nameDetails: "Send a value to other tabs without updating local state" },
-    { name: "status", type: "BroadcastStatus", nameDetails: "Current channel state: idle | active | unsupported" },
+    { name: "status", type: "useBroadcast.Status", nameDetails: "Current channel state: idle | active | unsupported" },
     { name: "isSupported", type: "boolean", nameDetails: "True if BroadcastChannel is supported in the current browser" },
     { name: "tabId", type: "string", nameDetails: "Unique ID generated for the current tab session" },
     { name: "listenerCount", type: "number", nameDetails: "Number of other tabs currently connected to the same channel" },

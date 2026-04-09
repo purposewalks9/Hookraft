@@ -62,6 +62,11 @@ export const basicDoc: DocSchema = [
         id: "use-broadcast",
         description: "Sync state across multiple browser tabs in real time using BroadcastChannel.",
       },
+      {
+        title: "UseEngagement",
+        id: "use-engagement",
+        description: "Track user engagement metrics like active time, idle time, and total clicks with automatic offline support and data syncing.",
+      }
     ],
   },
 

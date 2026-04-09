@@ -1,9 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import type {
-  WebSocketStatus,
-  UseWebSocketOptions,
-  UseWebSocketReturn,
-} from "./types"
 
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof WebSocket !== "undefined"
@@ -22,24 +17,70 @@ function defaultSerializer(data: unknown): string {
   return JSON.stringify(data)
 }
 
-/**
- * useWebSocket
- *
- * A complete WebSocket hook with auto-reconnect, exponential backoff,
- * message queuing, heartbeat, and full lifecycle callbacks.
- *
- * @example
- * const { status, messages, send, disconnect } = useWebSocket({
- *   url: "wss://api.example.com/chat",
- *   onMessage: (data) => console.log(data),
- *   onConnect: () => console.log("Connected!"),
- *   reconnect: true,
- *   heartbeat: { message: "ping", interval: 30000 },
- * })
- */
+// ─── Namespace ────────────────────────────────────────────────────────────────
+
+export declare namespace useWebSocket {
+  type Status =
+    | "idle"
+    | "connecting"
+    | "connected"
+    | "disconnected"
+    | "reconnecting"
+    | "error"
+
+  interface HeartbeatConfig {
+    /** Message to send as heartbeat. Defaults to "ping" */
+    message?: string | object
+    /** Interval in ms between heartbeats. Defaults to 30000 */
+    interval?: number
+  }
+
+  interface Options<TMessage = unknown, TSend = unknown> {
+    url: string
+    protocols?: string | string[]
+    autoConnect?: boolean
+    reconnect?: boolean
+    reconnectAttempts?: number
+    reconnectInterval?: number
+    maxReconnectInterval?: number
+    heartbeat?: HeartbeatConfig
+    messageLimit?: number
+    queueWhileOffline?: boolean
+    onConnect?: () => void
+    onDisconnect?: (event: CloseEvent) => void
+    onMessage?: (data: TMessage, event: MessageEvent) => void
+    onError?: (event: Event) => void
+    onReconnect?: (attempt: number) => void
+    onReconnectFailed?: () => void
+    parseMessage?: (raw: string) => TMessage | null
+    serializeMessage?: (data: TSend) => string
+  }
+
+  interface Return<TMessage = unknown, TSend = unknown> {
+    status: Status
+    messages: TMessage[]
+    lastMessage: TMessage | null
+    isConnecting: boolean
+    isConnected: boolean
+    isDisconnected: boolean
+    isError: boolean
+    reconnectCount: number
+    queuedCount: number
+    send: (data: TSend) => void
+    sendRaw: (data: string) => void
+    connect: () => void
+    disconnect: () => void
+    reconnect: () => void
+    clearMessages: () => void
+    is: (status: Status) => boolean
+  }
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export function useWebSocket<TMessage = unknown, TSend = unknown>(
-  options: UseWebSocketOptions<TMessage, TSend>
-): UseWebSocketReturn<TMessage, TSend> {
+  options: useWebSocket.Options<TMessage, TSend>
+): useWebSocket.Return<TMessage, TSend> {
   const {
     url,
     protocols,
@@ -61,7 +102,7 @@ export function useWebSocket<TMessage = unknown, TSend = unknown>(
     serializeMessage = defaultSerializer,
   } = options
 
-  const [status, setStatus] = useState<WebSocketStatus>("idle")
+  const [status, setStatus] = useState<useWebSocket.Status>("idle")
   const [messages, setMessages] = useState<TMessage[]>([])
   const [lastMessage, setLastMessage] = useState<TMessage | null>(null)
   const [reconnectCount, setReconnectCount] = useState(0)
@@ -75,7 +116,6 @@ export function useWebSocket<TMessage = unknown, TSend = unknown>(
   const manualCloseRef = useRef(false)
   const mountedRef = useRef(true)
 
-  // Callback refs
   const onConnectRef = useRef(onConnect)
   const onDisconnectRef = useRef(onDisconnect)
   const onMessageRef = useRef(onMessage)
@@ -148,7 +188,6 @@ export function useWebSocket<TMessage = unknown, TSend = unknown>(
     ws.onmessage = (event: MessageEvent) => {
       if (!mountedRef.current) return
 
-      // Ignore heartbeat responses
       if (
         heartbeat &&
         (event.data === "pong" || event.data === heartbeat.message)
@@ -176,14 +215,12 @@ export function useWebSocket<TMessage = unknown, TSend = unknown>(
         return
       }
 
-      // Auto reconnect
       if (shouldReconnect && reconnectAttemptsRef.current < maxAttempts) {
         reconnectAttemptsRef.current++
         setReconnectCount(reconnectAttemptsRef.current)
         setStatus("reconnecting")
         onReconnectRef.current?.(reconnectAttemptsRef.current)
 
-        // Exponential backoff
         const delay = Math.min(
           reconnectInterval * Math.pow(2, reconnectAttemptsRef.current - 1),
           maxReconnectInterval
@@ -203,7 +240,6 @@ export function useWebSocket<TMessage = unknown, TSend = unknown>(
     ws.onerror = (event: Event) => {
       if (!mountedRef.current) return
       onErrorRef.current?.(event)
-      // onclose will fire after onerror — let it handle reconnect
     }
   }, [
     url,
@@ -263,11 +299,10 @@ export function useWebSocket<TMessage = unknown, TSend = unknown>(
   }, [])
 
   const is = useCallback(
-    (s: WebSocketStatus) => status === s,
+    (s: useWebSocket.Status) => status === s,
     [status]
   )
 
-  // Auto connect on mount
   useEffect(() => {
     if (autoConnect) connect()
     return () => {

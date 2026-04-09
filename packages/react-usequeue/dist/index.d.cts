@@ -1,50 +1,48 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
 
-type QueueStatus = "idle" | "running" | "paused" | "done";
-interface QueueItem<T> {
-    id: string;
-    data: T;
-    status: "pending" | "processing" | "completed" | "failed";
-    error?: unknown;
+declare namespace useQueue {
+    type Status = "idle" | "running" | "paused" | "done";
+    type Item<T> = {
+        id: string;
+        data: T;
+        status: "pending" | "processing" | "completed" | "failed";
+        error?: unknown;
+    };
+    type Options<T> = {
+        onProcess: (item: T) => Promise<void>;
+        onSuccess?: (item: T) => void;
+        onError?: (item: T, error: unknown) => void;
+        onDone?: () => void;
+        concurrency?: number;
+    };
+    type Return<T> = {
+        status: Status;
+        is: (status: Status) => boolean;
+        add: (data: T) => string;
+        start: () => void;
+        pause: () => void;
+        clear: () => void;
+        reset: () => void;
+        items: Item<T>[];
+        pending: Item<T>[];
+        processing: Item<T>[];
+        completed: Item<T>[];
+        failed: Item<T>[];
+    };
 }
-interface UseQueueOptions<T> {
-    onProcess: (item: T) => Promise<void>;
-    onSuccess?: (item: T) => void;
-    onError?: (item: T, error: unknown) => void;
-    onDone?: () => void;
-    concurrency?: number;
-}
-declare function useQueue<T>(options: UseQueueOptions<T>): {
-    status: QueueStatus;
-    is: (s: QueueStatus) => boolean;
-    add: (data: T) => string;
-    start: () => void;
-    pause: () => void;
-    clear: () => void;
-    reset: () => void;
-    items: QueueItem<T>[];
-    pending: QueueItem<T>[];
-    processing: QueueItem<T>[];
-    completed: QueueItem<T>[];
-    failed: QueueItem<T>[];
-};
+declare function useQueue<T>(options: useQueue.Options<T>): useQueue.Return<T>;
 
-interface QueueProps {
-    /** Current queue status */
-    when: QueueStatus;
-    /** Fires when queue starts running */
-    onRunning?: () => void;
-    /** Fires when queue is paused */
-    onPaused?: () => void;
-    /** Fires when queue is done */
-    onDone?: () => void;
-    /** Fires when queue goes idle */
-    onIdle?: () => void;
-    /** What to render when queue is idle */
-    fallback?: React.ReactNode;
-    /** Your component */
-    children: React.ReactNode;
+declare namespace Queue {
+    type Props = {
+        when: useQueue.Status;
+        onRunning?: () => void;
+        onPaused?: () => void;
+        onDone?: () => void;
+        onIdle?: () => void;
+        fallback?: React.ReactNode;
+        children: React.ReactNode;
+    };
 }
-declare function Queue({ when, onRunning, onPaused, onDone, onIdle, fallback, children, }: QueueProps): react_jsx_runtime.JSX.Element;
+declare function Queue({ when, onRunning, onPaused, onDone, onIdle, fallback, children, }: Queue.Props): react_jsx_runtime.JSX.Element;
 
-export { Queue, type QueueItem, type QueueProps, type QueueStatus, type UseQueueOptions, useQueue };
+export { Queue, useQueue };

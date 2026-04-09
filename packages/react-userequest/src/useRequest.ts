@@ -7,11 +7,51 @@ import {
   setInFlight,
   clearInFlight,
 } from "./store"
-import type {
-  RequestStatus,
-  UseRequestOptions,
-  UseRequestReturn,
-} from "./types"
+
+export declare namespace useRequest {
+  type Status = "idle" | "loading" | "success" | "error"
+
+  type CacheEntry<T> = {
+    data: T
+    timestamp: number
+    error?: unknown
+  }
+
+  type InFlightEntry<T> = {
+    promise: Promise<T>
+    subscribers: number
+  }
+
+  type Options<T> = {
+    fetcher?: (key: string) => Promise<T>
+    cacheTime?: number
+    dedupe?: boolean
+    manual?: boolean
+    onSuccess?: (data: T) => void
+    onError?: (error: unknown) => void
+    onStatusChange?: (status: Status) => void
+  }
+
+  type Return<T> = {
+
+    data: T | undefined
+    status: Status
+
+    error: unknown
+
+    isLoading: boolean
+
+    isSuccess: boolean
+
+    isError: boolean
+
+    is: (status: Status) => boolean
+
+    refetch: () => Promise<void>
+
+    clear: () => void
+  }
+}
 
 const defaultFetcher = (key: string) =>
   fetch(key).then((res) => {
@@ -19,26 +59,10 @@ const defaultFetcher = (key: string) =>
     return res.json()
   })
 
-/**
- * useRequest
- *
- * A deduplication-first data fetching hook.
- * Multiple components requesting the same key at the same time
- * will share a single in-flight request — not fire multiple.
- *
- * All caching is in-memory only (JS RAM). Nothing is written
- * to localStorage, sessionStorage, or any browser storage.
- *
- * @example
- * // All three components share ONE network request
- * const { data } = useRequest("/api/user")
- * const { data } = useRequest("/api/user")
- * const { data } = useRequest("/api/user")
- */
 export function useRequest<T = unknown>(
   key: string | null,
-  options: UseRequestOptions<T> = {}
-): UseRequestReturn<T> {
+  options: useRequest.Options<T> = {}
+): useRequest.Return<T> {
   const {
     fetcher = defaultFetcher as (key: string) => Promise<T>,
     cacheTime = 30_000,
@@ -53,7 +77,7 @@ export function useRequest<T = unknown>(
     if (!key) return undefined
     return getCached<T>(key, cacheTime) ?? undefined
   })
-  const [status, setStatus] = useState<RequestStatus>(() => {
+  const [status, setStatus] = useState<useRequest.Status>(() => {
     if (!key) return "idle"
     const cached = getCached<T>(key, cacheTime)
     return cached !== null ? "success" : "idle"
@@ -66,16 +90,24 @@ export function useRequest<T = unknown>(
   const onStatusChangeRef = useRef(onStatusChange)
 
   // Keep callback refs fresh without causing re-runs
-  useEffect(() => { onSuccessRef.current = onSuccess }, [onSuccess])
-  useEffect(() => { onErrorRef.current = onError }, [onError])
-  useEffect(() => { onStatusChangeRef.current = onStatusChange }, [onStatusChange])
+  useEffect(() => {
+    onSuccessRef.current = onSuccess
+  }, [onSuccess])
+  useEffect(() => {
+    onErrorRef.current = onError
+  }, [onError])
+  useEffect(() => {
+    onStatusChangeRef.current = onStatusChange
+  }, [onStatusChange])
 
   useEffect(() => {
     mountedRef.current = true
-    return () => { mountedRef.current = false }
+    return () => {
+      mountedRef.current = false
+    }
   }, [])
 
-  const updateStatus = useCallback((next: RequestStatus) => {
+  const updateStatus = useCallback((next: useRequest.Status) => {
     if (!mountedRef.current) return
     setStatus(next)
     onStatusChangeRef.current?.(next)
@@ -169,10 +201,7 @@ export function useRequest<T = unknown>(
     updateStatus("idle")
   }, [key, updateStatus])
 
-  const is = useCallback(
-    (s: RequestStatus) => status === s,
-    [status]
-  )
+  const is = useCallback((s: useRequest.Status) => status === s, [status])
 
   return {
     data,

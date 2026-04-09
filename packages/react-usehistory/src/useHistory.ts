@@ -1,49 +1,36 @@
 import { useState, useCallback, useRef } from "react"
 
-export type UseHistoryOptions<T> = {
+export declare namespace useHistory {
+  type Options<T> = {
+    limit?: number
+    onUndo?: (state: T) => void
+    onRedo?: (state: T) => void
+    onChange?: (state: T) => void
+  }
 
-  limit?: number
-
-  onUndo?: (state: T) => void
-
-  onRedo?: (state: T) => void
-
-  onChange?: (state: T) => void
-}
-
-export type UseHistoryReturn<T> = {
-
-  state: T
-
-  set: (value: T | ((prev: T) => T)) => void
-
-  undo: () => void
-
-  redo: () => void
-
-  canUndo: boolean
-
-  canRedo: boolean
-
-  history: T[]
-
-  future: T[]
-
-  clear: () => void
-
-  jump: (index: number) => void
+  type Return<T> = {
+    state: T
+    set: (value: T | ((prev: T) => T)) => void
+    undo: () => void
+    redo: () => void
+    canUndo: boolean
+    canRedo: boolean
+    history: T[]
+    future: T[]
+    clear: () => void
+    jump: (index: number) => void
+  }
 }
 
 export function useHistory<T>(
   initialValue: T,
-  options: UseHistoryOptions<T> = {}
-): UseHistoryReturn<T> {
+  options: useHistory.Options<T> = {}
+): useHistory.Return<T> {
   const { limit = 100, onUndo, onRedo, onChange } = options
 
   const [state, setState] = useState<T>(initialValue)
   const pastRef = useRef<T[]>([])
   const futureRef = useRef<T[]>([])
-
 
   const [, forceRender] = useState(0)
   const rerender = useCallback(() => forceRender((n) => n + 1), [])
@@ -55,9 +42,7 @@ export function useHistory<T>(
 
         if (Object.is(prev, next)) return prev
 
-
         pastRef.current = [...pastRef.current, prev].slice(-limit)
-
         futureRef.current = []
 
         onChange?.(next)

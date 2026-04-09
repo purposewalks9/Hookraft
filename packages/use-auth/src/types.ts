@@ -23,38 +23,36 @@ export interface UseAuthOptions<C = unknown, U = unknown> {
   onRefresh?: () => Promise<string>
   onError?: (error: unknown) => void
 
-  // JWT
+
   decodeToken?: boolean
 
-  // Token expiry
   onTokenExpired?: () => void
 
-  // Storage
+
   storage?: StorageType
   storageKey?: string
 
-  // Brute force / rate limiting
+
   maxAttempts?: number
-  lockoutDuration?: number     // seconds
-  minAttemptInterval?: number  // ms — attempts faster than this = bot detection
+  lockoutDuration?: number
+  minAttemptInterval?: number
 }
 
 export interface UseAuthReturn<C = unknown, U = unknown> {
-  // State
+
   status: AuthStatus
   is: (s: AuthStatus) => boolean
   user: U | undefined
   token: string | null
 
-  // Actions
+
   login: (credentials: C) => Promise<void>
   logout: () => Promise<void>
 
-  // JWT
+
   tokenPayload: TokenPayload | null
   tokenExpiresAt: Date | null
 
-  // Brute force
   attempts: number
   lockout: LockoutState | null
   remainingTime: number

@@ -6,7 +6,10 @@ pnpm add @hookraft/usequeue
 ```
 </InstallationTabs>
 
-## Usage
+---
+
+## useQueue
+
 ```tsx
 import { useQueue } from "@hookraft/usequeue"
 ```
@@ -20,7 +23,8 @@ const queue = useQueue({
 })
 ```
 
-## Full Example
+### Full Example
+
 ```tsx
 function BulkEmailSender() {
   const queue = useQueue({
@@ -50,7 +54,7 @@ function BulkEmailSender() {
 }
 ```
 
-## Options
+### Options
 
 <PropsTable
   data={[
@@ -62,22 +66,22 @@ function BulkEmailSender() {
   ]}
 />
 
-## Returns
+### Returns
 
 <PropsTable
   data={[
-    { name: "status", type: "QueueStatus", nameDetails: "Current state: idle | running | paused | done" },
-    { name: "is(status)", type: "(s: QueueStatus) => boolean", nameDetails: "Check current state" },
+    { name: "status", type: "useQueue.Status", nameDetails: "Current state: idle | running | paused | done" },
+    { name: "is(status)", type: "(s: useQueue.Status) => boolean", nameDetails: "Check current state" },
     { name: "add(item)", type: "(item: T) => string", nameDetails: "Add an item to the queue, returns its id" },
     { name: "start()", type: "() => void", nameDetails: "Start processing the queue" },
     { name: "pause()", type: "() => void", nameDetails: "Pause processing" },
-    { name: "clear()", type: "() => void", nameDetails: "Clear all items and reset" },
-    { name: "reset()", type: "() => void", nameDetails: "Reset all items back to pending" },
-    { name: "items", type: "QueueItem<T>[]", nameDetails: "All items in the queue" },
-    { name: "pending", type: "QueueItem<T>[]", nameDetails: "Items waiting to be processed" },
-    { name: "processing", type: "QueueItem<T>[]", nameDetails: "Items currently being processed" },
-    { name: "completed", type: "QueueItem<T>[]", nameDetails: "Successfully processed items" },
-    { name: "failed", type: "QueueItem<T>[]", nameDetails: "Failed items" },
+    { name: "clear()", type: "() => void", nameDetails: "Clear all items and reset to idle" },
+    { name: "reset()", type: "() => void", nameDetails: "Reset all items back to pending and status to idle" },
+    { name: "items", type: "useQueue.Item<T>[]", nameDetails: "All items in the queue" },
+    { name: "pending", type: "useQueue.Item<T>[]", nameDetails: "Items waiting to be processed" },
+    { name: "processing", type: "useQueue.Item<T>[]", nameDetails: "Items currently being processed" },
+    { name: "completed", type: "useQueue.Item<T>[]", nameDetails: "Successfully processed items" },
+    { name: "failed", type: "useQueue.Item<T>[]", nameDetails: "Failed items" },
   ]}
 />
 
@@ -86,6 +90,7 @@ function BulkEmailSender() {
 ## Queue Component
 
 The declarative JSX wrapper for queue states.
+
 ```tsx
 import { Queue } from "@hookraft/usequeue"
 ```
@@ -100,16 +105,16 @@ import { Queue } from "@hookraft/usequeue"
 </Queue>
 ```
 
-## Props
+### Props
 
 <PropsTable
   data={[
-    { name: "when", type: "QueueStatus", nameDetails: "Current queue status from useQueue" },
+    { name: "when", type: "useQueue.Status", nameDetails: "Current queue status from useQueue" },
     { name: "onRunning", type: "() => void", nameDetails: "Fires when queue starts running" },
     { name: "onPaused", type: "() => void", nameDetails: "Fires when queue is paused" },
     { name: "onDone", type: "() => void", nameDetails: "Fires when queue finishes" },
     { name: "onIdle", type: "() => void", nameDetails: "Fires when queue goes idle" },
-    { name: "fallback", type: "ReactNode", default: "null", nameDetails: "Rendered when queue is idle" },
-    { name: "children", type: "ReactNode", nameDetails: "Rendered when queue is running, paused or done" },
+    { name: "fallback", type: "React.ReactNode", default: "null", nameDetails: "Rendered when queue is idle" },
+    { name: "children", type: "React.ReactNode", nameDetails: "Rendered when queue is running, paused, or done" },
   ]}
 />

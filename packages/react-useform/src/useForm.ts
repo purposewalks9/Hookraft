@@ -1,19 +1,77 @@
 import { useState, useCallback, useRef } from "react"
 import { validateValue } from "./validate"
-import type {
-  FieldConfig,
-  FieldState,
-  FieldValue,
-  FieldsConfig,
-  FieldsState,
-  FormErrors,
-  FormStatus,
-  FormValues,
-  UseFormOptions,
-  UseFormReturn,
-} from "./types"
 
-function buildInitialFieldState(config: FieldConfig<FieldValue>): FieldState<FieldValue> {
+export declare namespace useForm {
+  type Status = "idle" | "submitting" | "success" | "error"
+
+  type FieldValue = string | number | boolean
+
+  type FieldRule = {
+    required?: boolean
+    minLength?: number
+    maxLength?: number
+    min?: number
+    max?: number
+    pattern?: RegExp
+    validate?: (value: FieldValue, allValues: Record<string, FieldValue>) => boolean | string
+    message?: string
+  }
+
+  type FieldConfig<T extends FieldValue = string> = {
+    value: T
+    rules?: FieldRule[]
+    disabled?: boolean
+  }
+
+  type FieldState<T extends FieldValue = string> = {
+    value: T
+    error: string | undefined
+    touched: boolean
+    isDirty: boolean
+    isValid: boolean
+    disabled: boolean
+  }
+
+  type FieldsConfig = Record<string, FieldConfig<FieldValue>>
+  type FieldsState = Record<string, FieldState<FieldValue>>
+  type FormValues = Record<string, FieldValue>
+  type FormErrors = Record<string, string | undefined>
+
+  type Options<T extends FieldsConfig> = {
+    fields: T
+    onSubmit?: (values: FormValues) => Promise<void> | void
+    onSuccess?: (values: FormValues) => void
+    onError?: (error: unknown, values: FormValues) => void
+    onChange?: (values: FormValues, fieldName: string) => void
+    validateOn?: "change" | "blur" | "submit"
+  }
+
+  type Return<T extends FieldsConfig> = {
+    fields: { [K in keyof T]: FieldState }
+    values: FormValues
+    errors: FormErrors
+    status: Status
+    isValid: boolean
+    isDirty: boolean
+    isSubmitting: boolean
+    isSuccess: boolean
+    isError: boolean
+    submitError: unknown
+    is: (status: Status) => boolean
+    setValue: (name: keyof T, value: FieldValue) => void
+    setTouched: (name: keyof T) => void
+    setError: (name: keyof T, error: string) => void
+    clearError: (name: keyof T) => void
+    validateField: (name: keyof T) => boolean
+    validateAll: () => boolean
+    submit: () => Promise<void>
+    handleSubmit: (e?: React.FormEvent) => Promise<void>
+    reset: () => void
+    resetField: (name: keyof T) => void
+  }
+}
+
+function buildInitialFieldState(config: useForm.FieldConfig<useForm.FieldValue>): useForm.FieldState<useForm.FieldValue> {
   return {
     value: config.value,
     error: undefined,
@@ -24,7 +82,7 @@ function buildInitialFieldState(config: FieldConfig<FieldValue>): FieldState<Fie
   }
 }
 
-function buildInitialState(fields: FieldsConfig): FieldsState {
+function buildInitialState(fields: useForm.FieldsConfig): useForm.FieldsState {
   return Object.fromEntries(
     Object.entries(fields).map(([name, config]) => [
       name,
@@ -33,21 +91,21 @@ function buildInitialState(fields: FieldsConfig): FieldsState {
   )
 }
 
-function extractValues(fields: FieldsState): FormValues {
+function extractValues(fields: useForm.FieldsState): useForm.FormValues {
   return Object.fromEntries(
     Object.entries(fields).map(([name, field]) => [name, field.value])
   )
 }
 
-function extractErrors(fields: FieldsState): FormErrors {
+function extractErrors(fields: useForm.FieldsState): useForm.FormErrors {
   return Object.fromEntries(
     Object.entries(fields).map(([name, field]) => [name, field.error])
   )
 }
 
-export function useForm<T extends FieldsConfig>(
-  options: UseFormOptions<T>
-): UseFormReturn<T> {
+export function useForm<T extends useForm.FieldsConfig>(
+  options: useForm.Options<T>
+): useForm.Return<T> {
   const {
     fields: fieldConfigs,
     onSubmit,
@@ -57,10 +115,10 @@ export function useForm<T extends FieldsConfig>(
     validateOn = "blur",
   } = options
 
-  const [fields, setFields] = useState<FieldsState>(() =>
+  const [fields, setFields] = useState<useForm.FieldsState>(() =>
     buildInitialState(fieldConfigs)
   )
-  const [status, setStatus] = useState<FormStatus>("idle")
+  const [status, setStatus] = useState<useForm.Status>("idle")
   const [submitError, setSubmitError] = useState<unknown>(undefined)
 
   const fieldConfigsRef = useRef(fieldConfigs)
@@ -76,12 +134,12 @@ export function useForm<T extends FieldsConfig>(
   onChangeRef.current = onChange
 
   const getValues = useCallback(
-    (currentFields: FieldsState): FormValues => extractValues(currentFields),
+    (currentFields: useForm.FieldsState): useForm.FormValues => extractValues(currentFields),
     []
   )
 
   const validateField = useCallback(
-    (name: keyof T, currentFields?: FieldsState): boolean => {
+    (name: keyof T, currentFields?: useForm.FieldsState): boolean => {
       const stateToUse = currentFields ?? fields
       const config = fieldConfigsRef.current[name as string]
       const field = stateToUse[name as string]
@@ -129,7 +187,7 @@ export function useForm<T extends FieldsConfig>(
   }, [])
 
   const setValue = useCallback(
-    (name: keyof T, value: FieldValue) => {
+    (name: keyof T, value: useForm.FieldValue) => {
       setFields((prev) => {
         const config = fieldConfigsRef.current[name as string]
         const initial = config?.value
@@ -245,7 +303,7 @@ export function useForm<T extends FieldsConfig>(
     }))
   }, [])
 
-  const is = useCallback((s: FormStatus) => status === s, [status])
+  const is = useCallback((s: useForm.Status) => status === s, [status])
 
   const values = extractValues(fields)
   const errors = extractErrors(fields)
@@ -253,7 +311,7 @@ export function useForm<T extends FieldsConfig>(
   const isDirty = Object.values(fields).some((f) => f.isDirty)
 
   return {
-    fields: fields as UseFormReturn<T>["fields"],
+    fields: fields as useForm.Return<T>["fields"],
     values,
     errors,
     status,
@@ -268,11 +326,11 @@ export function useForm<T extends FieldsConfig>(
     setTouched,
     setError,
     clearError,
-    validateField: validateField as UseFormReturn<T>["validateField"],
+    validateField: validateField as useForm.Return<T>["validateField"],
     validateAll,
     submit,
     handleSubmit,
     reset,
-    resetField: resetField as UseFormReturn<T>["resetField"],
+    resetField: resetField as useForm.Return<T>["resetField"],
   }
 }

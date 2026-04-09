@@ -1,43 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
-export type DoorwayStatus = "idle" | "enter" | "loading" | "success" | "error"
+export declare namespace useDoorway {
+  type Status = "idle" | "enter" | "loading" | "success" | "error"
 
-export interface UseDoorwayOptions {
+  type Options = {
+    onEnter?: () => void | Promise<void>
+    onExit?: () => void | Promise<void>
+    onLoading?: () => void | Promise<void>
+    onSuccess?: () => void | Promise<void>
+    onError?: () => void | Promise<void>
+  }
 
-  onEnter?: () => void | Promise<void>
- 
-  onExit?: () => void | Promise<void>
- 
-  onLoading?: () => void | Promise<void>
- 
-  onSuccess?: () => void | Promise<void>
-
-  onError?: () => void | Promise<void>
+  type Return = {
+    status: Status
+    is: (status: Status) => boolean
+    enter: () => void
+    exit: () => void
+    load: () => void
+    succeed: () => void
+    fail: () => void
+    reset: () => void
+  }
 }
 
-export interface UseDoorwayReturn {
-  
-  status: DoorwayStatus
-  
-  is: (status: DoorwayStatus) => boolean
-  
-  enter: () => void
-  
-  exit: () => void
-  
-  load: () => void
-  
-  succeed: () => void
-
-  fail: () => void
-
-  reset: () => void
-}
-
-export function useDoorway(options: UseDoorwayOptions = {}): UseDoorwayReturn {
+export function useDoorway(options: useDoorway.Options = {}): useDoorway.Return {
   const { onEnter, onExit, onLoading, onSuccess, onError } = options
-  const [status, setStatus] = useState<DoorwayStatus>("idle")
-  const prevStatus = useRef<DoorwayStatus>("idle")
+  const [status, setStatus] = useState<useDoorway.Status>("idle")
+  const prevStatus = useRef<useDoorway.Status>("idle")
   const mounted = useRef(false)
 
   useEffect(() => {
@@ -79,7 +68,7 @@ export function useDoorway(options: UseDoorwayOptions = {}): UseDoorwayReturn {
     prevStatus.current = "idle"
     setStatus("idle")
   }, [])
-  const is = useCallback((s: DoorwayStatus) => status === s, [status])
+  const is = useCallback((s: useDoorway.Status) => status === s, [status])
 
   return { status, is, enter, exit, load, succeed, fail, reset }
 }

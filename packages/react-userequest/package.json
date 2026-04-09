@@ -1,6 +1,6 @@
 {
   "name": "@hookraft/userequest",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Deduplication-first data fetching hook for React. One request fires no matter how many components ask for the same data at the same time.",
   "author": "virus",
   "license": "MIT",

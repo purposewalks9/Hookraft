@@ -159,10 +159,7 @@ function useRequest(key, options = {}) {
     setError(void 0);
     updateStatus("idle");
   }, [key, updateStatus]);
-  const is = useCallback(
-    (s) => status === s,
-    [status]
-  );
+  const is = useCallback((s) => status === s, [status]);
   return {
     data,
     status,

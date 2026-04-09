@@ -1,23 +1,17 @@
 import { useEffect, useRef } from "react"
-import type { DoorwayStatus } from "./useDoorway"
+import { useDoorway } from "./useDoorway"
 
-export interface DoorwayProps {
-
-  when: boolean | DoorwayStatus
-
-  onEnter?: () => void | Promise<void>
-  
-  onExit?: () => void | Promise<void>
- 
-  onLoading?: () => void | Promise<void>
- 
-  onSuccess?: () => void | Promise<void>
- 
-  onError?: () => void | Promise<void>
-
-  fallback?: React.ReactNode
-
-  children: React.ReactNode
+export declare namespace Doorway {
+  type Props = {
+    when: boolean | useDoorway.Status
+    onEnter?: () => void | Promise<void>
+    onExit?: () => void | Promise<void>
+    onLoading?: () => void | Promise<void>
+    onSuccess?: () => void | Promise<void>
+    onError?: () => void | Promise<void>
+    fallback?: React.ReactNode
+    children: React.ReactNode
+  }
 }
 
 export function Doorway({
@@ -29,8 +23,8 @@ export function Doorway({
   onError,
   fallback = null,
   children,
-}: DoorwayProps) {
-  const prevWhen = useRef<boolean | DoorwayStatus | null>(null)
+}: Doorway.Props) {
+  const prevWhen = useRef<boolean | useDoorway.Status | null>(null)
 
   useEffect(() => {
     if (prevWhen.current === when) return

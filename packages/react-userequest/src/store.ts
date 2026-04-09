@@ -1,11 +1,11 @@
-import type { CacheEntry, InFlightEntry } from "./types"
+import { useRequest } from "./useRequest"
 
-const cache = new Map<string, CacheEntry<unknown>>()
+const cache = new Map<string, useRequest.CacheEntry<unknown>>()
 
-const inFlight = new Map<string, InFlightEntry<unknown>>()
+const inFlight = new Map<string, useRequest.InFlightEntry<unknown>>()
 
 export function getCached<T>(key: string, cacheTime: number): T | null {
-  const entry = cache.get(key) as CacheEntry<T> | undefined
+  const entry = cache.get(key) as useRequest.CacheEntry<T> | undefined
   if (!entry) return null
   if (cacheTime === 0) return null
   const isStale = Date.now() - entry.timestamp > cacheTime
@@ -25,7 +25,7 @@ export function clearCached(key: string): void {
 }
 
 export function getInFlight<T>(key: string): Promise<T> | null {
-  const entry = inFlight.get(key) as InFlightEntry<T> | undefined
+  const entry = inFlight.get(key) as useRequest.InFlightEntry<T> | undefined
   if (!entry) return null
   entry.subscribers++
   return entry.promise

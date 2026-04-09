@@ -1,6 +1,6 @@
 {
   "name": "@hookraft/doorway",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Connect conditional rendering to side effects. Lifecycle hooks for your view states.",
   "author": "purposewalker",
   "license": "MIT",
