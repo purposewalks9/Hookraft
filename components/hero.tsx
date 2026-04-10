@@ -31,11 +31,11 @@ export function Hero() {
               letterSpacing="-0.020em"
               className="font-medium text-3xl md:text-4xl lg:text-5xl tracking-tight text-foreground"
             >
-              Declarative custom hooks for your React components.
+             Eliminate repetitive React logic with reusable hooks
             </BlurReveal>
 
             <p className="text-base md:text-lg leading-6 text-muted-foreground">
-              Focus on building your UI, while Hookraft takes care of the logic.
+             A library of high-level hooks that remove repetitive frontend logic patterns state, async, behavior interaction.
             </p>
 
             <div className="flex flex-row gap-3 mt-2 w-auto">
