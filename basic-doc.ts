@@ -99,6 +99,11 @@ export const basicDoc: DocSchema = [
         id: "use-auth",
         description: "JWT auth with brute force protection and bot detection.",
       },
+      {
+        title: "UseCacheQuery",
+        id: "use-cachequery",
+        description: "Persistent data-fetching hook backed by the browser Cache API with in-memory layer, TTL expiry, background revalidation, and request deduplication.",
+      }
     ],
   },
 ];

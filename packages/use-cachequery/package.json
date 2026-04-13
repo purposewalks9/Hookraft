@@ -1,0 +1,57 @@
+{
+  "name": "@hookraft/usecachequery",
+  "version": "0.1.0",
+  "description": "Persistent data-fetching hook backed by the browser Cache API with in-memory layer, TTL expiry, background revalidation, and request deduplication.",
+  "author": "virus",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "pub:release": "npm publish --access public"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "cache",
+    "cache-api",
+    "data-fetching",
+    "ttl",
+    "revalidate",
+    "stale-while-revalidate",
+    "deduplication",
+    "typescript",
+    "nextjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/purposewalks9/Hookraft"
+  },
+  "homepage": "https://hookraft.site"
+}

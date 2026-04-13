@@ -1,0 +1,1 @@
+export { useCacheQuery } from "./usecachequery"

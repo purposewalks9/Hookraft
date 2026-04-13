@@ -1,0 +1,241 @@
+## Installation
+
+<InstallationTabs item="@hookraft/usecachequery">
+```bash
+pnpm add @hookraft/usecachequery
+```
+</InstallationTabs>
+
+---
+
+## useCacheQuery
+
+A persistent data-fetching hook backed by the browser's Cache API with an in-memory layer on top. Supports TTL expiry, background revalidation, and request deduplication — no provider, no config, just drop it in.
+
+```tsx
+import { useCacheQuery } from "@hookraft/usecachequery"
+```
+```tsx
+const { data, status, source, refresh, invalidate } = useCacheQuery(
+  "users",
+  () => fetch("/api/users").then((r) => r.json()),
+  {
+    expires: "1h",
+    revalidate: true,
+    onCacheHit: (data) => console.log("served from cache", data),
+    onFetchSuccess: (data) => console.log("fresh data", data),
+  }
+)
+```
+
+### How the cache layers work
+
+Every read checks three layers in order — fastest first:
+
+```
+1. Memory cache   → instant, lives for the current session
+2. Cache API      → persists across page reloads (HTTPS only)
+3. Network fetch  → always fresh, writes to both layers above
+```
+
+When multiple components use the same key at the same time, only **one** network request fires — all components share the same in-flight Promise.
+
+### Full Examples
+
+#### Basic data fetching
+
+```tsx
+import { useCacheQuery } from "@hookraft/usecachequery"
+
+type User = { id: string; name: string; email: string }
+
+function UserList() {
+  const { data, status } = useCacheQuery<User[]>(
+    "users",
+    () => fetch("/api/users").then((r) => r.json()),
+    { expires: "5m" }
+  )
+
+  if (status === "loading") return <p>Loading...</p>
+  if (status === "error") return <p>Something went wrong</p>
+
+  return (
+    <ul>
+      {data?.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+---
+
+#### Background revalidation (stale-while-revalidate)
+
+Show cached data immediately, then silently fetch fresh data in the background.
+
+```tsx
+const { data, status, source } = useCacheQuery(
+  "dashboard",
+  () => fetch("/api/dashboard").then((r) => r.json()),
+  {
+    expires: "10m",
+    revalidate: true, // show cache instantly, refresh behind the scenes
+  }
+)
+
+// status === "stale"    → showing cached data, fetch in progress
+// status === "success"  → fresh data loaded
+// source  === "memory"  → served from in-memory layer
+// source  === "cache"   → served from Cache API (survived page reload)
+// source  === "network" → just fetched fresh
+```
+
+---
+
+#### Manual refresh button
+
+```tsx
+function NotificationsPanel() {
+  const { data, status, refresh } = useCacheQuery(
+    "notifications",
+    () => fetch("/api/notifications").then((r) => r.json()),
+    { expires: "2m" }
+  )
+
+  return (
+    <div>
+      <button onClick={refresh} disabled={status === "revalidating"}>
+        {status === "revalidating" ? "Refreshing..." : "Sync"}
+      </button>
+
+      <ul>
+        {data?.map((n, i) => <li key={i}>{n.message}</li>)}
+      </ul>
+    </div>
+  )
+}
+```
+
+---
+
+#### Invalidate after a mutation
+
+After writing to your backend, wipe the cache so the next render fetches fresh data.
+
+```tsx
+function UserProfile({ userId }: { userId: string }) {
+  const { data, invalidate } = useCacheQuery(
+    `user:${userId}`,
+    () => fetch(`/api/users/${userId}`).then((r) => r.json())
+  )
+
+  const updateName = async (name: string) => {
+    await fetch(`/api/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ name }),
+    })
+    await invalidate() // wipe cache → next render fetches fresh
+  }
+
+  return (
+    <div>
+      <p>{data?.name}</p>
+      <button onClick={() => updateName("Alice")}>Rename</button>
+    </div>
+  )
+}
+```
+
+---
+
+#### Optimistic update
+
+Write new data directly to cache for instant UI feedback — no waiting for a refetch.
+
+```tsx
+function CartItem({ itemId }: { itemId: string }) {
+  const { data, update } = useCacheQuery(
+    `cart:${itemId}`,
+    () => fetch(`/api/cart/${itemId}`).then((r) => r.json())
+  )
+
+  const increment = async () => {
+    const optimistic = { ...data, quantity: data.quantity + 1 }
+    await update(optimistic) // instant UI update
+
+    await fetch(`/api/cart/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ quantity: optimistic.quantity }),
+    })
+  }
+
+  return (
+    <div>
+      <span>{data?.quantity}</span>
+      <button onClick={increment}>+</button>
+    </div>
+  )
+}
+```
+
+---
+
+#### Multiple components, one request
+
+All three components use the same key — only one network request fires regardless of how many are mounted at the same time.
+
+```tsx
+// Navbar.tsx
+const { data: user } = useCacheQuery("user", fetchUser, { expires: "5m" })
+
+// Sidebar.tsx
+const { data: user } = useCacheQuery("user", fetchUser, { expires: "5m" })
+
+// ProfileCard.tsx
+const { data: user } = useCacheQuery("user", fetchUser, { expires: "5m" })
+
+// → 1 request fires. All three components receive the same data.
+```
+
+### Expiry format
+
+```tsx
+expires: "30m"  // 30 minutes
+expires: "2h"   // 2 hours
+expires: "7d"   // 7 days
+```
+
+Omit `expires` entirely for data that never expires until invalidated manually.
+
+### Cache API availability
+
+The Cache API requires a secure context (HTTPS). On HTTP or in SSR environments it is not available — `useCacheQuery` detects this automatically and falls back to the in-memory layer only. Everything still works, data just won't persist across page reloads.
+
+### Options
+
+<PropsTable
+  data={[
+    { name: "cacheName", type: "string", default: "\"hookraft-cache-v1\"", nameDetails: "Name of the Cache API bucket. All keys using the same cacheName share one bucket" },
+    { name: "expires", type: "useCacheQuery.Expiry | null", default: "null", nameDetails: "TTL string controlling how long cached data is considered fresh. Accepts 30m, 1h, 7d format. No expiry if omitted" },
+    { name: "revalidate", type: "boolean", default: "false", nameDetails: "If true, serves cached data immediately then re-fetches in the background (stale-while-revalidate)" },
+    { name: "onCacheHit", type: "(data: T) => void", nameDetails: "Fires when data is served from memory or Cache API instead of the network" },
+    { name: "onFetchSuccess", type: "(data: T) => void", nameDetails: "Fires when fresh data is successfully fetched from the network" },
+    { name: "onExpired", type: "() => void", nameDetails: "Fires when a cached entry is found but its TTL has elapsed" },
+    { name: "onError", type: "(error: unknown) => void", nameDetails: "Fires when the fetcher throws" },
+  ]}
+/>
+
+### Returns
+
+<PropsTable
+  data={[
+    { name: "data", type: "T | null", nameDetails: "The fetched data — null until the first successful load" },
+    { name: "status", type: "useCacheQuery.Status", nameDetails: "Current state: idle | loading | success | stale | revalidating | expired | error" },
+    { name: "source", type: "useCacheQuery.Source", nameDetails: "Where the current data came from: memory | cache | network | null" },
+    { name: "refresh()", type: "() => Promise<void>", nameDetails: "Force a fresh network fetch, bypassing all cache layers" },
+    { name: "invalidate()", type: "() => Promise<void>", nameDetails: "Delete this key from memory and Cache API and reset to idle" },
+    { name: "update(data)", type: "(data: T) => Promise<void>", nameDetails: "Write new data directly to both cache layers without re-fetching — useful for optimistic updates" },
+  ]}
+/>
