@@ -36,19 +36,6 @@ The proxy must:
 3. Return the raw HTML from that GitHub endpoint.
 
 The hook then hands that HTML string to the browser's `DOMParser`, selects every `td[data-date]`, and reads `data-date`, `data-level`, and the inner text count off each cell.
-
-### Data pipeline at a glance
-
-```
-GitHub HTML  →  DOMParser  →  dayMap (date → ContributionDay)
-             →  Sunday-aligned week buckets (ContributionWeek[])
-             →  streak calculation  →  ContributionData returned to you
-```
-
-**Sunday alignment** — before the first real day is pushed into week buckets, the hook checks its day-of-week (`.getDay()`) and backfills that many empty placeholder days so every week always starts on Sunday and has exactly 7 entries.
-
-**Streak logic** — `computeStreaks` walks the flat sorted day list backward from today, skipping future dates. It increments a running counter for every day with `count > 0` and resets on any gap. The first non-zero run encountered (going backward) becomes `currentStreak`; the highest run ever reached in the full walk is `longestStreak`.
-
 ---
 
 ## useGithubContributions

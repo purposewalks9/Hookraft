@@ -166,21 +166,6 @@ function ContributionCalendar({
     4: colors.level4
   };
   const blockStep = blockSize + blockGap;
-  const monthLabels = useMemo(() => {
-    if (!data) return [];
-    const labels = [];
-    let lastMonth = -1;
-    data.weeks.forEach((week, wi) => {
-      const firstActive = week.days.find((d) => d.date);
-      if (!firstActive) return;
-      const month = new Date(firstActive.date).getMonth();
-      if (month !== lastMonth && month >= 0 && month <= 11) {
-        labels.push({ label: MONTHS[month], weekIndex: wi });
-        lastMonth = month;
-      }
-    });
-    return labels;
-  }, [data]);
   const gridW = ((_a = data == null ? void 0 : data.weeks.length) != null ? _a : 53) * blockStep;
   const gridH = 7 * blockStep;
   if (loading) {
@@ -215,7 +200,6 @@ function ContributionCalendar({
         },
         children: /* @__PURE__ */ jsxs("div", { style: {
           display: "inline-flex",
-          // shrink-wraps to content width, enables scroll
           gap: showDayLabels ? 6 : 0,
           padding: "0 12px"
         }, children: [
@@ -236,21 +220,24 @@ function ContributionCalendar({
             display: i % 2 === 0 ? "none" : "block"
           }, children: d }, d)) }),
           /* @__PURE__ */ jsxs("div", { style: { position: "relative", marginLeft: showDayLabels ? 8 : 0 }, children: [
-            showMonthLabels && /* @__PURE__ */ jsx("div", { style: { position: "relative", height: 20, marginBottom: 4, width: gridW }, children: monthLabels.map(({ label, weekIndex }) => /* @__PURE__ */ jsx(
-              "span",
-              {
-                style: {
-                  position: "absolute",
-                  left: weekIndex * blockStep,
-                  fontSize: 10,
-                  color: "var(--color-text-secondary, #6e7781)",
-                  userSelect: "none",
-                  whiteSpace: "nowrap"
+            showMonthLabels && /* @__PURE__ */ jsx("div", { style: { height: 20, marginBottom: 4, display: "flex", alignItems: "flex-end" }, children: /* @__PURE__ */ jsx("div", { style: { display: "flex", gap: blockGap, width: gridW }, children: data.weeks.map((week, wi) => {
+              const monthIndex = new Date(week.days[0].date).getMonth();
+              const isNewMonth = wi === 0 || monthIndex !== new Date(data.weeks[wi - 1].days[0].date).getMonth();
+              return /* @__PURE__ */ jsx(
+                "div",
+                {
+                  style: {
+                    width: blockStep,
+                    fontSize: 10,
+                    color: "var(--color-text-secondary, #6e7781)",
+                    userSelect: "none",
+                    whiteSpace: "nowrap"
+                  },
+                  children: isNewMonth ? MONTHS[monthIndex] : ""
                 },
-                children: label
-              },
-              `${label}-${weekIndex}`
-            )) }),
+                wi
+              );
+            }) }) }),
             /* @__PURE__ */ jsx("div", { style: { display: "flex", gap: blockGap, width: gridW }, children: data.weeks.map((week, wi) => /* @__PURE__ */ jsx("div", { style: { display: "flex", flexDirection: "column", gap: blockGap }, children: week.days.map((day) => /* @__PURE__ */ jsx(
               "div",
               {

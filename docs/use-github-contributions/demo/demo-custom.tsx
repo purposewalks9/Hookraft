@@ -62,7 +62,7 @@ export function DemoCustom() {
         username="torvalds"
         theme="custom"
         customColors={PRESETS[preset].colors}
-        year={2025} 
+        year={2026} 
         proxyUrl="/api/github-contributions"
       />
     </div>

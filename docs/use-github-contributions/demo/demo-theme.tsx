@@ -35,7 +35,7 @@ export function DemoTheme() {
       <ContributionCalendar
         username="purposewalks9"
         theme={theme}
-        year={2025} 
+        year={2026} 
         proxyUrl="/api/github-contributions"
         
       />

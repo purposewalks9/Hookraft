@@ -68,25 +68,6 @@ export function ContributionCalendar({
   }
 
   const blockStep = blockSize + blockGap
-
-  const monthLabels = useMemo(() => {
-    if (!data) return []
-    const labels: { label: string; weekIndex: number }[] = []
-    let lastMonth = -1
-
-    data.weeks.forEach((week, wi) => {
-      const firstActive = week.days.find((d) => d.date)
-      if (!firstActive) return
-      const month = new Date(firstActive.date).getMonth()
-      if (month !== lastMonth && month >= 0 && month <= 11) {
-        labels.push({ label: MONTHS[month], weekIndex: wi })
-        lastMonth = month
-      }
-    })
-
-    return labels
-  }, [data])
-
   const gridW = (data?.weeks.length ?? 53) * blockStep
   const gridH = 7 * blockStep
 
@@ -125,13 +106,9 @@ export function ContributionCalendar({
         ...style,
       }}
     >
-      {/*
-        ↓ Inner wrapper is wide enough to hold the full grid + day labels.
-            Everything — month labels, day labels, blocks — lives inside this
-            single div so they all scroll together as one unit.
-      */}
+      
       <div style={{
-        display:  "inline-flex",   // shrink-wraps to content width, enables scroll
+        display:  "inline-flex",
         gap:      showDayLabels ? 6 : 0,
         padding:  "0 12px",
       }}>
@@ -165,24 +142,29 @@ export function ContributionCalendar({
         {/* Grid: month labels + blocks stacked vertically */}
         <div style={{ position: "relative", marginLeft: showDayLabels ? 8 : 0 }}>
 
-          {/* Month labels — absolutely positioned relative to the grid div */}
+          {/* Month labels — aligned with weeks */}
           {showMonthLabels && (
-            <div style={{ position: "relative", height: 20, marginBottom: 4, width: gridW }}>
-              {monthLabels.map(({ label, weekIndex }) => (
-                <span
-                  key={`${label}-${weekIndex}`}
-                  style={{
-                    position:   "absolute",
-                    left:       weekIndex * blockStep,
-                    fontSize:   10,
-                    color:      "var(--color-text-secondary, #6e7781)",
-                    userSelect: "none",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {label}
-                </span>
-              ))}
+            <div style={{ height: 20, marginBottom: 4, display: "flex", alignItems: "flex-end" }}>
+              <div style={{ display: "flex", gap: blockGap, width: gridW }}>
+                {data.weeks.map((week, wi) => {
+                  const monthIndex = new Date(week.days[0].date).getMonth()
+                  const isNewMonth = wi === 0 || monthIndex !== new Date(data.weeks[wi - 1].days[0].date).getMonth()
+                  return (
+                    <div 
+                      key={wi} 
+                      style={{ 
+                        width: blockStep, 
+                        fontSize: 10, 
+                        color: "var(--color-text-secondary, #6e7781)",
+                        userSelect: "none",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {isNewMonth ? MONTHS[monthIndex] : ""}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 
