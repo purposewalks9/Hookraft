@@ -1,0 +1,198 @@
+---
+title: "Setting Up a Backend Proxy"
+description: "Configure a Next.js Route Handler to fetch GitHub contributions without CORS errors."
+---
+
+## Why You Need a Proxy
+
+By default, `@hookraft/use-github-contributions` fetches from GitHub's contribution graph using a public CORS proxy (`allorigins.win`). This works but has limitations:
+
+- ❌ Relies on third-party service (can go down)
+- ❌ Subject to rate limiting
+- ❌ No caching control
+- ✅ Create your own backend proxy for reliability, caching, and control
+
+## Setup
+
+### 1. Create the API Route
+
+Create a new file at `app/api/github-contributions/route.ts`:
+
+```typescript
+import { NextRequest, NextResponse } from "next/server"
+
+export const runtime = "edge" // optional — works on Node runtime too
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+
+  const username = searchParams.get("username")?.trim()
+  const year     = searchParams.get("year")
+
+  if (!username) {
+    return NextResponse.json(
+      { error: "Missing required query param: username" },
+      { status: 400 }
+    )
+  }
+
+  // Validate username — GitHub usernames are alphanumeric + hyphens, 1–39 chars
+  if (!/^[a-zA-Z0-9-]{1,39}$/.test(username)) {
+    return NextResponse.json(
+      { error: "Invalid GitHub username" },
+      { status: 400 }
+    )
+  }
+
+  const yearParam = year
+    ? `?from=${year}-01-01&to=${year}-12-31`
+    : ""
+
+  const url = `https://github.com/users/${username}/contributions${yearParam}`
+
+  let ghRes: Response
+  try {
+    ghRes = await fetch(url, {
+      headers: {
+        // Mimic a browser request — GitHub returns the SVG fragment only when
+        // X-Requested-With is absent and Accept includes text/html
+        "Accept":          "text/html,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9",
+        "User-Agent":
+          "Mozilla/5.0 (compatible; hookraft-contributions-bot/1.0; +https://hookraft.site)",
+      },
+      // Cache for 1 hour — contributions don't change by the second
+      next: { revalidate: 3600 },
+    })
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Upstream fetch failed: ${String(err)}` },
+      { status: 502 }
+    )
+  }
+
+  if (!ghRes.ok) {
+    return NextResponse.json(
+      { error: `GitHub returned ${ghRes.status} for user "${username}"` },
+      { status: ghRes.status === 404 ? 404 : 502 }
+    )
+  }
+
+  const html = await ghRes.text()
+
+  return new NextResponse(html, {
+    status: 200,
+    headers: {
+      "Content-Type":  "text/html; charset=utf-8",
+      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+    },
+  })
+}
+```
+
+### 2. Pass the Proxy URL to the Hook
+
+Use the hook with your new endpoint:
+
+```tsx
+import { useGithubContributions } from "@hookraft/use-github-contributions"
+
+const { data, loading, error } = useGithubContributions({
+  username: "torvalds",
+  proxyUrl: "/api/github-contributions"  // ← your custom proxy
+})
+```
+
+### 3. Use with ContributionCalendar
+
+Pass the proxy URL to the component:
+
+```tsx
+import { ContributionCalendar } from "@hookraft/use-github-contributions"
+
+export function Demo() {
+  return (
+    <ContributionCalendar
+      username="torvalds"
+      theme="github"
+      showStats
+      showTooltip
+      proxyUrl="/api/github-contributions"  // ← your custom proxy
+    />
+  )
+}
+```
+
+## What the Proxy Does
+
+1. **Validates the username** — prevents malicious input
+2. **Fetches from GitHub** — server-side, no CORS issues
+3. **Caches the response** — 1 hour in Vercel's edge cache
+4. **Returns HTML** — your hook parses it client-side
+5. **Handles errors gracefully** — returns appropriate status codes
+
+## Query Parameters
+
+Your proxy accepts:
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `username` | string | Yes | GitHub username to fetch contributions for |
+| `year` | number | No | Limit to a specific calendar year (YYYY) |
+
+**Examples:**
+```
+/api/github-contributions?username=torvalds
+/api/github-contributions?username=torvalds&year=2024
+```
+
+## Caching Strategy
+
+The proxy caches responses for **1 hour** on the server:
+
+```typescript
+next: { revalidate: 3600 }  // 1 hour ISR cache
+```
+
+This means:
+- ✅ Repeated requests within 1 hour are instant
+- ✅ After 1 hour, the next request updates the cache
+- ✅ Stale data is served while revalidating in the background
+
+Adjust the `revalidate` value if you need more/less frequent updates.
+
+## Testing
+
+1. **Start your dev server:**
+   ```bash
+   pnpm dev
+   ```
+
+2. **Test the proxy directly:**
+   ```
+   http://localhost:3000/api/github-contributions?username=torvalds
+   ```
+   You should see GitHub's HTML contribution graph.
+
+3. **Use the hook:**
+   ```tsx
+   <ContributionCalendar
+     username="torvalds"
+     proxyUrl="/api/github-contributions"
+   />
+   ```
+
+## Troubleshooting
+
+### "No contribution data found"
+- ✅ Verify the username is public on GitHub
+- ✅ Check the proxy is returning HTML (not JSON)
+- ✅ Ensure `proxyUrl` is spelled correctly
+
+### 404 Error
+- ✅ Check if the user exists and is public
+- ✅ Verify the route file is at `app/api/github-contributions/route.ts`
+
+### Still Using allorigins.win?
+- ✅ Make sure you passed `proxyUrl` to the hook/component
+- ✅ Restart your dev server after creating the route file
