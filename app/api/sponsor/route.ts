@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (existing) {
-    // Update plan + new txRef, reset verified until webhook confirms again
+   
     await db
       .update(sponsorships)
       .set({ plan, flutterwaveTxRef: txRef, verified: false, verifiedAt: null })
@@ -42,7 +42,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, sponsorId: existing.sponsorId });
   }
 
-  // New sponsorship row — unverified until Flutterwave webhook fires
   const sponsorId = generateSponsorId();
   await db.insert(sponsorships).values({
     id: nanoid(10),

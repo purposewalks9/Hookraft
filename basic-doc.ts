@@ -66,7 +66,12 @@ export const basicDoc: DocSchema = [
         title: "UseEngagement",
         id: "use-engagement",
         description: "Track user engagement metrics like active time, idle time, and total clicks with automatic offline support and data syncing.",
-      }
+      },
+      {
+        title: "UseGithubContributions",
+        id: "use-github-contributions",
+        description: "Fetch and display GitHub contribution data with customizable themes and real-time updates.",
+      },
     ],
   },
 
