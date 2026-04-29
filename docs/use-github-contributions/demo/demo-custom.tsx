@@ -63,6 +63,8 @@ export function DemoCustom() {
         theme="custom"
         customColors={PRESETS[preset].colors}
         year={2026} 
+        showMonthLabels={false}
+        showDayLabels={false}
         proxyUrl="/api/github-contributions"
       />
     </div>

@@ -8,8 +8,8 @@ export function Demo() {
   const [input, setInput] = useState("torvalds")
 
   return (
-    <div className="flex flex-col gap-5 p-6">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col max-w-[1200px] gap-5 p-6">
+      <div className="flex md:flex-row flex-col items-center gap-2">
         <span className="text-sm text-muted-foreground font-mono">github.com/</span>
         <input
           value={input}
@@ -26,11 +26,15 @@ export function Demo() {
         </button>
       </div>
 
-    
+
       <ContributionCalendar
         username={username}
         theme="github"
-        year={2025} 
+        year={2025}
+        showMonthLabels={false}
+        showDayLabels={false}
+        blockSize={8}
+        blockGap={2}
         proxyUrl="/api/github-contributions"
       />
     </div>

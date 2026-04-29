@@ -78,7 +78,7 @@ export function DemoPreview({
     <TabsContent value="preview">
       <div
         className={cn(
-          "flex w-full p-10 overflow-hidden border rounded-sm not-prose preview min-h-64 justify-center md:min-h-80 h-full items-center",
+          "flex w-full p-10 overflow-x-auto border rounded-sm not-prose preview min-h-64 justify-center md:min-h-80 h-full items-center",
           center && "flex items-center justify-center",
           className,
         )}
