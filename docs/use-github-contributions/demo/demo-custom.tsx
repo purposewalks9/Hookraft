@@ -40,7 +40,7 @@ export function DemoCustom() {
   const [preset, setPreset] = useState(0)
 
   return (
-    <div className="flex flex-col gap-4 p-6">
+    <div className="flex flex-col items-center gap-4 p-6">
       <div className="flex gap-2 flex-wrap">
         {PRESETS.map((p, i) => (
           <button
@@ -62,9 +62,12 @@ export function DemoCustom() {
         username="torvalds"
         theme="custom"
         customColors={PRESETS[preset].colors}
-        year={2026} 
+        year={2026}
+        blockSize={8}
+        blockGap={2}
         showMonthLabels={false}
         showDayLabels={false}
+        showThemeSwitcher={false}
         proxyUrl="/api/github-contributions"
       />
     </div>

@@ -22,7 +22,7 @@ export declare namespace useGithubContributions {
     currentStreak: number
   }
 
-  type Theme = "github" | "halloween" | "winter" | "custom"
+  type Theme = "github" | "halloween" | "winter" | "pink" | "dracula" | "custom"
 
   interface CustomColors {
     empty: string
@@ -57,11 +57,11 @@ export const THEMES: Record<
   useGithubContributions.CustomColors
 > = {
   github: {
-    empty:  "#ebedf0",
-    level1: "#9be9a8",
-    level2: "#40c463",
-    level3: "#30a14e",
-    level4: "#216e39",
+    empty:  "#161b22",
+    level1: "#0e4429",
+    level2: "#006d32",
+    level3: "#26a641",
+    level4: "#39d353",
   },
   halloween: {
     empty:  "#161b22",
@@ -72,12 +72,28 @@ export const THEMES: Record<
   },
   winter: {
     empty:  "#161b22",
-    level1: "#b6e3ff",
-    level2: "#54aeff",
-    level3: "#0969da",
-    level4: "#0a3069",
+    level1: "#0a3069",
+    level2: "#0969da",
+    level3: "#54aeff",
+    level4: "#b6e3ff",
+  },
+  pink: {
+    empty:  "#161b22",
+    level1: "#4a0d2e",
+    level2: "#8b1a52",
+    level3: "#d4317a",
+    level4: "#ff79c6",
+  },
+  dracula: {
+    empty:  "#161b22",
+    level1: "#1e1433",
+    level2: "#44275a",
+    level3: "#7b4ab8",
+    level4: "#bd93f9",
   },
 }
+
+// ─── Streak helpers ───────────────────────────────────────────────────────────
 
 function computeStreaks(weeks: useGithubContributions.ContributionWeek[]) {
   const days  = weeks.flatMap((w) => w.days).sort((a, b) => a.date.localeCompare(b.date))
@@ -101,6 +117,45 @@ function computeStreaks(weeks: useGithubContributions.ContributionWeek[]) {
 
   return { currentStreak: current, longestStreak: longest }
 }
+
+// ─── Count extraction ─────────────────────────────────────────────────────────
+
+function extractCount(cell: HTMLElement): number {
+  // 1. data-count attribute — most reliable, GitHub added this recently
+  const dataCount = cell.getAttribute("data-count")
+  if (dataCount !== null) {
+    const n = parseInt(dataCount, 10)
+    if (!isNaN(n)) return n
+  }
+
+  // 2. aria-label: "3 contributions on July 31, 2025" — first number is always the count
+  const ariaLabel = cell.getAttribute("aria-label") ?? ""
+  if (ariaLabel) {
+    const m = ariaLabel.match(/^(\d+)\s+contribution/)
+    if (m) return parseInt(m[1], 10)
+    // "No contributions" case
+    if (/^No contributions/i.test(ariaLabel)) return 0
+  }
+
+  // 3. tooltip attribute (older GitHub HTML)
+  const tooltip = cell.getAttribute("data-tooltip") ?? ""
+  if (tooltip) {
+    const m = tooltip.match(/^(\d+)\s+contribution/)
+    if (m) return parseInt(m[1], 10)
+    if (/^No contributions/i.test(tooltip)) return 0
+  }
+
+  // 4. Inner span text — last resort
+  const text = cell.querySelector("span")?.textContent?.trim()
+    ?? cell.textContent?.trim()
+    ?? ""
+  const m = text.match(/^(\d+)\s+contribution/)
+  if (m) return parseInt(m[1], 10)
+
+  return 0
+}
+
+// ─── Fetch & parse ────────────────────────────────────────────────────────────
 
 async function fetchContributions(
   username: string,
@@ -134,8 +189,7 @@ async function fetchContributions(
   cells.forEach((cell) => {
     const date  = cell.getAttribute("data-date") ?? ""
     const level = parseInt(cell.getAttribute("data-level") ?? "0", 10) as 0|1|2|3|4
-    const text  = cell.querySelector("span")?.textContent ?? cell.textContent ?? ""
-    const count = parseInt(text.match(/\d+/)?.[0] ?? "0", 10)
+    const count = extractCount(cell)
     dayMap.set(date, { date, count, level })
   })
 
@@ -198,7 +252,7 @@ export function useGithubContributions(
     } finally {
       setLoading(false)
     }
-  }, [username, year, proxyUrl]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [username, year, proxyUrl]) 
 
   useEffect(() => { run() }, [run])
 

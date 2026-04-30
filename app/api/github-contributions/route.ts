@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-export const runtime = "edge" // optional — works on Node runtime too
+export const runtime = "edge"
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -15,7 +15,6 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // Validate username — GitHub usernames are alphanumeric + hyphens, 1–39 chars
   if (!/^[a-zA-Z0-9-]{1,39}$/.test(username)) {
     return NextResponse.json(
       { error: "Invalid GitHub username" },
@@ -33,14 +32,13 @@ export async function GET(req: NextRequest) {
   try {
     ghRes = await fetch(url, {
       headers: {
-        // Mimic a browser request — GitHub returns the SVG fragment only when
-        // X-Requested-With is absent and Accept includes text/html
         "Accept":          "text/html,application/xhtml+xml",
         "Accept-Language": "en-US,en;q=0.9",
+        // GitHub returns contribution counts in cell text only when requested
+        // as a standard browser navigation — drop X-Requested-With entirely
         "User-Agent":
-          "Mozilla/5.0 (compatible; hookraft-contributions-bot/1.0; +https://hookraft.site)",
+          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
       },
-      // Cache for 1 hour — contributions don't change by the second
       next: { revalidate: 3600 },
     })
   } catch (err) {
@@ -58,6 +56,13 @@ export async function GET(req: NextRequest) {
   }
 
   const html = await ghRes.text()
+
+  if (!html.includes("data-date")) {
+    return NextResponse.json(
+      { error: `No contribution data found for "${username}". The user may not exist or their contributions may be private.` },
+      { status: 404 }
+    )
+  }
 
   return new NextResponse(html, {
     status: 200,

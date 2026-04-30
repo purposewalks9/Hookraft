@@ -25,17 +25,12 @@ pnpm add @hookraft/use-github-contributions
 
 ## How it works
 
-`useGithubContributions` fetches GitHub's public contribution graph HTML through a proxy route, parses every `<td data-date>` cell, and assembles the data into a typed week-by-week structure — the same 53-column grid GitHub renders on profile pages.
+`useGithubContributions` fetches GitHub's public contribution graph HTML through a proxy route, parses every `<td data-date>` cell, and returns a typed week-by-week structure — the same 53-column grid GitHub renders on profile pages.
 
-Because GitHub does not expose an unauthenticated public API for contribution data, the hook always goes through a proxy. By default it hits `/api/github-contributions` on your own origin. You can override this with the `proxyUrl` option.
+GitHub does not expose an unauthenticated public API for contribution data, so the hook always goes through a proxy. By default it hits `/api/github-contributions` on your own origin. Override this with the `proxyUrl` option.
 
-The proxy must:
+The proxy must accept `?username=` (and optionally `?year=`) as query params, fetch `https://github.com/users/{username}/contributions`, and return the raw HTML.
 
-1. Accept `?username=` (and optionally `?year=`) as query parameters.
-2. Fetch `https://github.com/users/{username}/contributions` (with `?from=YYYY-01-01&to=YYYY-12-31` when a year is supplied).
-3. Return the raw HTML from that GitHub endpoint.
-
-The hook then hands that HTML string to the browser's `DOMParser`, selects every `td[data-date]`, and reads `data-date`, `data-level`, and the inner text count off each cell.
 ---
 
 ## useGithubContributions
@@ -48,12 +43,9 @@ import { useGithubContributions } from "@hookraft/use-github-contributions"
 const { data, loading, error, refetch } = useGithubContributions({
   username: "torvalds",
   year:     2024,
-  theme:    "github",
   onLoad:   (data) => console.log(`${data.totalContributions} contributions`),
 })
 ```
-
-The hook manages its own fetch lifecycle. `loading` is `true` immediately on mount and after every `refetch()` call. The fetch re-runs automatically whenever `username`, `year`, or `proxyUrl` change (these three are the `useCallback` deps). `theme` and `customColors` are passed through to the `ContributionCalendar` component only — they have no effect on the raw data the hook returns.
 
 ### Options
 
@@ -63,39 +55,39 @@ The hook manages its own fetch lifecycle. `loading` is `true` immediately on mou
       name: "username",
       type: "string",
       required: true,
-      nameDetails: "Any public GitHub username. The fetch fails gracefully with an Error if the user doesn't exist, their contributions are private, or the proxy returns a non-2xx status."
+      nameDetails: "Any public GitHub username. Fails gracefully with an Error if the user doesn't exist, contributions are private, or the proxy returns a non-2xx status."
     },
     {
       name: "year",
       type: "number",
-      nameDetails: "Limit data to a specific calendar year. Omit to get GitHub's default rolling 52-week window. When provided, the proxy appends ?from=YYYY-01-01&to=YYYY-12-31 to the GitHub URL."
+      nameDetails: "Limit data to a specific calendar year. Omit to get GitHub's default rolling 52-week window."
     },
     {
       name: "proxyUrl",
       type: "string",
       default: "\"/api/github-contributions\"",
-      nameDetails: "Base URL for your proxy endpoint. The hook appends ?username= and optionally ?year= to this URL. Override if you host the proxy on a different path or domain."
+      nameDetails: "Base URL for your proxy endpoint. The hook appends ?username= and optionally ?year= to this URL."
     },
     {
       name: "theme",
-      type: "\"github\" | \"halloween\" | \"winter\" | \"custom\"",
+      type: "\"github\" | \"halloween\" | \"winter\" | \"pink\" | \"dracula\" | \"custom\"",
       default: "\"github\"",
-      nameDetails: "Passed through to ContributionCalendar when used together. Has no effect on the raw data returned by the hook itself."
+      nameDetails: "Passed through to ContributionCalendar when used together. Has no effect on the raw data returned by the hook."
     },
     {
       name: "customColors",
       type: "CustomColors",
-      nameDetails: "Five hex strings for a custom palette: { empty, level1, level2, level3, level4 }. Only used when theme is \"custom\". Ignored otherwise."
+      nameDetails: "Five hex strings: { empty, level1, level2, level3, level4 }. Only used when theme is \"custom\"."
     },
     {
       name: "onLoad",
       type: "(data: ContributionData) => void",
-      nameDetails: "Callback fired after a successful fetch and parse. Receives the full typed ContributionData object. Useful for logging, analytics, or syncing external state."
+      nameDetails: "Callback fired after a successful fetch and parse. Receives the full ContributionData object."
     },
     {
       name: "onError",
       type: "(error: Error) => void",
-      nameDetails: "Callback fired if the fetch fails or no td[data-date] cells are found in the response. Receives the Error instance."
+      nameDetails: "Callback fired if the fetch fails or no td[data-date] cells are found. Receives the Error instance."
     },
   ]}
 />
@@ -107,79 +99,62 @@ The hook manages its own fetch lifecycle. `loading` is `true` immediately on mou
     {
       name: "data",
       type: "ContributionData | null",
-      nameDetails: "Full structured data once resolved. null while loading or when an error has occurred."
+      nameDetails: "Full structured data once resolved. null while loading or on error."
     },
     {
       name: "loading",
       type: "boolean",
-      nameDetails: "True from the moment a fetch begins until it settles (success or error). Resets to true on every refetch() call."
+      nameDetails: "True from the moment a fetch begins until it settles. Resets to true on every refetch() call."
     },
     {
       name: "error",
       type: "Error | null",
-      nameDetails: "Populated if the fetch returns a non-2xx status, the response body cannot be parsed, or no contribution cells are found. Cleared on the next successful fetch."
+      nameDetails: "Populated if the fetch fails or no contribution cells are found. Cleared on the next successful fetch."
     },
     {
       name: "refetch",
       type: "() => void",
-      nameDetails: "Re-runs the fetch with the current options without remounting. Useful for a manual refresh button or polling interval."
+      nameDetails: "Re-runs the fetch with the current options without remounting. Useful for a manual refresh button."
     },
   ]}
 />
 
-### Full example
+### Types
 
-```tsx
-"use client"
-
-import { useGithubContributions } from "@hookraft/use-github-contributions"
-
-function ContribHeatmap({ username }: { username: string }) {
-  const { data, loading, error, refetch } = useGithubContributions({ username })
-
-  if (loading) return <p>Loading…</p>
-  if (error)   return <p>Error: {error.message}</p>
-
-  return (
-    <div>
-      <p>
-        {data!.totalContributions} contributions this year ·{" "}
-        {data!.currentStreak}d current streak ·{" "}
-        {data!.longestStreak}d longest streak
-      </p>
-
-      {/* Refresh without remounting */}
-      <button onClick={refetch}>Refresh</button>
-
-      {/* Raw grid — bring your own UI */}
-      <div style={{ display: "flex", gap: 3 }}>
-        {data!.weeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {week.days.map((day) => (
-              <div
-                key={day.date}
-                title={`${day.count} on ${day.date}`}
-                style={{
-                  width:        11,
-                  height:       11,
-                  borderRadius: 2,
-                  background: ["#ebedf0","#9be9a8","#40c463","#30a14e","#216e39"][day.level],
-                }}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+```ts
+interface ContributionDay {
+  date:  string        // "YYYY-MM-DD"
+  count: number        // raw contribution count
+  level: 0 | 1 | 2 | 3 | 4  // intensity bucket, same as GitHub's data-level
 }
+
+interface ContributionWeek {
+  days: ContributionDay[]  // always 7 entries, Sun → Sat
+}
+
+interface ContributionData {
+  weeks:              ContributionWeek[]
+  totalContributions: number
+  currentStreak:      number
+  longestStreak:      number
+}
+
+interface CustomColors {
+  empty:  string  // hex — no-contribution cells
+  level1: string  // hex — lowest activity
+  level2: string
+  level3: string
+  level4: string  // hex — highest activity
+}
+
+type Theme = "github" | "halloween" | "winter" | "pink" | "dracula" | "custom"
 ```
 
 ---
 
 ## ContributionCalendar
 
-Drop-in component that wraps `useGithubContributions` internally and renders the full heatmap — month labels, day labels (Mon / Wed / Fri), the block grid, and optional stat cards. The grid scrolls horizontally on narrow viewports and never wraps.
+Drop-in component that wraps `useGithubContributions` and renders the full heatmap — month labels, day labels, block grid, Less/More legend, total count, and a hover tooltip. Includes a built-in theme switcher and scrolls horizontally on narrow viewports.
 
 ```tsx
 import { ContributionCalendar } from "@hookraft/use-github-contributions"
@@ -193,12 +168,6 @@ import { ContributionCalendar } from "@hookraft/use-github-contributions"
   onContributionClick={(day) => console.log(day)}
 />
 ```
-
-### How the layout is built
-
-The component calculates a `blockStep = blockSize + blockGap` value and uses it consistently for both the column widths and the absolute positioning of month labels. Month labels are placed with `left: weekIndex * blockStep` so they always align to the column they describe. Only odd-indexed day labels (Mon, Wed, Fri) are rendered to match GitHub's default.
-
-Colors are resolved at render time via `resolveColors(theme, customColors)`. For built-in themes it reads from the `THEMES` constant; for `"custom"` it uses your `customColors` object. The resolved five-stop map is applied per block as `background: colorMap[day.level]`.
 
 ### Props
 
@@ -219,13 +188,13 @@ Colors are resolved at render time via `resolveColors(theme, customColors)`. For
       name: "proxyUrl",
       type: "string",
       default: "\"/api/github-contributions\"",
-      nameDetails: "Forwarded directly to the underlying hook. Override if your proxy lives at a different path."
+      nameDetails: "Forwarded to the underlying hook. Override if your proxy lives at a different path."
     },
     {
       name: "theme",
-      type: "\"github\" | \"halloween\" | \"winter\" | \"custom\"",
+      type: "\"github\" | \"halloween\" | \"winter\" | \"pink\" | \"dracula\" | \"custom\"",
       default: "\"github\"",
-      nameDetails: "Built-in color palette. Pass \"custom\" and provide customColors to use your own five-stop scale."
+      nameDetails: "Built-in color palette. Pass \"custom\" with customColors for a fully custom five-stop scale. When showThemeSwitcher is true, the user can also switch themes interactively."
     },
     {
       name: "customColors",
@@ -236,7 +205,7 @@ Colors are resolved at render time via `resolveColors(theme, customColors)`. For
       name: "blockSize",
       type: "number",
       default: "11",
-      nameDetails: "Width and height of each day square in px. Border-radius scales proportionally at 18% of blockSize (minimum 2px)."
+      nameDetails: "Width and height of each day square in px. Border-radius scales proportionally at 20% of blockSize (minimum 2px)."
     },
     {
       name: "blockGap",
@@ -248,18 +217,24 @@ Colors are resolved at render time via `resolveColors(theme, customColors)`. For
       name: "showMonthLabels",
       type: "boolean",
       default: "true",
-      nameDetails: "Render abbreviated month names (Jan–Dec) above the grid, each aligned to the first week of that month."
+      nameDetails: "Render abbreviated month names (Jan–Dec) above the grid. Labels are suppressed for orphaned months with fewer than 2 visible weeks."
     },
     {
       name: "showDayLabels",
       type: "boolean",
       default: "true",
-      nameDetails: "Render Mon, Wed, Fri labels to the left of the grid (odd-indexed days only, matching GitHub's layout)."
+      nameDetails: "Render Mon, Wed, Fri labels to the left of the grid."
+    },
+    {
+      name: "showThemeSwitcher",
+      type: "boolean",
+      default: "true",
+      nameDetails: "Render the built-in theme pill buttons above the grid. Set to false when controlling the theme externally via the theme prop."
     },
     {
       name: "onContributionClick",
       type: "(day: ContributionDay) => void",
-      nameDetails: "Click handler on individual day blocks. Receives the full ContributionDay object for that square (date, count, level)."
+      nameDetails: "Click handler on individual day blocks. Receives the ContributionDay for that square: { date, count, level }."
     },
     {
       name: "className",
@@ -269,7 +244,7 @@ Colors are resolved at render time via `resolveColors(theme, customColors)`. For
     {
       name: "style",
       type: "CSSProperties",
-      nameDetails: "Applied to the root wrapper div alongside overflowX: auto."
+      nameDetails: "Applied to the root wrapper div."
     },
   ]}
 />
@@ -280,7 +255,7 @@ Colors are resolved at render time via `resolveColors(theme, customColors)`. For
 
 The hook cannot call `github.com` directly from the browser due to CORS. You need a thin server-side route that forwards the request.
 
-### Next.js App Router example
+### Next.js App Router
 
 ```ts
 // app/api/github-contributions/route.ts
@@ -308,14 +283,13 @@ export async function GET(req: NextRequest) {
     return new Response(await res.text(), { status: res.status })
   }
 
-  const html = await res.text()
-  return new Response(html, {
+  return new Response(await res.text(), {
     headers: { "Content-Type": "text/html" },
   })
 }
 ```
 
-### Next.js Pages Router example
+### Next.js Pages Router
 
 ```ts
 // pages/api/github-contributions.ts
@@ -348,7 +322,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 ### Themes
 
-Switch between the three built-in palettes. The active theme is applied immediately — no refetch needed, only the color map updates.
+Switch between the five built-in palettes. Theme changes apply immediately — no refetch, only the color map updates.
 
 <DemoCanvas>
   <DemoPreview>
@@ -356,20 +330,6 @@ Switch between the three built-in palettes. The active theme is applied immediat
   </DemoPreview>
   <DemoCode>
     ```tsx file=./demo/demo-theme.tsx
-    ```
-  </DemoCode>
-</DemoCanvas>
-
-### Custom colors
-
-Pass `theme="custom"` with a `customColors` object for full palette control. All five stops — `empty`, `level1`, `level2`, `level3`, `level4` — must be provided as hex strings.
-
-<DemoCanvas>
-  <DemoPreview>
-    <DemoCustom />
-  </DemoPreview>
-  <DemoCode>
-    ```tsx file=./demo/demo-custom.tsx
     ```
   </DemoCode>
 </DemoCanvas>

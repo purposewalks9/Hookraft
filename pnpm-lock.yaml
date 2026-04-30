@@ -30,8 +30,8 @@ importers:
         specifier: ^0.1.0
         version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       '@hookraft/use-github-contributions':
-        specifier: ^0.1.9
-        version: 0.1.9(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
+        specifier: ^0.1.11
+        version: 0.1.11(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       '@hookraft/use-key-cursor':
         specifier: ^0.1.0
         version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
@@ -1067,8 +1067,8 @@ packages:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@hookraft/use-github-contributions@0.1.9':
-    resolution: {integrity: sha512-nXFZkYlqLVKnoW5DH6IaVw6oEa5lCbvtZayPpmBgo+5BgHx0XCRu3luQ5AYHHS535bweR/dDvBHYyJtPFw8U9w==}
+  '@hookraft/use-github-contributions@0.1.11':
+    resolution: {integrity: sha512-P5QscRioWQsRB2mobhRBPibn41FF1MQnYh5aq4YFu3BhSdwKrQT8siDPNexGIGGC13ggjr/EEj6tcPpN9EYkag==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -6390,7 +6390,7 @@ snapshots:
       react: 19.1.2
       react-dom: 19.1.2(react@19.1.2)
 
-  '@hookraft/use-github-contributions@0.1.9(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
+  '@hookraft/use-github-contributions@0.1.11(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
     dependencies:
       react: 19.1.2
       react-dom: 19.1.2(react@19.1.2)

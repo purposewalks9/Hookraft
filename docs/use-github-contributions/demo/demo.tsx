@@ -26,13 +26,13 @@ export function Demo() {
         </button>
       </div>
 
-
       <ContributionCalendar
         username={username}
         theme="github"
         year={2025}
         showMonthLabels={false}
         showDayLabels={false}
+        showThemeSwitcher={false}
         blockSize={8}
         blockGap={2}
         proxyUrl="/api/github-contributions"
