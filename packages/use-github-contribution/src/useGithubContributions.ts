@@ -118,44 +118,7 @@ function computeStreaks(weeks: useGithubContributions.ContributionWeek[]) {
   return { currentStreak: current, longestStreak: longest }
 }
 
-// ─── Count extraction ─────────────────────────────────────────────────────────
-
-function extractCount(cell: HTMLElement): number {
-  // 1. data-count attribute — most reliable, GitHub added this recently
-  const dataCount = cell.getAttribute("data-count")
-  if (dataCount !== null) {
-    const n = parseInt(dataCount, 10)
-    if (!isNaN(n)) return n
-  }
-
-  // 2. aria-label: "3 contributions on July 31, 2025" — first number is always the count
-  const ariaLabel = cell.getAttribute("aria-label") ?? ""
-  if (ariaLabel) {
-    const m = ariaLabel.match(/^(\d+)\s+contribution/)
-    if (m) return parseInt(m[1], 10)
-    // "No contributions" case
-    if (/^No contributions/i.test(ariaLabel)) return 0
-  }
-
-  // 3. tooltip attribute (older GitHub HTML)
-  const tooltip = cell.getAttribute("data-tooltip") ?? ""
-  if (tooltip) {
-    const m = tooltip.match(/^(\d+)\s+contribution/)
-    if (m) return parseInt(m[1], 10)
-    if (/^No contributions/i.test(tooltip)) return 0
-  }
-
-  // 4. Inner span text — last resort
-  const text = cell.querySelector("span")?.textContent?.trim()
-    ?? cell.textContent?.trim()
-    ?? ""
-  const m = text.match(/^(\d+)\s+contribution/)
-  if (m) return parseInt(m[1], 10)
-
-  return 0
-}
-
-// ─── Fetch & parse ────────────────────────────────────────────────────────────
+// ─── GraphQL fetch & parse ────────────────────────────────────────────────────
 
 async function fetchContributions(
   username: string,
@@ -172,42 +135,43 @@ async function fetchContributions(
     throw new Error(`Failed to fetch contributions for "${username}": ${msg}`)
   }
 
-  const html   = await res.text()
-  const parser = new DOMParser()
-  const doc    = parser.parseFromString(html, "text/html")
-  const cells  = doc.querySelectorAll<HTMLElement>("td[data-date]")
+  // The proxy now returns JSON directly (GraphQL response)
+  const json = await res.json() as {
+    weeks: Array<{
+      days: Array<{ date: string; count: number; level: 0 | 1 | 2 | 3 | 4 }>
+    }>
+    totalContributions: number
+    error?: string
+  }
 
-  if (!cells.length) {
+  if (json.error) {
+    throw new Error(json.error)
+  }
+
+  if (!json.weeks || !json.weeks.length) {
     throw new Error(
       `No contribution data found for "${username}". ` +
-      `Make sure the proxy is returning GitHub's contribution HTML.`
+      `The user may not exist or their contributions may be private.`
     )
   }
 
-  const dayMap = new Map<string, useGithubContributions.ContributionDay>()
+  // Align weeks to Sunday boundaries (same as before)
+  const allDays = json.weeks.flatMap((w) => w.days).sort((a, b) => a.date.localeCompare(b.date))
 
-  cells.forEach((cell) => {
-    const date  = cell.getAttribute("data-date") ?? ""
-    const level = parseInt(cell.getAttribute("data-level") ?? "0", 10) as 0|1|2|3|4
-    const count = extractCount(cell)
-    dayMap.set(date, { date, count, level })
-  })
-
-  const sorted = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date))
   const weeks: useGithubContributions.ContributionWeek[] = []
   let week: useGithubContributions.ContributionDay[]     = []
 
   // Pad to Sunday-aligned start
-  if (sorted.length) {
-    const firstDow = new Date(sorted[0].date).getDay()
+  if (allDays.length) {
+    const firstDow = new Date(allDays[0].date).getDay()
     for (let i = 0; i < firstDow; i++) {
-      const d = new Date(sorted[0].date)
+      const d = new Date(allDays[0].date)
       d.setDate(d.getDate() - (firstDow - i))
       week.push({ date: d.toISOString().slice(0, 10), count: 0, level: 0 })
     }
   }
 
-  sorted.forEach((day) => {
+  allDays.forEach((day) => {
     week.push(day)
     if (week.length === 7) { weeks.push({ days: week }); week = [] }
   })
@@ -221,10 +185,14 @@ async function fetchContributions(
     weeks.push({ days: week })
   }
 
-  const totalContributions           = sorted.reduce((s, d) => s + d.count, 0)
   const { currentStreak, longestStreak } = computeStreaks(weeks)
 
-  return { weeks, totalContributions, longestStreak, currentStreak }
+  return {
+    weeks,
+    totalContributions: json.totalContributions,
+    longestStreak,
+    currentStreak,
+  }
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -252,7 +220,7 @@ export function useGithubContributions(
     } finally {
       setLoading(false)
     }
-  }, [username, year, proxyUrl]) 
+  }, [username, year, proxyUrl])
 
   useEffect(() => { run() }, [run])
 

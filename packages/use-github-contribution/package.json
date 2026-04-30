@@ -1,6 +1,6 @@
 {
   "name": "@hookraft/use-github-contributions",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Fetch and display a GitHub contribution calendar as a responsive React hook + UI component. Zero dependencies beyond React.",
   "author": "virus",
   "license": "MIT",

@@ -25,11 +25,227 @@ pnpm add @hookraft/use-github-contributions
 
 ## How it works
 
-`useGithubContributions` fetches GitHub's public contribution graph HTML through a proxy route, parses every `<td data-date>` cell, and returns a typed week-by-week structure — the same 53-column grid GitHub renders on profile pages.
+`useGithubContributions` fetches GitHub contribution data through a **server-side proxy route** you provide. The proxy calls the **GitHub GraphQL API** (`/graphql`) with a personal access token, then returns a structured JSON response — no HTML scraping, no CORS issues, no fragile DOM parsing.
 
-GitHub does not expose an unauthenticated public API for contribution data, so the hook always goes through a proxy. By default it hits `/api/github-contributions` on your own origin. Override this with the `proxyUrl` option.
+The hook receives a clean JSON payload from your proxy, aligns days into Sunday-anchored weeks (matching GitHub's grid layout), and computes streak stats — giving you the same 53-column heatmap GitHub renders on profile pages.
 
-The proxy must accept `?username=` (and optionally `?year=`) as query params, fetch `https://github.com/users/{username}/contributions`, and return the raw HTML.
+---
+
+## Prerequisites: GitHub Personal Access Token
+
+The GraphQL API requires authentication. You need a **classic** or **fine-grained** personal access token with at minimum the `read:user` scope (for public contribution data).
+
+1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
+2. Generate a new token — **classic** is easiest; enable the `read:user` scope
+3. Copy the token value
+4. Add it to your project's environment variables:
+
+```bash
+# .env.local
+GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
+```
+
+> **Never expose this token client-side.** It lives only on your server inside the proxy route.
+
+---
+
+## Setting up the proxy
+
+The hook calls your own `/api/github-contributions` endpoint (or any URL you pass as `proxyUrl`). The proxy authenticates with GitHub on your behalf and returns JSON.
+
+### Next.js App Router
+
+```ts
+// app/api/github-contributions/route.ts
+import { NextRequest, NextResponse } from "next/server"
+
+export const runtime = "edge"
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+
+  const username = searchParams.get("username")?.trim()
+  const year     = parseInt(searchParams.get("year") || "", 10)
+
+  if (!username) {
+    return NextResponse.json({ error: "Missing username" }, { status: 400 })
+  }
+
+  if (!/^[a-zA-Z0-9-]{1,39}$/.test(username)) {
+    return NextResponse.json({ error: "Invalid GitHub username" }, { status: 400 })
+  }
+
+  const now        = new Date()
+  const targetYear = year || now.getFullYear()
+  const from       = new Date(`${targetYear}-01-01T00:00:00Z`).toISOString()
+  const to         = new Date(`${targetYear}-12-31T23:59:59Z`).toISOString()
+
+  const query = `
+    query($username: String!, $from: DateTime!, $to: DateTime!) {
+      user(login: $username) {
+        contributionsCollection(from: $from, to: $to) {
+          contributionCalendar {
+            weeks {
+              contributionDays {
+                date
+                contributionCount
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  try {
+    const ghRes = await fetch("https://api.github.com/graphql", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query, variables: { username, from, to } }),
+      next: { revalidate: 3600 }, // cache 1 hour
+    })
+
+    const json = await ghRes.json()
+
+    if (!ghRes.ok || json.errors) {
+      return NextResponse.json(
+        { error: json.errors?.[0]?.message ?? "GitHub API error" },
+        { status: 500 }
+      )
+    }
+
+    if (!json.data?.user) {
+      return NextResponse.json(
+        { error: `User "${username}" not found or contributions are private.` },
+        { status: 404 }
+      )
+    }
+
+    const weeks = json.data.user.contributionsCollection.contributionCalendar.weeks
+
+    // Flatten days for max-based level scaling
+    const allDays = weeks.flatMap((w: any) => w.contributionDays)
+    const max     = Math.max(...allDays.map((d: any) => d.contributionCount), 0)
+
+    const mappedWeeks = weeks.map((w: any) => ({
+      days: w.contributionDays.map((d: any) => {
+        const count = d.contributionCount
+        let level: 0 | 1 | 2 | 3 | 4 = 0
+        if (count > 0) {
+          const ratio = count / (max || 1)
+          if      (ratio > 0.75) level = 4
+          else if (ratio > 0.5)  level = 3
+          else if (ratio > 0.25) level = 2
+          else                   level = 1
+        }
+        return { date: d.date, count, level }
+      }),
+    }))
+
+    const totalContributions = allDays.reduce(
+      (sum: number, d: any) => sum + d.contributionCount, 0
+    )
+
+    return NextResponse.json(
+      { weeks: mappedWeeks, totalContributions },
+      { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" } }
+    )
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
+  }
+}
+```
+
+### Next.js Pages Router
+
+```ts
+// pages/api/github-contributions.ts
+import type { NextApiRequest, NextApiResponse } from "next"
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const username = (req.query.username as string)?.trim()
+  const year     = parseInt(req.query.year as string || "", 10)
+
+  if (!username) return res.status(400).json({ error: "Missing username" })
+  if (!/^[a-zA-Z0-9-]{1,39}$/.test(username)) {
+    return res.status(400).json({ error: "Invalid GitHub username" })
+  }
+
+  const now        = new Date()
+  const targetYear = year || now.getFullYear()
+  const from       = new Date(`${targetYear}-01-01T00:00:00Z`).toISOString()
+  const to         = new Date(`${targetYear}-12-31T23:59:59Z`).toISOString()
+
+  const query = `
+    query($username: String!, $from: DateTime!, $to: DateTime!) {
+      user(login: $username) {
+        contributionsCollection(from: $from, to: $to) {
+          contributionCalendar {
+            weeks {
+              contributionDays {
+                date
+                contributionCount
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  try {
+    const ghRes = await fetch("https://api.github.com/graphql", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query, variables: { username, from, to } }),
+    })
+
+    const json = await ghRes.json()
+
+    if (!ghRes.ok || json.errors) {
+      return res.status(500).json({ error: json.errors?.[0]?.message ?? "GitHub API error" })
+    }
+
+    if (!json.data?.user) {
+      return res.status(404).json({ error: `User "${username}" not found.` })
+    }
+
+    const weeks   = json.data.user.contributionsCollection.contributionCalendar.weeks
+    const allDays = weeks.flatMap((w: any) => w.contributionDays)
+    const max     = Math.max(...allDays.map((d: any) => d.contributionCount), 0)
+
+    const mappedWeeks = weeks.map((w: any) => ({
+      days: w.contributionDays.map((d: any) => {
+        const count = d.contributionCount
+        let level: 0 | 1 | 2 | 3 | 4 = 0
+        if (count > 0) {
+          const ratio = count / (max || 1)
+          if      (ratio > 0.75) level = 4
+          else if (ratio > 0.5)  level = 3
+          else if (ratio > 0.25) level = 2
+          else                   level = 1
+        }
+        return { date: d.date, count, level }
+      }),
+    }))
+
+    const totalContributions = allDays.reduce(
+      (sum: number, d: any) => sum + d.contributionCount, 0
+    )
+
+    res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400")
+    res.status(200).json({ weeks: mappedWeeks, totalContributions })
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+}
+```
 
 ---
 
@@ -60,7 +276,7 @@ const { data, loading, error, refetch } = useGithubContributions({
     {
       name: "year",
       type: "number",
-      nameDetails: "Limit data to a specific calendar year. Omit to get GitHub's default rolling 52-week window."
+      nameDetails: "Limit data to a specific calendar year. Omit to get the current year's contributions."
     },
     {
       name: "proxyUrl",
@@ -87,7 +303,7 @@ const { data, loading, error, refetch } = useGithubContributions({
     {
       name: "onError",
       type: "(error: Error) => void",
-      nameDetails: "Callback fired if the fetch fails or no td[data-date] cells are found. Receives the Error instance."
+      nameDetails: "Callback fired if the fetch fails or no contribution data is returned. Receives the Error instance."
     },
   ]}
 />
@@ -109,7 +325,7 @@ const { data, loading, error, refetch } = useGithubContributions({
     {
       name: "error",
       type: "Error | null",
-      nameDetails: "Populated if the fetch fails or no contribution cells are found. Cleared on the next successful fetch."
+      nameDetails: "Populated if the fetch fails or no contribution data is found. Cleared on the next successful fetch."
     },
     {
       name: "refetch",
@@ -123,13 +339,13 @@ const { data, loading, error, refetch } = useGithubContributions({
 
 ```ts
 interface ContributionDay {
-  date:  string        // "YYYY-MM-DD"
-  count: number        // raw contribution count
-  level: 0 | 1 | 2 | 3 | 4  // intensity bucket, same as GitHub's data-level
+  date:  string              // "YYYY-MM-DD"
+  count: number              // raw contribution count
+  level: 0 | 1 | 2 | 3 | 4  // intensity bucket (0 = none, 4 = highest)
 }
 
 interface ContributionWeek {
-  days: ContributionDay[]  // always 7 entries, Sun → Sat
+  days: ContributionDay[]    // always 7 entries, Sun → Sat
 }
 
 interface ContributionData {
@@ -182,7 +398,7 @@ import { ContributionCalendar } from "@hookraft/use-github-contributions"
     {
       name: "year",
       type: "number",
-      nameDetails: "Limit to a specific year. Omit for the rolling 52-week view."
+      nameDetails: "Limit to a specific year. Omit for the current year."
     },
     {
       name: "proxyUrl",
@@ -217,7 +433,7 @@ import { ContributionCalendar } from "@hookraft/use-github-contributions"
       name: "showMonthLabels",
       type: "boolean",
       default: "true",
-      nameDetails: "Render abbreviated month names (Jan–Dec) above the grid. Labels are suppressed for orphaned months with fewer than 2 visible weeks."
+      nameDetails: "Render abbreviated month names (Jan–Dec) above the grid."
     },
     {
       name: "showDayLabels",
@@ -251,70 +467,19 @@ import { ContributionCalendar } from "@hookraft/use-github-contributions"
 
 ---
 
-## Setting up the proxy
+## Level scaling
 
-The hook cannot call `github.com` directly from the browser due to CORS. You need a thin server-side route that forwards the request.
+Since the GraphQL API returns raw `contributionCount` values without GitHub's internal bucket thresholds, the proxy computes levels dynamically based on the **maximum count in the queried period**:
 
-### Next.js App Router
+| Ratio (`count / max`) | Level |
+|------------------------|-------|
+| `0`                    | `0`   |
+| `> 0` and `≤ 0.25`    | `1`   |
+| `> 0.25` and `≤ 0.5`  | `2`   |
+| `> 0.5` and `≤ 0.75`  | `3`   |
+| `> 0.75`              | `4`   |
 
-```ts
-// app/api/github-contributions/route.ts
-import { NextRequest } from "next/server"
-
-export async function GET(req: NextRequest) {
-  const username = req.nextUrl.searchParams.get("username")
-  const year     = req.nextUrl.searchParams.get("year")
-
-  if (!username) {
-    return new Response("username is required", { status: 400 })
-  }
-
-  const url = new URL(`https://github.com/users/${username}/contributions`)
-  if (year) {
-    url.searchParams.set("from", `${year}-01-01`)
-    url.searchParams.set("to",   `${year}-12-31`)
-  }
-
-  const res = await fetch(url.toString(), {
-    headers: { "X-Requested-With": "XMLHttpRequest" },
-  })
-
-  if (!res.ok) {
-    return new Response(await res.text(), { status: res.status })
-  }
-
-  return new Response(await res.text(), {
-    headers: { "Content-Type": "text/html" },
-  })
-}
-```
-
-### Next.js Pages Router
-
-```ts
-// pages/api/github-contributions.ts
-import type { NextApiRequest, NextApiResponse } from "next"
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { username, year } = req.query
-
-  if (!username || typeof username !== "string") {
-    return res.status(400).send("username is required")
-  }
-
-  const url = new URL(`https://github.com/users/${username}/contributions`)
-  if (year && typeof year === "string") {
-    url.searchParams.set("from", `${year}-01-01`)
-    url.searchParams.set("to",   `${year}-12-31`)
-  }
-
-  const ghRes = await fetch(url.toString(), {
-    headers: { "X-Requested-With": "XMLHttpRequest" },
-  })
-
-  res.status(ghRes.status).send(await ghRes.text())
-}
-```
+This means the darkest cell always represents the user's personal peak — the same visual behaviour GitHub uses.
 
 ---
 

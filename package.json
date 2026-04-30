@@ -21,7 +21,7 @@
     "@fontsource-variable/geist-mono": "^5.2.7",
     "@fontsource/geist": "^5.2.8",
     "@hookraft/use-copy": "^0.1.0",
-    "@hookraft/use-github-contributions": "^0.1.11",
+    "@hookraft/use-github-contributions": "^0.1.12",
     "@hookraft/use-key-cursor": "^0.1.0",
     "@icons-pack/react-simple-icons": "^13.7.0",
     "@mdx-js/loader": "^3.1.1",

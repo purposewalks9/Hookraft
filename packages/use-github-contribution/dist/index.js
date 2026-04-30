@@ -59,30 +59,6 @@ function computeStreaks(weeks) {
   }
   return { currentStreak: current, longestStreak: longest };
 }
-function extractCount(cell) {
-  var _a, _b, _c, _d, _e, _f, _g;
-  const dataCount = cell.getAttribute("data-count");
-  if (dataCount !== null) {
-    const n = parseInt(dataCount, 10);
-    if (!isNaN(n)) return n;
-  }
-  const ariaLabel = (_a = cell.getAttribute("aria-label")) != null ? _a : "";
-  if (ariaLabel) {
-    const m2 = ariaLabel.match(/^(\d+)\s+contribution/);
-    if (m2) return parseInt(m2[1], 10);
-    if (/^No contributions/i.test(ariaLabel)) return 0;
-  }
-  const tooltip = (_b = cell.getAttribute("data-tooltip")) != null ? _b : "";
-  if (tooltip) {
-    const m2 = tooltip.match(/^(\d+)\s+contribution/);
-    if (m2) return parseInt(m2[1], 10);
-    if (/^No contributions/i.test(tooltip)) return 0;
-  }
-  const text = (_g = (_f = (_d = (_c = cell.querySelector("span")) == null ? void 0 : _c.textContent) == null ? void 0 : _d.trim()) != null ? _f : (_e = cell.textContent) == null ? void 0 : _e.trim()) != null ? _g : "";
-  const m = text.match(/^(\d+)\s+contribution/);
-  if (m) return parseInt(m[1], 10);
-  return 0;
-}
 async function fetchContributions(username, year, proxyUrl) {
   const base = proxyUrl != null ? proxyUrl : "/api/github-contributions";
   const params = new URLSearchParams({ username });
@@ -92,35 +68,27 @@ async function fetchContributions(username, year, proxyUrl) {
     const msg = await res.text().catch(() => res.statusText);
     throw new Error(`Failed to fetch contributions for "${username}": ${msg}`);
   }
-  const html = await res.text();
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-  const cells = doc.querySelectorAll("td[data-date]");
-  if (!cells.length) {
+  const json = await res.json();
+  if (json.error) {
+    throw new Error(json.error);
+  }
+  if (!json.weeks || !json.weeks.length) {
     throw new Error(
-      `No contribution data found for "${username}". Make sure the proxy is returning GitHub's contribution HTML.`
+      `No contribution data found for "${username}". The user may not exist or their contributions may be private.`
     );
   }
-  const dayMap = /* @__PURE__ */ new Map();
-  cells.forEach((cell) => {
-    var _a, _b;
-    const date = (_a = cell.getAttribute("data-date")) != null ? _a : "";
-    const level = parseInt((_b = cell.getAttribute("data-level")) != null ? _b : "0", 10);
-    const count = extractCount(cell);
-    dayMap.set(date, { date, count, level });
-  });
-  const sorted = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+  const allDays = json.weeks.flatMap((w) => w.days).sort((a, b) => a.date.localeCompare(b.date));
   const weeks = [];
   let week = [];
-  if (sorted.length) {
-    const firstDow = new Date(sorted[0].date).getDay();
+  if (allDays.length) {
+    const firstDow = new Date(allDays[0].date).getDay();
     for (let i = 0; i < firstDow; i++) {
-      const d = new Date(sorted[0].date);
+      const d = new Date(allDays[0].date);
       d.setDate(d.getDate() - (firstDow - i));
       week.push({ date: d.toISOString().slice(0, 10), count: 0, level: 0 });
     }
   }
-  sorted.forEach((day) => {
+  allDays.forEach((day) => {
     week.push(day);
     if (week.length === 7) {
       weeks.push({ days: week });
@@ -135,9 +103,13 @@ async function fetchContributions(username, year, proxyUrl) {
     }
     weeks.push({ days: week });
   }
-  const totalContributions = sorted.reduce((s, d) => s + d.count, 0);
   const { currentStreak, longestStreak } = computeStreaks(weeks);
-  return { weeks, totalContributions, longestStreak, currentStreak };
+  return {
+    weeks,
+    totalContributions: json.totalContributions,
+    longestStreak,
+    currentStreak
+  };
 }
 function useGithubContributions(options) {
   const { username, year, proxyUrl, onLoad, onError } = options;
