@@ -46,6 +46,11 @@ export const basicDoc: DocSchema = [
         id: "use-queue",
         description: "Manage and process async task queues in React.",
       },
+      {
+        title: "UseCacheQuery",
+        id: "use-cachequery",
+        description: "Persistent data-fetching hook backed by the browser Cache API with in-memory layer, TTL expiry, background revalidation, and request deduplication.",
+      },
     ],
   },
 
@@ -67,11 +72,6 @@ export const basicDoc: DocSchema = [
         id: "use-engagement",
         description: "Track user engagement metrics like active time, idle time, and total clicks with automatic offline support and data syncing.",
       },
-      {
-        title: "UseGithubContributions",
-        id: "use-github-contributions",
-        description: "Fetch and display GitHub contribution data with customizable themes and real-time updates.",
-      },
     ],
   },
 
@@ -92,7 +92,7 @@ export const basicDoc: DocSchema = [
         title: "UseCopy",
         id: "use-copy",
         description: "Copy text to the clipboard with visual feedback.",
-      }
+      },
     ],
   },
 
@@ -104,11 +104,22 @@ export const basicDoc: DocSchema = [
         id: "use-auth",
         description: "JWT auth with brute force protection and bot detection.",
       },
+    ],
+  },
+
+  {
+    title: "UI & Experience",
+    items: [
       {
-        title: "UseCacheQuery",
-        id: "use-cachequery",
-        description: "Persistent data-fetching hook backed by the browser Cache API with in-memory layer, TTL expiry, background revalidation, and request deduplication.",
-      }
+        title: "UseSound",
+        id: "use-sound",
+        description: "Play customizable sound effects with optional haptic feedback, built on the Web Audio API.",
+      },
+      {
+        title: "UseGithubContributions",
+        id: "use-github-contributions",
+        description: "Fetch and display GitHub contribution data with customizable themes and real-time updates.",
+      },
     ],
   },
 ];

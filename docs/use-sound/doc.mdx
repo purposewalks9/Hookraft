@@ -1,0 +1,413 @@
+import { Demo }             from './demo/demo'
+import { DemoThemes }        from './demo/demo-themes'
+import { DemoList }        from './demo/demo-button'
+import { DemoLoading }        from './demo/demo-loading'
+import { DemoModal }         from './demo/demo-modal'
+import { DemoToast }         from './demo/demo-toast'
+import { DemoScroll }         from './demo/demo-scroll'
+import { DemoTabs }         from './demo/demo-tab'
+import { DemoHaptics }       from './demo/demo-haptics'
+import { DemoCanvas, DemoPreview, DemoCode } from '@/components/demo-canvas'
+import { DemoInput }         from './demo/demo-input'
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoModal />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo-modal.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+## Installation
+
+<InstallationTabs item="@hookraft/use-sound">
+```bash
+pnpm add @hookraft/use-sound
+```
+</InstallationTabs>
+
+---
+
+## How it works
+
+`useSound` synthesizes UI sounds entirely in the browser using the **Web Audio API** — no audio files, no network requests, no external dependencies. Every sound is procedurally generated from oscillators, filters, and gain envelopes tuned to feel natural for UI interactions.
+
+Haptics are layered on top via `navigator.vibrate()` using pre-mapped patterns that match each sound's intent. Both sound and haptics respect `prefers-reduced-motion` automatically.
+
+---
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoList />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo-button.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+--- 
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoInput />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo-input.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+---
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoTabs />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo-tab.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+---
+
+### Toast / notification
+
+Fire `"notification"` when a toast appears and `"success"` or `"error"` based on its type. Gives each toast distinct audible identity.
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoToast />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo-toast.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+---
+
+### Loading state
+
+`"loading"` loops automatically until you call `stop("loading")`. Use `isPlaying("loading")` to track its state and swap your UI accordingly.
+
+
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoLoading />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo-loading.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+---
+
+### Scroll ticking
+
+Throttle `"scroll"` so it fires at most once every 80ms during list scroll — any faster and it becomes noise rather than feedback.
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoScroll />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo-toast.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+---
+
+## Types
+
+```ts
+type SoundName =
+  | "click" | "hover" | "scroll"
+  | "modal-open" | "modal-close"
+  | "success" | "error" | "warning"
+  | "toggle-on" | "toggle-off"
+  | "notification" | "delete"
+  | "expand" | "collapse"
+  | "swipe" | "pop"
+  | "minimize" | "maximize"
+  | "typing" | "loading" | "complete" | "coin"
+
+type Theme =
+  | "soft"
+  | "mechanical"
+  | "digital"
+  | "wooden"
+  | "glass"
+
+type HapticPattern =
+  | "click" | "double"
+  | "success" | "error" | "warning"
+  | "notification"
+  | "impact-light" | "impact-medium" | "impact-heavy"
+  | "selection" | "long"
+
+interface Options {
+  volume?:        number
+  pitch?:         "low" | "mid" | "high" | number
+  speed?:         "slow" | "normal" | "fast"
+  reverb?:        boolean
+  stereo?:        number
+  haptic?:        boolean
+  hapticPattern?: HapticPattern
+}
+
+interface GlobalOptions {
+  globalVolume?: number
+  muted?:        boolean
+  theme?:        Theme
+  haptics?:      boolean
+}
+
+interface Return {
+  play:           (name: SoundName, options?: Options) => void
+  stop:           (name?: SoundName) => void
+  mute:           () => void
+  unmute:         () => void
+  isMuted:        boolean
+  isPlaying:      (name: SoundName) => boolean
+  triggerHaptic:  (pattern: HapticPattern) => void
+}
+```
+
+
+## useSound
+
+```tsx
+import { useSound } from "@hookraft/use-sound"
+```
+
+```tsx
+const { play, stop, mute, unmute, isMuted, isPlaying, triggerHaptic } = useSound({
+  theme:        "soft",
+  globalVolume: 0.3,
+  haptics:      true,
+})
+```
+<DemoCanvas>
+  <DemoPreview>
+    <Demo />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+### GlobalOptions
+
+<PropsTable
+  data={[
+    {
+      name: "theme",
+      type: "useSound.Theme",
+      default: "\"soft\"",
+      nameDetails: "Sets the sonic character for all sounds. Each theme changes the oscillator type, filter shape, and envelope timing. See Themes below."
+    },
+    {
+      name: "globalVolume",
+      type: "number",
+      default: "0.3",
+      nameDetails: "Master volume applied to all play() calls unless overridden per-call. Range 0–1."
+    },
+    {
+      name: "muted",
+      type: "boolean",
+      default: "false",
+      nameDetails: "Initialize the hook in a muted state. Useful when restoring a user's saved preference."
+    },
+    {
+      name: "haptics",
+      type: "boolean",
+      default: "false",
+      nameDetails: "Enable haptic feedback globally. When true, every play() call automatically triggers the mapped haptic pattern for that sound unless overridden."
+    },
+  ]}
+/>
+
+### Return value
+
+<PropsTable
+  data={[
+    {
+      name: "play",
+      type: "(name: SoundName, options?: Options) => void",
+      nameDetails: "Fire a sound by name. Options override the global config for this call only. AudioContext is created lazily on the first call — browsers require a user gesture before audio can play."
+    },
+    {
+      name: "stop",
+      type: "(name?: SoundName) => void",
+      nameDetails: "Stop a specific sound by name. Omit the argument to stop all currently playing sounds including any active loading loop."
+    },
+    {
+      name: "mute",
+      type: "() => void",
+      nameDetails: "Silences all subsequent play() calls without stopping sounds already in progress."
+    },
+    {
+      name: "unmute",
+      type: "() => void",
+      nameDetails: "Re-enables sound after mute()."
+    },
+    {
+      name: "isMuted",
+      type: "boolean",
+      nameDetails: "Current mute state. Useful for rendering a mute toggle button."
+    },
+    {
+      name: "isPlaying",
+      type: "(name: SoundName) => boolean",
+      nameDetails: "Returns true if a specific sound is currently active. Primarily useful for the \"loading\" loop."
+    },
+    {
+      name: "triggerHaptic",
+      type: "(pattern: HapticPattern) => void",
+      nameDetails: "Trigger a haptic pattern directly without playing a sound. Useful for touch interactions that need haptic feedback only."
+    },
+  ]}
+/>
+
+### Per-call Options
+
+<PropsTable
+  data={[
+    {
+      name: "volume",
+      type: "number",
+      nameDetails: "Override globalVolume for this call only. Range 0–1."
+    },
+    {
+      name: "pitch",
+      type: "\"low\" | \"mid\" | \"high\" | number",
+      nameDetails: "Shift the pitch. Presets multiply the base frequency by 0.6, 1.0, or 1.6. Pass a number to use a custom multiplier."
+    },
+    {
+      name: "speed",
+      type: "\"slow\" | \"normal\" | \"fast\"",
+      nameDetails: "Scale the attack and decay envelope. \"fast\" compresses to 60%, \"slow\" stretches to 180%."
+    },
+    {
+      name: "reverb",
+      type: "boolean",
+      nameDetails: "Add a subtle room reverb using a programmatically generated impulse response. Adds depth without audio files."
+    },
+    {
+      name: "stereo",
+      type: "number",
+      nameDetails: "Pan the sound left or right. -1 is full left, 1 is full right, 0 is center."
+    },
+    {
+      name: "haptic",
+      type: "boolean",
+      nameDetails: "Override the global haptics setting for this call only."
+    },
+    {
+      name: "hapticPattern",
+      type: "useSound.HapticPattern",
+      nameDetails: "Override the auto-mapped haptic pattern for this sound."
+    },
+  ]}
+/>
+
+---
+
+## Sound palette
+
+Every sound is tuned for a specific UI context. Each maps automatically to a haptic pattern when haptics are enabled.
+
+| Name | Context | Haptic |
+|------|---------|--------|
+| `"click"` | Button press | `click` |
+| `"hover"` | Icon / link mouseenter | `impact-light` |
+| `"scroll"` | List scroll tick | `selection` |
+| `"modal-open"` | Modal / drawer open | `impact-medium` |
+| `"modal-close"` | Modal / drawer close | `impact-light` |
+| `"success"` | Form submit, save confirmed | `success` |
+| `"error"` | Validation failure | `error` |
+| `"warning"` | Alert, caution state | `warning` |
+| `"toggle-on"` | Switch / checkbox on | `double` |
+| `"toggle-off"` | Switch / checkbox off | `double` |
+| `"notification"` | Toast / badge appear | `notification` |
+| `"delete"` | Destructive action | `impact-heavy` |
+| `"expand"` | Accordion / dropdown open | `impact-light` |
+| `"collapse"` | Accordion / dropdown close | `impact-light` |
+| `"swipe"` | Card swipe / drawer drag | `impact-medium` |
+| `"pop"` | Tooltip / popover appear | `click` |
+| `"minimize"` | Panel minimize | `impact-light` |
+| `"maximize"` | Panel maximize | `impact-medium` |
+| `"typing"` | Each keystroke | `selection` |
+| `"loading"` | Spinner / skeleton start (loops) | `selection` |
+| `"complete"` | Loading done | `success` |
+| `"coin"` | Points / reward earned | `double` |
+
+---
+
+## Themes
+
+Five themes ship out of the box. Each changes the oscillator waveform, filter shape, and envelope timing — making the same sound feel mechanical, glassy, warm, or digital depending on your product's personality.
+
+| Theme | Character | Oscillator |
+|-------|-----------|------------|
+| `"soft"` | Muted, gentle — iOS-like (default) | Sine |
+| `"mechanical"` | Keyboard / typewriter clicks | Square |
+| `"digital"` | Crisp, synthetic, sci-fi | Sawtooth |
+| `"wooden"` | Warm, organic taps | Triangle |
+| `"glass"` | Bright, crystalline pings | Sine + peaking filter |
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoThemes />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo-themes.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+---
+
+
+---
+
+## Haptic patterns
+
+Haptic patterns use `navigator.vibrate()` with tuned duration arrays. They fire automatically alongside sounds when `haptics: true`, or you can trigger them manually via `triggerHaptic()`.
+
+Haptics are silently skipped when:
+- `navigator.vibrate` is unavailable (desktop browsers, iOS Safari)
+- `prefers-reduced-motion: reduce` is set
+
+| Pattern | Vibration sequence |
+|---------|--------------------|
+| `"click"` | 10ms |
+| `"double"` | 10 · 50 · 10ms |
+| `"success"` | 15 · 40 · 40ms |
+| `"error"` | 30 · 20 · 30 · 20 · 30ms |
+| `"warning"` | 20 · 60 · 20ms |
+| `"notification"` | 25ms |
+| `"impact-light"` | 5ms |
+| `"impact-medium"` | 15ms |
+| `"impact-heavy"` | 30ms |
+| `"selection"` | 8ms |
+| `"long"` | 10 · 30 · 10 · 30 · 40ms |
+
+<DemoCanvas>
+  <DemoPreview>
+    <DemoHaptics />
+  </DemoPreview>
+  <DemoCode>
+    ```tsx file=./demo/demo-haptics.tsx
+    ```
+  </DemoCode>
+</DemoCanvas>
+
+---

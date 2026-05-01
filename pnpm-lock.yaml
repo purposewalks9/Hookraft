@@ -35,6 +35,9 @@ importers:
       '@hookraft/use-key-cursor':
         specifier: ^0.1.0
         version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
+      '@hookraft/use-sound':
+        specifier: ^0.1.0
+        version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       '@icons-pack/react-simple-icons':
         specifier: ^13.7.0
         version: 13.12.0(react@19.1.2)
@@ -1072,6 +1075,12 @@ packages:
 
   '@hookraft/use-key-cursor@0.1.0':
     resolution: {integrity: sha512-D6xh7rmDcPFajj4zJ5ZaD1f/vcKfv43ghZh8o37H3mxOZ+Hq/G7rzVdJ9l+3LC2ra/i+MzXXC4CxQyXWxnA3KA==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+
+  '@hookraft/use-sound@0.1.0':
+    resolution: {integrity: sha512-MEBCSHNKN2sc6OM6Z4cb3VICKw5/l2PxONwWPm6aX0RoVBmJbDvwJLjE6UKWF0ZXbxltQfqsAgzJpGvb9m4lCw==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -6387,6 +6396,11 @@ snapshots:
       react-dom: 19.1.2(react@19.1.2)
 
   '@hookraft/use-key-cursor@0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
+    dependencies:
+      react: 19.1.2
+      react-dom: 19.1.2(react@19.1.2)
+
+  '@hookraft/use-sound@0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
     dependencies:
       react: 19.1.2
       react-dom: 19.1.2(react@19.1.2)
