@@ -26,9 +26,6 @@ importers:
       '@fontsource/geist':
         specifier: ^5.2.8
         version: 5.2.8
-      '@hookraft/spatial-tabs':
-        specifier: ^0.1.0
-        version: 0.1.0(framer-motion@12.35.2(react-dom@19.1.2(react@19.1.2))(react@19.1.2))(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       '@hookraft/use-copy':
         specifier: ^0.1.0
         version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
@@ -38,9 +35,6 @@ importers:
       '@hookraft/use-key-cursor':
         specifier: ^0.1.0
         version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
-      '@hookraft/use-skeleton':
-        specifier: ^0.1.3
-        version: 0.1.3(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       '@hookraft/use-sound':
         specifier: ^0.1.0
         version: 0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
@@ -1070,13 +1064,6 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hookraft/spatial-tabs@0.1.0':
-    resolution: {integrity: sha512-Pk9JtuU1dQThvHKy0Su2LEqk8v/hqpLjpU0yoQp+mEMshe2Nv76A4SgfXLdHhHpV217oLxToHQt4ZivGPUu/Sg==}
-    peerDependencies:
-      framer-motion: '>=11.0.0'
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-
   '@hookraft/use-copy@0.1.0':
     resolution: {integrity: sha512-xovXM0u1ckLtYt80oF59SvKH4/7ywrGT+gMif2ElMUs2OUel+HUbF/GEDEXlYt/J3DKyIyBt1zv9kvXUvXGtjg==}
     peerDependencies:
@@ -1091,12 +1078,6 @@ packages:
 
   '@hookraft/use-key-cursor@0.1.0':
     resolution: {integrity: sha512-D6xh7rmDcPFajj4zJ5ZaD1f/vcKfv43ghZh8o37H3mxOZ+Hq/G7rzVdJ9l+3LC2ra/i+MzXXC4CxQyXWxnA3KA==}
-    peerDependencies:
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-
-  '@hookraft/use-skeleton@0.1.3':
-    resolution: {integrity: sha512-nUA/J0o2kfYHFRf/zNBqJMQOwxO1f9nTAK8bPcSIDmLU14WeGoXq9GFCiLL9GSbgJ5AabId72hAovPCTDgaQMw==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -6412,12 +6393,6 @@ snapshots:
     dependencies:
       hono: 4.12.12
 
-  '@hookraft/spatial-tabs@0.1.0(framer-motion@12.35.2(react-dom@19.1.2(react@19.1.2))(react@19.1.2))(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
-    dependencies:
-      framer-motion: 12.35.2(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
-      react: 19.1.2
-      react-dom: 19.1.2(react@19.1.2)
-
   '@hookraft/use-copy@0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
     dependencies:
       react: 19.1.2
@@ -6429,11 +6404,6 @@ snapshots:
       react-dom: 19.1.2(react@19.1.2)
 
   '@hookraft/use-key-cursor@0.1.0(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
-    dependencies:
-      react: 19.1.2
-      react-dom: 19.1.2(react@19.1.2)
-
-  '@hookraft/use-skeleton@0.1.3(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
     dependencies:
       react: 19.1.2
       react-dom: 19.1.2(react@19.1.2)
