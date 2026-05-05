@@ -54,7 +54,7 @@
     "jotai": "^2.15.0",
     "lucide-react": "^0.544.0",
     "mdast-util-toc": "^7.1.0",
-    "motion": "^12.23.12",
+    "motion": "^12.38.0",
     "nanoid": "^5.1.7",
     "next": "16.0.10",
     "next-themes": "^0.4.6",
@@ -72,7 +72,6 @@
     "remark": "^15.0.1",
     "remark-code-import": "^1.2.0",
     "remark-gfm": "^4.0.1",
-    "shadcn": "^4.2.0",
     "spotify-url-info": "^3.2.18",
     "tailwind-merge": "^3.5.0",
     "three": "^0.181.2"
@@ -92,6 +91,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
+    "shadcn": "^4.7.0",
     "sharp": "^0.34.5",
     "shiki": "^3.12.2",
     "tailwindcss": "^4",
@@ -99,5 +99,13 @@
     "typescript": "^5",
     "unist-util-visit": "^5.0.0"
   },
-  "packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b"
+  "packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b",
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "msw"
+    ],
+    "onlyBuiltDependencies": [
+      "msw"
+    ]
+  }
 }
