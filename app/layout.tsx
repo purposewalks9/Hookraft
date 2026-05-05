@@ -14,6 +14,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { JotaiProvider } from "@/components/providers";
 import ScrollSpark from "@/components/scroll";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -63,6 +64,7 @@ export default async function RootLayout({
           >
             <ScrollSpark />
             {children}
+        
           </ThemeProvider>
         </JotaiProvider>
         <SpeedInsights />

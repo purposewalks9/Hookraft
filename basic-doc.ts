@@ -25,11 +25,6 @@ export const basicDoc: DocSchema = [
         id: "use-pipeline",
         description: "Orchestrate complex multi-step async flows with dependency management, parallel execution, rollback, and per-step retry.",
       },
-      {
-        title: "UseKeyCursor",
-        id: "use-key-cursor",
-        description: "Declarative key cursor with dynamic positioning and auto-cleanup.",
-      },
     ],
   },
 
@@ -88,11 +83,6 @@ export const basicDoc: DocSchema = [
         id: "use-form",
         description: "Lightweight form state and validation management for React.",
       },
-      {
-        title: "UseCopy",
-        id: "use-copy",
-        description: "Copy text to the clipboard with visual feedback.",
-      },
     ],
   },
 
@@ -119,6 +109,16 @@ export const basicDoc: DocSchema = [
         title: "UseGithubContributions",
         id: "use-github-contributions",
         description: "Fetch and display GitHub contribution data with customizable themes and real-time updates.",
+      },
+       {
+        title: "UseKeyCursor",
+        id: "use-key-cursor",
+        description: "Declarative key cursor with dynamic positioning and auto-cleanup.",
+      },
+      {
+        title:"UseSound-Demo",
+        id: "use-sound-demo",
+        description: "A customizable developer social dock with sound effects, theming, and multiple platforms.",
       },
     ],
   },
