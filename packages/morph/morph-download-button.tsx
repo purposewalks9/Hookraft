@@ -58,6 +58,12 @@ export function MorphDownloadButton({
 }: MorphDownloadButtonProps) {
   const [status, setStatus] = React.useState("idle");
 
+  // ✅ Safari fix: generate stable unique IDs per instance to avoid
+  // collisions when multiple buttons are rendered on the same page.
+  const uid = React.useId().replace(/:/g, "");
+  const glowId = `glow-${uid}`;
+  const clipId = `circleClip-${uid}`;
+
   const { play } = useSound({
     theme: "soft",
     globalVolume: 0.35,
@@ -76,11 +82,14 @@ export function MorphDownloadButton({
   const total = t.arrow + t.dot + t.ring + t.check + t.fade + t.reset;
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // ✅ Safari fix: play() below is called synchronously inside the gesture
+    // handler to unlock the AudioContext before any setTimeout runs.
+    // Safari silently blocks Web Audio that starts outside a gesture window.
     if (status !== "idle") return;
     setStatus("animating");
     onClick?.(e);
 
-    // Phase 1 — button press
+    // Phase 1 — button press (still inside gesture window)
     play("click", { pitch: "mid", speed: "fast" });
 
     // Phase 2 — arrow slides down
@@ -102,25 +111,19 @@ export function MorphDownloadButton({
   };
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={status !== "idle"}
-      className={cn(
-        "relative flex items-center justify-center rounded-full text-white overflow-hidden",
-        "transition-[filter] duration-200 hover:brightness-110 active:brightness-95",
-        "bg-linear-to-b",
-        "border border-zinc-950/35 dark:border-0",
-        "shadow-md shadow-zinc-950/20",
-        "inset-shadow-2xs inset-shadow-white/25",
-        bgColorMap[color],
-        sizeMap[size],
-        className
-      )}
-      {...props}
-    >
-      <svg viewBox="0 0 100 100" className="w-full h-full">
+    <>
+      {/*
+        ✅ Safari fix: hoist <defs> into a standalone hidden SVG rendered
+        outside the animated button SVG. Safari can drop filter/clipPath
+        definitions that live inside an SVG with active animations /
+        AnimatePresence. A separate 0×0 SVG keeps them stable.
+      */}
+      <svg
+        aria-hidden="true"
+        style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+      >
         <defs>
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="2" result="blur1" />
             <feGaussianBlur stdDeviation="4" result="blur2" />
             <feMerge>
@@ -130,57 +133,43 @@ export function MorphDownloadButton({
             </feMerge>
           </filter>
 
-          <clipPath id="circleClip">
+          <clipPath id={clipId}>
             <circle cx="50" cy="50" r="48" />
           </clipPath>
         </defs>
+      </svg>
 
-        <g clipPath="url(#circleClip)">
-          <AnimatePresence>
-            {status === "idle" ? (
-              <motion.g
-                key="idle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                filter="url(#glow)"
-                transform="translate(50, 50)"
-              >
-                <path d="M0 -22 L0 16" stroke="white" strokeWidth="5" strokeLinecap="round" />
-                <path
-                  d="M-17 6 Q0 28 17 6"
-                  stroke="white"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  fill="none" // ✅ FIX
-                />
-              </motion.g>
-            ) : (
-              <motion.g key="anim">
+      <button
+        onClick={handleClick}
+        disabled={status !== "idle"}
+        className={cn(
+          "relative flex items-center justify-center rounded-full text-white overflow-hidden",
+          "transition-[filter] duration-200 hover:brightness-110 active:brightness-95",
+          "bg-linear-to-b",
+          "border border-zinc-950/35 dark:border-0",
+          "shadow-md shadow-zinc-950/20",
+          "inset-shadow-2xs inset-shadow-white/25",
+          bgColorMap[color],
+          sizeMap[size],
+          className
+        )}
+        {...props}
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <g clipPath={`url(#${clipId})`}>
+            <AnimatePresence>
+              {status === "idle" ? (
                 <motion.g
-                  initial={{ x: 50, y: 50, opacity: 1 }}
-                  animate={{ x: 50, y: 105, opacity: 0 }}
-                  transition={{
-                    y: {
-                      duration: t.arrow,
-                      ease: [0.4, 0, 0.2, 1],
-                    },
-                    opacity: {
-                      delay: t.arrow * 0.85, // 🔥 fade near the end
-                      duration: 0.15,
-                      ease: "easeOut",
-                    },
-                  }}
+                  key="idle"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  // ✅ Safari fix: use style filter instead of SVG attribute —
+                  // SVG filter attributes are unreliable inside animated groups
+                  // on Safari; CSS filter references work correctly.
+                  style={{ filter: `url(#${glowId})` }}
+                  transform="translate(50, 50)"
                 >
-                  {/* Shaft */}
-                  <path
-                    d="M0 -22 L0 16"
-                    stroke="white"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-
-                  {/* Arrow head */}
+                  <path d="M0 -22 L0 16" stroke="white" strokeWidth="5" strokeLinecap="round" />
                   <path
                     d="M-17 6 Q0 28 17 6"
                     stroke="white"
@@ -189,62 +178,103 @@ export function MorphDownloadButton({
                     fill="none"
                   />
                 </motion.g>
+              ) : (
+                <motion.g key="anim">
+                  <motion.g
+                    initial={{ x: 50, y: 50, opacity: 1 }}
+                    animate={{ x: 50, y: 105, opacity: 0 }}
+                    transition={{
+                      y: {
+                        duration: t.arrow,
+                        ease: [0.4, 0, 0.2, 1],
+                      },
+                      opacity: {
+                        delay: t.arrow * 0.85,
+                        duration: 0.15,
+                        ease: "easeOut",
+                      },
+                    }}
+                  >
+                    {/* Shaft */}
+                    <path
+                      d="M0 -22 L0 16"
+                      stroke="white"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      fill="none"
+                    />
 
+                    {/* Arrow head */}
+                    <path
+                      d="M-17 6 Q0 28 17 6"
+                      stroke="white"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      fill="none"
+                    />
+                  </motion.g>
 
-                <motion.circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke="white"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  fill="none"
-                  initial={{
-                    pathLength: 0,
-                    rotate: 90, // 🔥 start from bottom
-                  }}
-                  animate={{
-                    pathLength: 1.02,
-                  }}
-                  transition={{
-                    delay: t.arrow + t.dot,
-                    duration: t.ring,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  style={{
-                    transformOrigin: "50% 50%",
-                  }}
-                />
-                <motion.path
-                  d="M33 52 L45 64 L68 38"
-                  stroke="#22c55e"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  filter="url(#glow)"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{
-                    delay: t.arrow + t.dot + t.ring,
-                    duration: t.check,
-                  }}
-                />
+                  <motion.circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="white"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    fill="none"
+                    initial={{
+                      pathLength: 0,
+                      rotate: 90,
+                    }}
+                    animate={{
+                      pathLength: 1.02,
+                    }}
+                    transition={{
+                      delay: t.arrow + t.dot,
+                      duration: t.ring,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    style={{
+                      transformOrigin: "50% 50%",
+                      // ✅ Safari fix: without transform-box: fill-box, SVG
+                      // elements use the viewport as their transform origin
+                      // reference box, so rotate animations appear to orbit
+                      // the wrong point on Safari.
+                      transformBox: "fill-box",
+                    }}
+                  />
 
+                  <motion.path
+                    d="M33 52 L45 64 L68 38"
+                    stroke="#22c55e"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                    // ✅ Safari fix: same as idle group — style filter, not attribute
+                    style={{ filter: `url(#${glowId})` }}
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{
+                      delay: t.arrow + t.dot + t.ring,
+                      duration: t.check,
+                    }}
+                  />
 
-                <motion.g
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 0 }}
-                  transition={{
-                    delay: t.arrow + t.dot + t.ring + t.check,
-                    duration: t.fade,
-                  }}
-                />
-              </motion.g>
-            )}
-          </AnimatePresence>
-        </g>
-      </svg>
-    </button>
+                  <motion.g
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 0 }}
+                    transition={{
+                      delay: t.arrow + t.dot + t.ring + t.check,
+                      duration: t.fade,
+                    }}
+                  />
+                </motion.g>
+              )}
+            </AnimatePresence>
+          </g>
+        </svg>
+      </button>
+    </>
   );
 }
