@@ -59,6 +59,8 @@ export function MorphDownloadButton({
   const [status, setStatus] = React.useState("idle");
   const timeoutRefsRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  // ✅ Safari fix: generate stable unique IDs per instance to avoid
+  // collisions when multiple buttons are rendered on the same page.
   const uid = React.useId().replace(/:/g, "");
   const glowId = `glow-${uid}`;
   const clipId = `circleClip-${uid}`;
@@ -80,40 +82,35 @@ export function MorphDownloadButton({
 
   const total = t.arrow + t.dot + t.ring + t.check + t.fade + t.reset;
 
-  // ✅ Safari fix: Schedule all sounds upfront with proper delays
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // ✅ Safari fix: play() is called synchronously inside the gesture
+    // handler to unlock the AudioContext before any setTimeout runs.
+    // Safari silently blocks Web Audio that starts outside a gesture window.
     if (status !== "idle") return;
     setStatus("animating");
     onClick?.(e);
 
-    // ✅ Play click immediately (inside gesture)
+    // Phase 1 — button press (still inside gesture window)
     play("click", { pitch: "mid", speed: "fast" });
 
-    // Schedule remaining sounds with calculated delays
-    const scheduleSound = (soundName: string, delayMs: number, options?: any) => {
-      const timeoutId = setTimeout(() => {
-        play(soundName, options);
-      }, delayMs);
-      timeoutRefsRef.current.push(timeoutId);
-    };
+    // Phase 2 — arrow slides down
+    setTimeout(() => {
+      play("swipe", { pitch: "low", speed: "slow" });
+    }, t.arrow * 1000);
 
-    // Arrow swipe at t.arrow
-    scheduleSound("swipe", t.arrow * 1000, { pitch: "low", speed: "slow" });
+    // Phase 4 — checkmark appears
+    setTimeout(() => {
+      play("success", { pitch: "high", reverb: true });
+    }, (t.arrow + t.dot + t.ring) * 1000);
 
-    // Success checkmark at t.arrow + t.dot + t.ring
-    scheduleSound("success", (t.arrow + t.dot + t.ring) * 1000, { pitch: "high", reverb: true });
+    // Phase 5 — fade out / reset
+    setTimeout(() => {
+      play("complete", { pitch: "low", volume: 0.2 });
+    }, (t.arrow + t.dot + t.ring + t.check) * 1000);
 
-    // Complete sound at t.arrow + t.dot + t.ring + t.check
-    scheduleSound("complete", (t.arrow + t.dot + t.ring + t.check) * 1000, { pitch: "low", volume: 0.2 });
-
-    // Reset status after total animation
-    const resetTimeoutId = setTimeout(() => {
-      setStatus("idle");
-    }, total * 1000);
-    timeoutRefsRef.current.push(resetTimeoutId);
+    setTimeout(() => setStatus("idle"), total * 1000);
   };
 
-  // ✅ Cleanup timeouts on unmount or status reset
   React.useEffect(() => {
     return () => {
       timeoutRefsRef.current.forEach(clearTimeout);
@@ -123,6 +120,12 @@ export function MorphDownloadButton({
 
   return (
     <>
+      {/*
+        ✅ Safari fix: hoist <defs> into a standalone hidden SVG rendered
+        outside the animated button SVG. Safari can drop filter/clipPath
+        definitions that live inside an SVG with active animations /
+        AnimatePresence. A separate 0×0 SVG keeps them stable.
+      */}
       <svg
         aria-hidden="true"
         style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
@@ -137,7 +140,6 @@ export function MorphDownloadButton({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-
           <clipPath id={clipId}>
             <circle cx="50" cy="50" r="48" />
           </clipPath>
@@ -168,6 +170,9 @@ export function MorphDownloadButton({
                   key="idle"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
+                  // ✅ Safari fix: use style filter instead of SVG attribute —
+                  // SVG filter attributes are unreliable inside animated groups
+                  // on Safari; CSS filter references work correctly.
                   style={{ filter: `url(#${glowId})` }}
                   transform="translate(50, 50)"
                 >
@@ -197,6 +202,7 @@ export function MorphDownloadButton({
                       },
                     }}
                   >
+                    {/* Shaft */}
                     <path
                       d="M0 -22 L0 16"
                       stroke="white"
@@ -205,6 +211,7 @@ export function MorphDownloadButton({
                       fill="none"
                     />
 
+                    {/* Arrow head */}
                     <path
                       d="M-17 6 Q0 28 17 6"
                       stroke="white"
@@ -222,13 +229,8 @@ export function MorphDownloadButton({
                     strokeWidth="3"
                     strokeLinecap="round"
                     fill="none"
-                    initial={{
-                      pathLength: 0,
-                      rotate: 90,
-                    }}
-                    animate={{
-                      pathLength: 1.02,
-                    }}
+                    initial={{ pathLength: 0, rotate: 90 }}
+                    animate={{ pathLength: 1.02 }}
                     transition={{
                       delay: t.arrow + t.dot,
                       duration: t.ring,
@@ -236,6 +238,10 @@ export function MorphDownloadButton({
                     }}
                     style={{
                       transformOrigin: "50% 50%",
+                      // ✅ Safari fix: without transform-box: fill-box, SVG
+                      // elements use the viewport as their transform origin
+                      // reference box, so rotate animations appear to orbit
+                      // the wrong point on Safari.
                       transformBox: "fill-box",
                     }}
                   />
@@ -247,6 +253,7 @@ export function MorphDownloadButton({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     fill="none"
+                    // ✅ Safari fix: same as idle group — style filter, not attribute
                     style={{ filter: `url(#${glowId})` }}
                     initial={{ pathLength: 0, opacity: 0 }}
                     animate={{ pathLength: 1, opacity: 1 }}
