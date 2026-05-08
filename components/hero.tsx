@@ -31,11 +31,11 @@ export function Hero() {
               letterSpacing="-0.020em"
               className="font-medium text-3xl md:text-4xl lg:text-5xl tracking-tight text-foreground"
             >
-             Eliminate repetitive React logic with reusable hooks
+             Craft immersive frontend interactions with powerful React hooks
             </BlurReveal>
 
             <p className="text-base md:text-lg leading-6 text-muted-foreground">
-             A library of high-level hooks that remove repetitive frontend logic patterns state, async, behavior interaction.
+             Powerful frontend primitives for motion, effects, behavior, async workflows, and modern interactive UI development.
             </p>
 
             <div className="flex flex-row gap-3 mt-2 w-auto">
