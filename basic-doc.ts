@@ -69,7 +69,16 @@ export const basicDoc: DocSchema = [
       },
     ],
   },
-
+   {
+    title: "Debugging-Hooks",
+    items: [
+      {
+        title: "Render-Xray",
+        id: "render-xray",
+        description: "X-ray vision for React re-renders. See exactly which prop, state, or function reference caused a re-render — and whether it was even necessary.",
+      },
+    ],
+  },
   {
     title: "State Management",
     items: [

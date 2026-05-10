@@ -1,0 +1,346 @@
+## Installation
+
+<InstallationTabs item="@hookraft/render-xray">
+```bash
+pnpm add @hookraft/render-xray
+```
+</InstallationTabs>
+
+---
+
+## useRenderXray
+
+```tsx
+import { useRenderXray } from "@hookraft/render-xray"
+```
+```tsx
+const { renderCount, stableRenderCount, history, clearHistory } = useRenderXray(
+  "MyComponent",
+  props,
+  { count, open },
+  { onlyAvoidable: true, track: true, onRender: (record) => console.log(record) }
+)
+```
+
+### How it works
+
+Every time React calls your component function, that is a render. When it calls it again, that is a re-render. Most re-renders are fine — but some happen for the wrong reason:
+
+- An object prop was recreated with the same content but a new memory reference
+- A function prop was recreated inline instead of being wrapped in `useCallback`
+- A parent re-rendered and dragged the child along even though nothing changed
+
+`useRenderXray` sits inside your component and watches every re-render. It diffs the previous props and state against the new ones, classifies exactly why each value changed, and logs it in the console — with the fix — when a re-render included avoidable work.
+
+```
+Parent re-renders
+  │
+  ├── Child A — prop "user" changed: same value, new reference → useMemo
+  ├── Child B — prop "onClick" changed: new function → useCallback
+  └── Child C — no changes at all → render source inferred as parent
+```
+
+All console groups are **collapsed by default** to keep output manageable in large apps.
+
+---
+
+### Full Examples
+
+#### Track props only
+
+```tsx
+import { useRenderXray } from "@hookraft/render-xray"
+
+function UserCard(props: { user: User; onClick: () => void }) {
+  useRenderXray("UserCard", props as Record<string, unknown>)
+
+  return <div onClick={props.onClick}>{props.user.name}</div>
+}
+```
+
+#### Track props and state
+
+```tsx
+function SearchBox(props: { placeholder: string }) {
+  const [query, setQuery] = useState("")
+  const [focused, setFocused] = useState(false)
+
+  useRenderXray("SearchBox", props as Record<string, unknown>, { query, focused })
+
+  return (
+    <input
+      placeholder={props.placeholder}
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+    />
+  )
+}
+```
+
+#### Only log avoidable recreations
+
+Silence expected re-renders. Only surface the ones worth fixing.
+
+```tsx
+useRenderXray("HeavyChart", props as Record<string, unknown>, {}, {
+  onlyAvoidable: true,
+})
+```
+
+#### Filter specific change categories
+
+```tsx
+useRenderXray("MyComponent", props as Record<string, unknown>, {}, {
+  filter: {
+    includeProps:          true,
+    includeState:          true,
+    includeFunctions:      false,  // hide function-reference noise
+    includeParentTriggers: false,  // hide parent-triggered renders
+  },
+})
+```
+
+#### Collect history for a custom overlay
+
+```tsx
+function Dashboard(props: DashboardProps) {
+  const { history, clearHistory } = useRenderXray(
+    "Dashboard",
+    props as Record<string, unknown>,
+    {},
+    { track: true }
+  )
+
+  return (
+    <>
+      <DashboardUI {...props} />
+      {process.env.NODE_ENV === "development" && (
+        <RenderHistory records={history} onClear={clearHistory} />
+      )}
+    </>
+  )
+}
+```
+
+#### Send records to a custom reporter
+
+```tsx
+useRenderXray("MyComponent", props as Record<string, unknown>, {}, {
+  log: false,
+  onRender: (record) => {
+    if (record.hasAvoidableChanges) {
+      myAnalytics.track("avoidable_rerender", {
+        component: record.component,
+        trigger: record.trigger,
+        changes: record.changes.map((c) => c.key),
+      })
+    }
+  },
+})
+```
+
+---
+
+### What you see in the console
+
+All groups are collapsed by default. Click to expand.
+
+#### Avoidable — same value, new object reference
+```
+▶ [render-xray] UserCard re-rendered (props changed)
+    render #4
+    🟢 render duration: 2.1ms
+    🟡 [prop] user ← same value, new reference
+        fix: wrap in useMemo()
+        changed keys:
+          (none — content is identical)
+    ⚠ 1 avoidable prop/value recreation detected during this render.
+      See flagged changes above for useMemo / useCallback opportunities.
+```
+
+#### Avoidable — new function on every render
+```
+▶ [render-xray] UserCard re-rendered (props changed)
+    render #5
+    🟢 render duration: 1.8ms
+    🟡 [prop] onClick ← new function on every render
+        fix: wrap in useCallback()
+```
+
+#### Parent triggered it — render source inferred
+```
+▶ [render-xray] UserCard re-rendered (render source inferred: parent)
+    render #6
+    🟢 render duration: 1.2ms
+    → No local changes detected — render source inferred as parent.
+      Tip: this component may benefit from memoization (React.memo / equivalent).
+```
+
+#### Expected — value actually changed
+```
+▶ [render-xray] SearchBox re-rendered (state changed)
+    render #3
+    🟢 render duration: 3.4ms
+    🟢 [state] query ← changed
+        prev: "re"
+        next: "rea"
+```
+
+#### Expensive render (>16ms)
+```
+▶ [render-xray] HeavyChart re-rendered (props changed)
+    render #9
+    🔴 render duration: 24.6ms
+    🔴 [prop] data ← same value, new reference
+        fix: wrap in useMemo()
+    ⚠ 1 avoidable prop/value recreation detected during this render.
+```
+
+#### React Strict Mode replay (dev only)
+```
+▶ [render-xray] MyComponent React StrictMode replay (dev only)
+    This is a development-only double-invoke. Ignore for production analysis.
+```
+
+---
+
+### Strip in production
+
+`useRenderXray` is for development only. Two ways to remove it:
+
+**Option 1 — conditional call**
+```tsx
+if (process.env.NODE_ENV === "development") {
+  useRenderXray("MyComponent", props as Record<string, unknown>)
+}
+```
+
+**Option 2 — no-op wrapper (recommended)**
+
+Create this file once in your project and import from it instead of the package directly.
+
+```ts
+// lib/renderXray.ts
+type Hook = typeof import("@hookraft/render-xray").useRenderXray
+
+const noop: ReturnType<Hook> = {
+  renderCount: 0,
+  stableRenderCount: 0,
+  history: [],
+  clearHistory: () => {},
+}
+
+export const useRenderXray: Hook =
+  process.env.NODE_ENV === "development"
+    ? require("@hookraft/render-xray").useRenderXray
+    : () => noop
+```
+
+---
+
+### Strict Mode handling
+
+React Strict Mode intentionally double-invokes effects in development. `render-xray` detects replays within a 50 ms window and annotates them instead of logging them as real renders. `stableRenderCount` gives you an estimated production-equivalent count.
+
+---
+
+### Severity levels
+
+Every change carries a severity so you know what to prioritise:
+
+<PropsTable
+  data={[
+    { name: "🟢 expected", nameDetails: "Value genuinely changed. No action needed." },
+    { name: "🟡 avoidable", nameDetails: "Same value, new reference. Wrap in useMemo() or useCallback()." },
+    { name: "🔴 expensive", nameDetails: "Avoidable change AND the render took over 16 ms. Fix this first." },
+  ]}
+/>
+
+---
+
+### Change reasons
+
+<PropsTable
+  data={[
+    { name: "value-changed", type: "🟢 expected", nameDetails: "A primitive value (string, number, boolean) actually changed. No action needed." },
+    { name: "object-value-changed", type: "🟢 expected", nameDetails: "The object's content changed. No action needed." },
+    { name: "same-value-new-reference", type: "🟡 avoidable", nameDetails: "The object looks identical but is a new reference. Wrap the value in useMemo()." },
+    { name: "new-function-reference", type: "🟡 avoidable", nameDetails: "A new function was created on this render. Wrap the function in useCallback()." },
+    { name: "added", type: "🟢 expected", nameDetails: "A new key appeared in props or state that wasn't there before." },
+    { name: "removed", type: "🟢 expected", nameDetails: "A key was present in the previous render but is now gone." },
+  ]}
+/>
+
+---
+
+### Options
+
+<PropsTable
+  data={[
+    { name: "log", type: "boolean", default: "true", nameDetails: "Log to the browser console on every re-render." },
+    { name: "track", type: "boolean", default: "false", nameDetails: "Collect render records in the returned history array. Useful for custom overlays or test assertions." },
+    { name: "maxHistory", type: "number", default: "50", nameDetails: "Maximum number of records to keep in history. Only applies when track is true." },
+    { name: "onlyAvoidable", type: "boolean", default: "false", nameDetails: "Only log when a re-render included avoidable changes or was triggered by a parent. Silences expected re-renders." },
+    { name: "onRender", type: "(record: useRenderXray.Record) => void", nameDetails: "Called after every re-render with the full record. Use for custom reporting, analytics, or test assertions." },
+    { name: "filter.includeProps", type: "boolean", default: "true", nameDetails: "Include prop changes in logs." },
+    { name: "filter.includeState", type: "boolean", default: "true", nameDetails: "Include state changes in logs." },
+    { name: "filter.includeFunctions", type: "boolean", default: "true", nameDetails: "Include new-function-reference changes in logs." },
+    { name: "filter.includeParentTriggers", type: "boolean", default: "true", nameDetails: "Include renders where the inferred trigger was a parent re-render." },
+  ]}
+/>
+
+### Returns
+
+<PropsTable
+  data={[
+    { name: "renderCount", type: "number", nameDetails: "Raw number of times this component has rendered since mount. May be doubled in React Strict Mode dev." },
+    { name: "stableRenderCount", type: "number", nameDetails: "Estimated production-equivalent render count. Approximately half of renderCount in Strict Mode dev." },
+    { name: "history", type: "useRenderXray.Record[]", nameDetails: "Collected render records. Only populated when track: true." },
+    { name: "clearHistory()", type: "() => void", nameDetails: "Clear the collected history array." },
+  ]}
+/>
+
+---
+
+### TypeScript
+
+All types live under the `useRenderXray` namespace. No extra imports needed.
+
+```tsx
+import { useRenderXray } from "@hookraft/render-xray"
+
+// Options
+const options: useRenderXray.Options = { onlyAvoidable: true }
+
+// Filter options
+const filter: useRenderXray.FilterOptions = { includeFunctions: false }
+
+// A single render record
+const record: useRenderXray.Record = { ... }
+
+// A single change within a record
+const change: useRenderXray.Change = { ... }
+
+// The trigger type
+const trigger: useRenderXray.Trigger = "parent"
+
+// The reason a value changed
+const reason: useRenderXray.ChangeReason = "same-value-new-reference"
+
+// The severity of a change
+const severity: useRenderXray.Severity = "avoidable"
+```
+
+### Works with
+
+| Framework | Supported |
+|-----------|-----------|
+| Next.js (app + pages router) | ✅ |
+| Vite + React | ✅ |
+| Remix | ✅ |
+| Create React App | ✅ |
+| React Native | ✅ |
+| React Compiler | ✅ |
+| React 17 / 18 / 19 | ✅ |
