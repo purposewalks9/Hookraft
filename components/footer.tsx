@@ -48,7 +48,7 @@ export function Footer() {
               </Link>
 
               <Link
-                href="https://x.com/purpose_walker"
+                href="https://x.com/zzxxx__x"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-all hover:scale-110"
@@ -60,7 +60,7 @@ export function Footer() {
               </Link>
 
               <Link
-                href="https://discord.gg/utV9wVYu"
+                href="https://discord.gg/zxzAZvv8"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-all hover:scale-110"
