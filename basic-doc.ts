@@ -129,6 +129,11 @@ export const basicDoc: DocSchema = [
         id: "use-sound-demo",
         description: "A customizable developer social dock with sound effects, theming, and multiple platforms.",
       },
+      {
+        title:"Vercel Avatar Decoration",
+        id: "vercel-decoration",
+        description: "A React component that adds a Vercel-style decoration to your app.",
+      }
     ],
   },
 ];

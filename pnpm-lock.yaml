@@ -26,9 +26,6 @@ importers:
       '@fontsource/geist':
         specifier: ^5.2.8
         version: 5.2.8
-      '@hookraft/use-copy':
-        specifier: ^0.1.0
-        version: 0.1.4(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       '@hookraft/use-github-contributions':
         specifier: ^0.1.12
         version: 0.1.12(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
@@ -1073,12 +1070,6 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
-
-  '@hookraft/use-copy@0.1.4':
-    resolution: {integrity: sha512-vxZYzdQbSjyrEG3czbdSiImkQf8ywzSdcLdp96CEx6y7qN+IM8fh+vK/zZNXYlsRfKw7Sae2Qo/P1mjc8aloAA==}
-    peerDependencies:
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
 
   '@hookraft/use-github-contributions@0.1.12':
     resolution: {integrity: sha512-C0huW2wzMk8zg2XTNLMvU7chmy/9LP1YSdHKu2qkXudtHr3P3LAlOVncfzsrsgUZ4rz6OmxnuXTYi6/pPrurJQ==}
@@ -6392,11 +6383,6 @@ snapshots:
   '@hono/node-server@1.19.14(hono@4.12.17)':
     dependencies:
       hono: 4.12.17
-
-  '@hookraft/use-copy@0.1.4(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
-    dependencies:
-      react: 19.1.2
-      react-dom: 19.1.2(react@19.1.2)
 
   '@hookraft/use-github-contributions@0.1.12(react-dom@19.1.2(react@19.1.2))(react@19.1.2)':
     dependencies:
