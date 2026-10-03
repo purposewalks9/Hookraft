@@ -47,7 +47,6 @@ export async function GET(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ query, variables: { username, from, to } }),
-      // @ts-ignore — Next.js fetch extension
       next: { revalidate: 3600 },
     })
 

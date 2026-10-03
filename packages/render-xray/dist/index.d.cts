@@ -44,6 +44,6 @@ declare namespace useRenderXray {
         clearHistory: () => void;
     };
 }
-declare function useRenderXray(componentName: string, props: Record<string, unknown>, state?: Record<string, unknown>, options?: useRenderXray.Options): useRenderXray.Return;
+declare const useRenderXray: (componentName: string, props: Record<string, unknown>, state?: Record<string, unknown>, options?: useRenderXray.Options) => useRenderXray.Return;
 
 export { useRenderXray };

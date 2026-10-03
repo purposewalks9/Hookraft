@@ -94,17 +94,13 @@ const DEFAULTS: Required<Omit<useRenderXray.Options, 'onRender' | 'filter'>> = {
 import { useRef, useEffect } from 'react'
 import { diffValues } from './diff'
 import { logRecord } from './logger'
-import process from 'next/dist/build/webpack/loaders/resolve-url-loader/lib/postcss';
 
-export function useRenderXray(
+function useRenderXrayDev(
   componentName: string,
   props: Record<string, unknown>,
   state: Record<string, unknown> = {},
   options: useRenderXray.Options = {},
 ): useRenderXray.Return {
-
-  if (!IS_DEV) return NOOP_RETURN
-
   const opts = { ...DEFAULTS, ...options }
 
   const prevProps = useRef<Record<string, unknown> | null>(null)
@@ -202,3 +198,10 @@ const NOOP_RETURN: useRenderXray.Return = {
   history: [],
   clearHistory: () => { },
 }
+// IS_DEV is fixed at module load, so the same hook implementation runs on every render.
+export const useRenderXray: (
+  componentName: string,
+  props: Record<string, unknown>,
+  state?: Record<string, unknown>,
+  options?: useRenderXray.Options,
+) => useRenderXray.Return = IS_DEV ? useRenderXrayDev : () => NOOP_RETURN

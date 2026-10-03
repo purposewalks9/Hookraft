@@ -13,12 +13,12 @@ export default function SettingsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!session?.user && !isPending) router.push("/signin");
+    if (!session?.user && !isPending) router.push("/login");
   }, [session, isPending, router]);
 
   async function handleSignOut() {
     await authClient.signOut({
-      fetchOptions: { onSuccess: () => router.push("/signin") },
+      fetchOptions: { onSuccess: () => router.push("/login") },
     });
   }
 

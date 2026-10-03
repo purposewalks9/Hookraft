@@ -2,154 +2,7 @@
 
 var react = require('react');
 
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
-var __commonJS = (cb, mod) => function __require2() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  __defProp(target, "default", { value: mod, enumerable: true }) ,
-  mod
-));
-
-// ../../node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.1.2_react@19.1.2__react@19.1.2/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib/file-protocol.js
-var require_file_protocol = __commonJS({
-  "../../node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.1.2_react@19.1.2__react@19.1.2/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib/file-protocol.js"(exports) {
-    Object.defineProperty(exports, "__esModule", {
-      value: true
-    });
-    function _export(target, all) {
-      for (var name in all) Object.defineProperty(target, name, {
-        enumerable: true,
-        get: all[name]
-      });
-    }
-    _export(exports, {
-      prepend: function() {
-        return prepend;
-      },
-      remove: function() {
-        return remove;
-      }
-    });
-    function prepend(candidate) {
-      if (typeof candidate === "string") {
-        return "file://" + candidate;
-      } else if (candidate && typeof candidate === "object" && Array.isArray(candidate.sources)) {
-        return Object.assign({}, candidate, {
-          sources: candidate.sources.map(prepend)
-        });
-      } else {
-        throw Object.defineProperty(new Error("expected string|object"), "__NEXT_ERROR_CODE", {
-          value: "E489",
-          enumerable: false,
-          configurable: true
-        });
-      }
-    }
-    function remove(candidate) {
-      if (typeof candidate === "string") {
-        return candidate.replace(/^file:\/{2}/, "");
-      } else if (candidate && typeof candidate === "object" && Array.isArray(candidate.sources)) {
-        return Object.assign({}, candidate, {
-          sources: candidate.sources.map(remove)
-        });
-      } else {
-        throw Object.defineProperty(new Error("expected string|object"), "__NEXT_ERROR_CODE", {
-          value: "E489",
-          enumerable: false,
-          configurable: true
-        });
-      }
-    }
-  }
-});
-
-// ../../node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.1.2_react@19.1.2__react@19.1.2/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib/postcss.js
-var require_postcss = __commonJS({
-  "../../node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.1.2_react@19.1.2__react@19.1.2/node_modules/next/dist/build/webpack/loaders/resolve-url-loader/lib/postcss.js"(exports) {
-    Object.defineProperty(exports, "__esModule", {
-      value: true
-    });
-    Object.defineProperty(exports, "default", {
-      enumerable: true,
-      get: function() {
-        return process2;
-      }
-    });
-    var _path = /* @__PURE__ */ _interop_require_default(__require("path"));
-    var _fileprotocol = require_file_protocol();
-    function _interop_require_default(obj) {
-      return obj && obj.__esModule ? obj : {
-        default: obj
-      };
-    }
-    var ORPHAN_CR_REGEX = /\r(?!\n)(.|\n)?/g;
-    function process2(postcss, sourceFile, sourceContent, params) {
-      postcssPlugin.postcss = true;
-      return postcss([
-        postcssPlugin
-      ]).process(sourceContent, {
-        from: (0, _fileprotocol.prepend)(sourceFile),
-        map: params.outputSourceMap && {
-          prev: !!params.inputSourceMap && (0, _fileprotocol.prepend)(params.inputSourceMap),
-          inline: false,
-          annotation: false,
-          sourcesContent: true
-        }
-      }).then((result) => ({
-        content: result.css,
-        map: params.outputSourceMap ? (0, _fileprotocol.remove)(result.map.toJSON()) : null
-      }));
-      function postcssPlugin() {
-        return {
-          postcssPlugin: "postcss-resolve-url",
-          Once: function(root) {
-            root.walkDecls(eachDeclaration);
-          }
-        };
-        function eachDeclaration(declaration) {
-          const isValid = declaration.value && declaration.value.indexOf("url") >= 0;
-          if (isValid) {
-            const startPosApparent = declaration.source.start, startPosOriginal = params.sourceMapConsumer && params.sourceMapConsumer.originalPositionFor(startPosApparent);
-            const directory = startPosOriginal && startPosOriginal.source && (0, _fileprotocol.remove)(_path.default.dirname(startPosOriginal.source));
-            if (directory) {
-              declaration.value = params.transformDeclaration(declaration.value, directory);
-            } else if (params.sourceMapConsumer) {
-              throw Object.defineProperty(new Error("source-map information is not available at url() declaration " + (ORPHAN_CR_REGEX.test(sourceContent) ? "(found orphan CR, try removeCR option)" : "(no orphan CR found)")), "__NEXT_ERROR_CODE", {
-                value: "E34",
-                enumerable: false,
-                configurable: true
-              });
-            }
-          }
-        }
-      }
-    }
-  }
-});
+// src/useRenderXray.ts
 
 // src/diff.ts
 function diffValues(source, prev, next) {
@@ -416,7 +269,6 @@ function applyFilters(changes, opts) {
 }
 
 // src/useRenderXray.ts
-var import_postcss = __toESM(require_postcss());
 var import_meta = {};
 var IS_DEV = (() => {
   var _a, _b;
@@ -426,7 +278,7 @@ var IS_DEV = (() => {
   } catch (e) {
   }
   try {
-    return (_b = globalThis.__DEV__) != null ? _b : typeof import_postcss.default !== "undefined" && ((_a = import_postcss.default.env) == null ? void 0 : _a.NODE_ENV) !== "production";
+    return (_b = globalThis.__DEV__) != null ? _b : typeof process !== "undefined" && ((_a = process.env) == null ? void 0 : _a.NODE_ENV) !== "production";
   } catch (e) {
   }
   return true;
@@ -437,8 +289,7 @@ var DEFAULTS = {
   maxHistory: 50,
   onlyAvoidable: false
 };
-function useRenderXray(componentName, props, state = {}, options = {}) {
-  if (!IS_DEV) return NOOP_RETURN;
+function useRenderXrayDev(componentName, props, state = {}, options = {}) {
   const opts = { ...DEFAULTS, ...options };
   const prevProps = react.useRef(null);
   const prevState = react.useRef(null);
@@ -508,6 +359,7 @@ var NOOP_RETURN = {
   clearHistory: () => {
   }
 };
+var useRenderXray = IS_DEV ? useRenderXrayDev : () => NOOP_RETURN;
 
 exports.useRenderXray = useRenderXray;
 //# sourceMappingURL=index.cjs.map
