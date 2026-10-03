@@ -60,17 +60,6 @@ export function MobileNav({
         sideOffset={14}
       ><div className="flex flex-col gap-12 overflow-auto px-4 py-6">
 
-         
-          <div className="flex flex-col gap-4">
-            <div className="text-muted-foreground text-sm font-medium">
-              Support
-            </div>
-            <MobileLink href="/sponsor" onOpenChange={setOpen}>
-              Sponsor
-            </MobileLink>
-          </div>
-
-        
           <div className="flex flex-col gap-8">
             {docSchema.map((group, index) => (
               <div key={index} className="flex flex-col gap-4">

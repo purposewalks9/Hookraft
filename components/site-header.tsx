@@ -13,7 +13,6 @@ export default function SiteHeader({ docSchema }: { docSchema?: DocSchema }) {
   const pathname = usePathname();
 
   const isDocs = pathname.startsWith("/docs");
-  const isSponsor = pathname.startsWith("/sponsor");
 
   return (
     <header className="fixed bg-background top-0 left-0 right-0 z-50 w-full border-b border-border">
@@ -37,17 +36,6 @@ export default function SiteHeader({ docSchema }: { docSchema?: DocSchema }) {
               }`}
             >
               Docs
-            </Link>
-
-            <Link
-              href="/sponsor"
-              className={`transition-colors ${
-                isSponsor
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Sponsor
             </Link>
           </nav>
         </div>
