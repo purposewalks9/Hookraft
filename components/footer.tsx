@@ -48,7 +48,7 @@ export function Footer() {
               </Link>
 
               <Link
-                href="https://x.com/zzxxx__x"
+                href="https://x.com/purpose_walker"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-all hover:scale-110"
