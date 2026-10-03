@@ -1,340 +1,325 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type ComponentType,
+  type RefObject,
+  type SVGProps,
+} from "react";
+import {
+  Triangle,
+  Copy,
+  Check,
+  MoreVertical,
+  Github,
+  LineChart,
+  ArrowUpDown,
+  Settings,
+  Globe,
+  Star,
+} from "lucide-react";
 
-/**
- * AvatarDecoration
- * -----------------
- * A Discord-style animated avatar decoration: the avatar photo itself never
- * changes — it stays static, full brightness, full size. Only the decorative
- * frame (triangle → circle) animates around it.
- *
- * Sequence: idle → triangle emerges → bounce → triangle tumbles/grows over
- * the avatar → contracts back → moves behind the avatar → dissolves into a
- * circular frame → idle → repeat.
- */
 
-const CONFIG = {
-  // Geometry
-  triangleStrokeWidth: 2,
-  circleStrokeWidth: 1.5,
-  triangleInset: 0.62,
-  circleInset: 0.9,
+type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
-  // Crisp, flat color — no blur/glow. Clean lines only, like a Discord frame.
-  baseColor: "rgba(255,255,255,0.95)",
-  baseOpacityIdle: 0.85,
-  baseOpacityActive: 1,
-
-  // Visibly tinted edges (green / cyan-blue / white)
-  edgeColors: ["#8CFFC0", "#8FD6FF", "#F2F2F2"] as [string, string, string],
-  edgeOpacity: 0.9,
-
-  // Cumulative rotation target (deg) per phase — always increasing so the
-  // transition reads as one continuous tumble, not a snap-back.
-  rotation: {
-    idle: 0,
-    emerge: 0,
-    bounce: 24,
-    swallow: 372,
-    returnAvatar: 372,
-    behind: 392,
-    morph: 392,
-  },
-
-  // Timing (ms)
-  timing: {
-    emerge: 550,
-    bounce: 480,
-    swallow: 1000,
-    returnAvatar: 650,
-    moveBehind: 500,
-    morph: 900,
-    settle: 350,
-  },
-
-  // Easing
-  easeBounce: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-  easeSmooth: "cubic-bezier(0.4, 0, 0.2, 1)",
-  easeTumble: "cubic-bezier(0.65, 0, 0.35, 1)",
-
-  idleRotationSeconds: 40,
-  defaultCycleDuration: 150_000,
+type MenuItem = {
+  id: string;
+  label: string;
+  hint: string;
+  icon: IconComponent;
 };
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+const MENU_ITEMS: MenuItem[] = [
+  { id: "performance", label: "Performance", hint: "View build & runtime metrics", icon: LineChart },
+  { id: "redeploy", label: "Redeploy", hint: "Run this build again", icon: ArrowUpDown },
+  { id: "settings", label: "Settings", hint: "Configure project settings", icon: Settings },
+  { id: "domains", label: "Domains", hint: "Manage attached domains", icon: Globe },
+  { id: "favorite", label: "Favorite", hint: "Pin to your dashboard", icon: Star },
+];
 
-/**
- * Accepts a plain path/URL string, OR a Next.js static image import
- * (`import avatar from "./avatar.png"`), which is an object with a `src`
- * field rather than a string.
- */
-export type ImageSource = string | { src: string };
-
-export interface AvatarDecorationProps {
-  src: ImageSource;
-  alt?: string;
-  size?: number;
-  /** Total time between the start of one animation cycle and the next. */
-  cycleDuration?: number;
-  className?: string;
+interface IconMenuProps {
+  open: boolean;
+  onClose: () => void;
+  anchorRef: RefObject<HTMLButtonElement | null>;
 }
 
-type Phase =
-  | "idle"
-  | "emerge"
-  | "bounce"
-  | "swallow"
-  | "return"
-  | "behind"
-  | "morph";
+function IconMenu({ open, onClose, anchorRef }: IconMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const groupWarmRef = useRef(false);
+  const warmTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-function resolveSrc(src: ImageSource): string {
-  return typeof src === "string" ? src : src?.src ?? "";
-}
-
-function trianglePoints(cx: number, cy: number, r: number, rotationDeg = -90) {
-  const pts: [number, number][] = [];
-  for (let i = 0; i < 3; i++) {
-    const angle = ((rotationDeg + i * 120) * Math.PI) / 180;
-    pts.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
-  }
-  return pts;
-}
-
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
+  // Close on outside click / Escape, return focus to trigger.
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    if (!open) return;
+
+    function handlePointerDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(target) &&
+        !anchorRef.current?.contains(target)
+      ) {
+        onClose();
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      const items = MENU_ITEMS;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        anchorRef.current?.focus();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((i) => (i + 1) % items.length);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((i) => (i - 1 + items.length) % items.length);
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        setActiveIndex(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        setActiveIndex(items.length - 1);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, onClose, anchorRef]);
+
+  // Focus the active item whenever the menu opens or selection moves.
+  useEffect(() => {
+    if (!open) return;
+    const node = menuRef.current?.querySelectorAll<HTMLButtonElement>(
+      "[data-menu-item]"
+    )[activeIndex];
+    node?.focus();
+  }, [open, activeIndex]);
+
+  useEffect(() => {
+    if (!open) {
+      groupWarmRef.current = false;
+      setHoveredId(null);
+    }
+    return () => clearTimeout(warmTimeoutRef.current);
+  }, [open]);
+
+  const showTooltip = useCallback((id: string) => {
+    if (groupWarmRef.current) {
+      setHoveredId(id);
+      return;
+    }
+    warmTimeoutRef.current = setTimeout(() => {
+      groupWarmRef.current = true;
+      setHoveredId(id);
+    }, 350);
   }, []);
-  return reduced;
-}
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-export function AvatarDecoration({
-  src,
-  alt = "",
-  size = 96,
-  cycleDuration = CONFIG.defaultCycleDuration,
-  className,
-}: AvatarDecorationProps) {
-  const resolvedSrc = resolveSrc(src);
-  const reducedMotion = usePrefersReducedMotion();
-  const [phase, setPhase] = useState<Phase>("idle");
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const hideTooltip = useCallback(() => {
+    clearTimeout(warmTimeoutRef.current);
+    setHoveredId(null);
+  }, []);
 
-  const activeDuration = useMemo(
-    () => Object.values(CONFIG.timing).reduce((a, b) => a + b, 0),
-    []
-  );
-
-  useEffect(() => {
-    if (reducedMotion) return;
-
-    const clearAll = () => {
-      timers.current.forEach(clearTimeout);
-      timers.current = [];
-    };
-
-    const t = CONFIG.timing;
-    const schedule = (delay: number, fn: () => void) =>
-      timers.current.push(setTimeout(fn, delay));
-
-    const runCycle = () => {
-      let elapsed = 0;
-      schedule((elapsed += 0), () => setPhase("emerge"));
-      schedule((elapsed = t.emerge), () => setPhase("bounce"));
-      schedule((elapsed += t.bounce), () => setPhase("swallow"));
-      schedule((elapsed += t.swallow), () => setPhase("return"));
-      schedule((elapsed += t.returnAvatar), () => setPhase("behind"));
-      schedule((elapsed += t.moveBehind), () => setPhase("morph"));
-      schedule((elapsed += t.morph + t.settle), () => setPhase("idle"));
-
-      const idleGap = Math.max(cycleDuration - activeDuration, 1000);
-      schedule(activeDuration + idleGap, runCycle);
-    };
-
-    runCycle();
-    return clearAll;
-  }, [cycleDuration, activeDuration, reducedMotion]);
-
-  // ---- geometry ----
-  const box = size * 1.9;
-  const cx = box / 2;
-  const cy = box / 2;
-  const avatarR = size / 2;
-  const triR = avatarR / CONFIG.triangleInset;
-  const circleR = avatarR / CONFIG.circleInset;
-
-  const pts = trianglePoints(cx, cy, triR);
-  const trianglePath = `M ${pts[0][0]} ${pts[0][1]} L ${pts[1][0]} ${pts[1][1]} L ${pts[2][0]} ${pts[2][1]} Z`;
-
-  // ---- phase-derived visual state (decoration only — avatar never changes) ----
-  const showTriangle = phase !== "idle";
-  const triangleBehind = phase === "behind" || phase === "morph";
-  const triangleScale =
-    phase === "emerge"
-      ? 0.82
-      : phase === "bounce"
-      ? 1.05
-      : phase === "swallow"
-      ? 1.6
-      : phase === "return"
-      ? 1
-      : phase === "behind"
-      ? 0.9
-      : phase === "morph"
-      ? 0.9
-      : 1;
-  const rotationDeg =
-    CONFIG.rotation[phase === "return" ? "returnAvatar" : phase] ?? 0;
-  const transformDuration =
-    phase === "bounce"
-      ? CONFIG.timing.bounce
-      : phase === "swallow"
-      ? CONFIG.timing.swallow
-      : phase === "emerge"
-      ? CONFIG.timing.emerge
-      : 450;
-  const triangleOpacity = phase === "morph" ? 0 : showTriangle ? 1 : 0;
-  const baseOpacity =
-    phase === "swallow" ? CONFIG.baseOpacityActive : CONFIG.baseOpacityIdle;
-
-  const circleVisible = phase === "morph" || phase === "idle";
-  const circleScale = circleVisible ? 1 : 0.92;
-
-  const staticDecoration = reducedMotion;
+  if (!open) return null;
 
   return (
     <div
-      className={className}
-      style={{
-        position: "relative",
-        width: box,
-        height: box,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      ref={menuRef}
+      role="menu"
+      aria-orientation="vertical"
+      aria-label="Project actions"
+      className="absolute right-0 top-12 z-20 flex flex-col gap-1 rounded-full border border-white/10 bg-neutral-900/95 p-1.5 shadow-2xl shadow-black/60 backdrop-blur-sm animate-menu-in motion-reduce:animate-none"
     >
-      <svg
-        width={box}
-        height={box}
-        viewBox={`0 0 ${box} ${box}`}
-        style={{
-          position: "absolute",
-          inset: 0,
-          overflow: "visible",
-          animation: staticDecoration
-            ? undefined
-            : `avatar-deco-idle-spin ${CONFIG.idleRotationSeconds}s linear infinite`,
-        }}
-      >
-        {/* Triangle (drawn behind or in front of the avatar depending on phase) */}
-        {!staticDecoration && (
-          <g
-            style={{
-              transformOrigin: `${cx}px ${cy}px`,
-              transform: `rotate(${rotationDeg}deg) scale(${triangleScale})`,
-              transition: `transform ${transformDuration}ms ${
-                phase === "swallow" ? CONFIG.easeTumble : CONFIG.easeBounce
-              }`,
-              opacity: triangleOpacity,
+      {MENU_ITEMS.map(({ id, label, hint, icon: Icon }, index) => (
+        <div key={id} className="relative">
+          <button
+            type="button"
+            data-menu-item
+            role="menuitem"
+            tabIndex={activeIndex === index ? 0 : -1}
+            aria-label={label}
+            onFocus={() => setActiveIndex(index)}
+            onMouseEnter={() => {
+              setActiveIndex(index);
+              showTooltip(id);
             }}
+            onMouseLeave={hideTooltip}
+            onClick={() => onClose()}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-400 transition-colors duration-150 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 active:scale-90"
           >
-            <path
-              d={trianglePath}
-              fill="none"
-              stroke={CONFIG.baseColor}
-              strokeWidth={CONFIG.triangleStrokeWidth}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              opacity={baseOpacity}
-            />
-            {/* visibly tinted edges (green / cyan-blue / white) */}
-            {[0, 1, 2].map((i) => {
-              const [x1, y1] = pts[i];
-              const [x2, y2] = pts[(i + 1) % 3];
-              return (
-                <line
-                  key={i}
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  stroke={CONFIG.edgeColors[i]}
-                  strokeWidth={CONFIG.triangleStrokeWidth * 0.55}
-                  strokeLinecap="round"
-                  opacity={CONFIG.edgeOpacity}
-                />
-              );
-            })}
-          </g>
-        )}
+            <Icon className="h-4 w-4 transition-transform duration-150" strokeWidth={1.75} />
+          </button>
 
-        {/* Resting / morphed circle */}
-        <g
-          style={{
-            transformOrigin: `${cx}px ${cy}px`,
-            transform: `scale(${staticDecoration ? 1 : circleScale})`,
-            opacity: staticDecoration || circleVisible ? 1 : 0,
-            transition: `opacity ${CONFIG.timing.morph}ms ${CONFIG.easeSmooth}, transform ${CONFIG.timing.morph}ms ${CONFIG.easeSmooth}`,
-          }}
-        >
-          <circle
-            cx={cx}
-            cy={cy}
-            r={circleR}
-            fill="none"
-            stroke={CONFIG.baseColor}
-            strokeWidth={CONFIG.circleStrokeWidth}
-            opacity={CONFIG.baseOpacityIdle}
+          <span
+            role="tooltip"
+            className={[
+              "pointer-events-none absolute right-11 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md border border-white/10 bg-neutral-800 px-2.5 py-1 text-xs font-medium text-neutral-100 shadow-lg transition-all duration-150",
+              hoveredId === id ? "translate-x-0 opacity-100" : "translate-x-1 opacity-0",
+            ].join(" ")}
+          >
+            {label}
+            <span className="ml-1.5 text-neutral-400">{hint}</span>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type DeploymentStatus = "success" | "building" | "error";
+
+export interface DeploymentCardProps {
+  name?: string;
+  domain?: string;
+  message?: string;
+  status?: DeploymentStatus;
+  date?: string;
+  sourceIcon?: IconComponent;
+}
+
+const STATUS_STYLES: Record<
+  DeploymentStatus,
+  { dot: string; ring: string; text: string }
+> = {
+  success: { dot: "bg-emerald-500", ring: "bg-emerald-500/30", text: "Ready" },
+  building: { dot: "bg-amber-500", ring: "bg-amber-500/30", text: "Building…" },
+  error: { dot: "bg-red-500", ring: "bg-red-500/30", text: "Failed" },
+};
+
+export function DeploymentCard({
+  name = "raven",
+  domain = "raven.dev",
+  message = "Added source map support",
+  status = "success",
+  date = "Aug 3",
+  sourceIcon: SourceIcon = Github,
+}: DeploymentCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => clearTimeout(copiedTimeoutRef.current), []);
+
+  const statusStyles = STATUS_STYLES[status];
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(domain);
+    } catch {
+      // Clipboard API unavailable — fail silently, no broken UI.
+    }
+    setCopied(true);
+    clearTimeout(copiedTimeoutRef.current);
+    copiedTimeoutRef.current = setTimeout(() => setCopied(false), 1600);
+  }
+
+  return (
+    <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-neutral-900 p-5 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_20px_40px_-24px_rgba(0,0,0,0.8)]">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
+            <Triangle className="h-4 w-4 fill-black text-black" strokeWidth={0} />
+          </div>
+          <div className="min-w-0">
+            <h3 className="truncate text-[15px] font-semibold leading-tight text-white">
+              {name}
+            </h3>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <a
+                href={`https://${domain}`}
+                className="truncate text-sm text-neutral-400 underline decoration-neutral-700 underline-offset-2 transition-colors duration-150 hover:text-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 rounded-sm"
+              >
+                {domain}
+              </a>
+              <button
+                type="button"
+                aria-label={copied ? "Copied domain" : "Copy domain"}
+                onClick={handleCopy}
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-neutral-500 transition-colors duration-150 hover:bg-white/10 hover:text-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 active:scale-90"
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2} />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" strokeWidth={1.75} />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative shrink-0">
+          <button
+            ref={triggerRef}
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label="Project actions"
+            onClick={() => setMenuOpen((v) => !v)}
+            className={[
+              "grid h-9 w-9 place-items-center rounded-full text-neutral-400 transition-colors duration-150 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 active:scale-90",
+              menuOpen ? "bg-white/10 text-white" : "",
+            ].join(" ")}
+          >
+            <MoreVertical className="h-4 w-4" strokeWidth={1.75} />
+          </button>
+
+          <IconMenu open={menuOpen} onClose={() => setMenuOpen(false)} anchorRef={triggerRef} />
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2 text-sm">
+        <span className="relative flex h-2 w-2 shrink-0">
+          <span
+            className={[
+              "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 motion-reduce:animate-none",
+              statusStyles.ring,
+            ].join(" ")}
           />
-        </g>
-      </svg>
+          <span className={["relative inline-flex h-2 w-2 rounded-full", statusStyles.dot].join(" ")} />
+        </span>
+        <span className="text-neutral-300">{message}</span>
+      </div>
 
-      {/* Avatar — always static: no scale, no darken, no movement */}
-      <div
-        style={{
-          position: "relative",
-          width: size,
-          height: size,
-          borderRadius: "50%",
-          overflow: "hidden",
-          zIndex: triangleBehind ? 2 : 1,
-        }}
-      >
-        <img
-          src={resolvedSrc}
-          alt={alt}
-          width={size}
-          height={size}
-          style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
-        />
+      <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
+        <div className="grid h-7 w-7 place-items-center rounded-full bg-white/10 text-neutral-300">
+          <SourceIcon className="h-3.5 w-3.5" strokeWidth={1.75} />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-neutral-400">{statusStyles.text}</span>
+          <span className="rounded-md bg-white/5 px-2 py-1 text-xs font-medium tabular-nums text-neutral-300">
+            {date}
+          </span>
+        </div>
       </div>
 
       <style>{`
-        @keyframes avatar-deco-idle-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes menu-in {
+          from { opacity: 0; transform: translateY(-4px) scale(0.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        @media (prefers-reduced-motion: reduce) {
-          .avatar-decoration * { animation: none !important; transition: none !important; }
+        .animate-menu-in {
+          transform-origin: top right;
+          animation: menu-in 150ms cubic-bezier(0.16, 1, 0.3, 1);
         }
       `}</style>
     </div>
   );
 }
 
-export default AvatarDecoration;
+export default function Demo() {
+  return (
+    <div className="flex min-h-[420px] w-full items-center justify-center bg-black p-8">
+      <DeploymentCard />
+    </div>
+  );
+}
